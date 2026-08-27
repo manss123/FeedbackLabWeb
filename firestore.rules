@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /scenarios/{scenarioId} {
+      allow read: if request.auth != null;
+      allow write: if false; // scenario content is managed server-side only
+    }
+
+    match /sessions/{sessionId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Milestone activity log — an immutable audit trail (unlike sessions,
+    // no update/delete: an event, once logged, never changes). Admin reads
+    // go through the Cloud Function's Admin SDK, which bypasses these rules
+    // entirely — see functions/src/index.ts's adminGetUserActivity.
+    match /activity_log/{eventId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if false;
+    }
+  }
+}
