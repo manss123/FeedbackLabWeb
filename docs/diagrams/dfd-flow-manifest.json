@@ -1,0 +1,527 @@
+{
+  "convention": "Level 0 = context; Level 1 = main processes; Level 2 = each parent decomposition",
+  "level1": [
+    [
+      "E1",
+      "P1",
+      "Sign-in and setup input"
+    ],
+    [
+      "E2",
+      "P1",
+      "Admin sign-in request"
+    ],
+    [
+      "P1",
+      "E1",
+      "Setup and route status"
+    ],
+    [
+      "P1",
+      "E2",
+      "Identity status"
+    ],
+    [
+      "P1",
+      "E3",
+      "Authentication request"
+    ],
+    [
+      "E3",
+      "P1",
+      "Authenticated identity"
+    ],
+    [
+      "P1",
+      "D1",
+      "Profile and consent"
+    ],
+    [
+      "D1",
+      "P1",
+      "Stored setup status"
+    ],
+    [
+      "P1",
+      "P4",
+      "Identity milestone events"
+    ],
+    [
+      "E1",
+      "P2",
+      "Answers and module actions"
+    ],
+    [
+      "P2",
+      "E1",
+      "Learning content and results"
+    ],
+    [
+      "D4",
+      "P2",
+      "Local progress and answers"
+    ],
+    [
+      "P2",
+      "D4",
+      "Results and progress"
+    ],
+    [
+      "P2",
+      "P4",
+      "Learning and assessment timing"
+    ],
+    [
+      "E1",
+      "P3",
+      "Speech, text and reflection"
+    ],
+    [
+      "P3",
+      "E1",
+      "Scene, playback and coaching"
+    ],
+    [
+      "P3",
+      "E4",
+      "Transcript and coaching context"
+    ],
+    [
+      "E4",
+      "P3",
+      "AI response or failure"
+    ],
+    [
+      "P3",
+      "E5",
+      "Speech recognition input"
+    ],
+    [
+      "E5",
+      "P3",
+      "Transcript or recognition error"
+    ],
+    [
+      "P3",
+      "E6",
+      "NPC text and voice request"
+    ],
+    [
+      "E6",
+      "P3",
+      "NPC audio or service error"
+    ],
+    [
+      "P3",
+      "D2",
+      "VR stage records"
+    ],
+    [
+      "P3",
+      "D4",
+      "Scenario completion progress"
+    ],
+    [
+      "P3",
+      "D5",
+      "Temporary audio blob"
+    ],
+    [
+      "D5",
+      "P3",
+      "Local playback audio"
+    ],
+    [
+      "P3",
+      "D6",
+      "TTS usage metadata"
+    ],
+    [
+      "P3",
+      "P4",
+      "VR step and scenario events"
+    ],
+    [
+      "E1",
+      "P4",
+      "Browser lifecycle observations"
+    ],
+    [
+      "E2",
+      "P4",
+      "Admin browser observations"
+    ],
+    [
+      "P4",
+      "E1",
+      "Activity delivery status"
+    ],
+    [
+      "P4",
+      "E2",
+      "Activity delivery status"
+    ],
+    [
+      "P4",
+      "D7",
+      "Queued event envelope"
+    ],
+    [
+      "D7",
+      "P4",
+      "Pending same-user events"
+    ],
+    [
+      "P4",
+      "D3",
+      "Immutable event and server time"
+    ],
+    [
+      "D3",
+      "P4",
+      "Existing event for retry check"
+    ],
+    [
+      "E2",
+      "P5",
+      "Authorized filters and export request"
+    ],
+    [
+      "P5",
+      "E2",
+      "Research views and files"
+    ],
+    [
+      "D1",
+      "P5",
+      "Participant records"
+    ],
+    [
+      "D2",
+      "P5",
+      "VR session records"
+    ],
+    [
+      "D3",
+      "P5",
+      "Activity and timing records"
+    ]
+  ],
+  "level2": {
+    "P1": {
+      "boundary": [
+        [
+          "E1",
+          "P11",
+          "Sign-in and setup input"
+        ],
+        [
+          "E2",
+          "P11",
+          "Admin sign-in request"
+        ],
+        [
+          "P13",
+          "E1",
+          "Setup and route status"
+        ],
+        [
+          "P13",
+          "E2",
+          "Identity status"
+        ],
+        [
+          "P11",
+          "E3",
+          "Authentication request"
+        ],
+        [
+          "E3",
+          "P11",
+          "Authenticated identity"
+        ],
+        [
+          "P12",
+          "D1",
+          "Profile and consent"
+        ],
+        [
+          "D1",
+          "P12",
+          "Stored setup status"
+        ],
+        [
+          "P13",
+          "P4",
+          "Identity milestone events"
+        ]
+      ],
+      "internal": [
+        [
+          "P11",
+          "P12",
+          "Authenticated UID and setup input"
+        ],
+        [
+          "P12",
+          "P13",
+          "Stored setup state / read error"
+        ]
+      ],
+      "balanced": true
+    },
+    "P2": {
+      "boundary": [
+        [
+          "E1",
+          "P22",
+          "Answers and module actions"
+        ],
+        [
+          "P23",
+          "E1",
+          "Learning content and results"
+        ],
+        [
+          "D4",
+          "P21",
+          "Local progress and answers"
+        ],
+        [
+          "P23",
+          "D4",
+          "Results and progress"
+        ],
+        [
+          "P23",
+          "P4",
+          "Learning and assessment timing"
+        ]
+      ],
+      "internal": [
+        [
+          "P21",
+          "P22",
+          "Progress and draft context"
+        ],
+        [
+          "P22",
+          "P23",
+          "Responses, outcome and measured timing"
+        ]
+      ],
+      "balanced": true
+    },
+    "P3": {
+      "boundary": [
+        [
+          "E1",
+          "P31",
+          "Speech, text and reflection"
+        ],
+        [
+          "P33",
+          "E1",
+          "Scene, playback and coaching"
+        ],
+        [
+          "P32",
+          "E4",
+          "Transcript and coaching context"
+        ],
+        [
+          "E4",
+          "P32",
+          "AI response or failure"
+        ],
+        [
+          "P31",
+          "E5",
+          "Speech recognition input"
+        ],
+        [
+          "E5",
+          "P31",
+          "Transcript or recognition error"
+        ],
+        [
+          "P32",
+          "E6",
+          "NPC text and voice request"
+        ],
+        [
+          "E6",
+          "P32",
+          "NPC audio or service error"
+        ],
+        [
+          "P33",
+          "D2",
+          "VR stage records"
+        ],
+        [
+          "P33",
+          "D4",
+          "Scenario completion progress"
+        ],
+        [
+          "P31",
+          "D5",
+          "Temporary audio blob"
+        ],
+        [
+          "D5",
+          "P31",
+          "Local playback audio"
+        ],
+        [
+          "P32",
+          "D6",
+          "TTS usage metadata"
+        ],
+        [
+          "P33",
+          "P4",
+          "VR step and scenario events"
+        ]
+      ],
+      "internal": [
+        [
+          "P31",
+          "P32",
+          "Transcript, scenario context and goals"
+        ],
+        [
+          "P31",
+          "P33",
+          "Playback, manual input and reflection"
+        ],
+        [
+          "P32",
+          "P33",
+          "Coaching / NPC audio or failure"
+        ]
+      ],
+      "balanced": true
+    },
+    "P4": {
+      "boundary": [
+        [
+          "P1",
+          "P41",
+          "Identity milestone events"
+        ],
+        [
+          "P2",
+          "P41",
+          "Learning and assessment timing"
+        ],
+        [
+          "P3",
+          "P41",
+          "VR step and scenario events"
+        ],
+        [
+          "E1",
+          "P41",
+          "Browser lifecycle observations"
+        ],
+        [
+          "E2",
+          "P41",
+          "Admin browser observations"
+        ],
+        [
+          "P43",
+          "E1",
+          "Activity delivery status"
+        ],
+        [
+          "P43",
+          "E2",
+          "Activity delivery status"
+        ],
+        [
+          "P42",
+          "D7",
+          "Queued event envelope"
+        ],
+        [
+          "D7",
+          "P42",
+          "Pending same-user events"
+        ],
+        [
+          "P43",
+          "D3",
+          "Immutable event and server time"
+        ],
+        [
+          "D3",
+          "P43",
+          "Existing event for retry check"
+        ]
+      ],
+      "internal": [
+        [
+          "P41",
+          "P42",
+          "Event envelope with client measurements"
+        ],
+        [
+          "P42",
+          "P43",
+          "Pending event owned by current UID"
+        ],
+        [
+          "P43",
+          "P42",
+          "Acknowledgement / retained failure"
+        ]
+      ],
+      "balanced": true
+    },
+    "P5": {
+      "boundary": [
+        [
+          "E2",
+          "P51",
+          "Authorized filters and export request"
+        ],
+        [
+          "P53",
+          "E2",
+          "Research views and files"
+        ],
+        [
+          "D1",
+          "P51",
+          "Participant records"
+        ],
+        [
+          "D2",
+          "P51",
+          "VR session records"
+        ],
+        [
+          "D3",
+          "P51",
+          "Activity and timing records"
+        ]
+      ],
+      "internal": [
+        [
+          "P51",
+          "P52",
+          "Authorized records and filter settings"
+        ],
+        [
+          "P52",
+          "P53",
+          "Filtered research rows and metadata"
+        ]
+      ],
+      "balanced": true
+    }
+  }
+}

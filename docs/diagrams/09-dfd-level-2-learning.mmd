@@ -1,0 +1,14 @@
+flowchart TB
+  E1["Lecturer"]
+  P22(["2.2 Process learning input"])
+  P23(["2.3 Save and present results"])
+  D4[("D4 Local learner state")]
+  P21(["2.1 Load learner state"])
+  P4(["4.0 Usage event persistence"])
+  E1 -->|"Answers and module actions"| P22
+  P23 -->|"Learning content and results"| E1
+  D4 -->|"Local progress and answers"| P21
+  P23 -->|"Results and progress"| D4
+  P23 -->|"Learning and assessment timing"| P4
+  P21 -->|"Progress and draft context"| P22
+  P22 -->|"Responses, outcome and measured timing"| P23

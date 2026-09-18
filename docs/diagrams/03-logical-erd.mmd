@@ -1,0 +1,48 @@
+erDiagram
+  USERS {
+    string uid PK
+    map profile
+    map consent
+  }
+  SESSIONS {
+    string sessionId PK
+    string userId
+    string scenarioId
+    timestamp createdAt
+    map stage1
+    map stage2
+    map stage3
+    map stage4
+  }
+  ACTIVITY_LOG {
+    string eventId PK
+    string userId
+    string type
+    int schemaVersion
+    timestamp createdAt
+    string occurredAt
+    string browserId
+    string tabId
+    string webSessionId
+    string runId
+    string stepVisitId
+    string pageVisitId
+    string sessionId
+    string startedAtClient
+    string endedAtClient
+    float elapsedSeconds
+    float visibleSeconds
+    float activeSeconds
+    float unobservedSeconds
+  }
+  TTS_LOGS {
+    string logId PK
+    string uid "or anonymous"
+    int textLength
+    string voiceName
+    string modelName
+    timestamp createdAt
+  }
+  USERS o|..o{ SESSIONS : "logical UID"
+  USERS o|..o{ ACTIVITY_LOG : "logical UID"
+  SESSIONS o|..o{ ACTIVITY_LOG : "optional sessionId"

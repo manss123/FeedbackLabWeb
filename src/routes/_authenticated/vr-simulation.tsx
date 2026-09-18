@@ -1,3 +1,5 @@
+import { deferredEffect } from "@/lib/deferred-effect";
+import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -48,7 +50,7 @@ import type {
 import { toast } from "sonner";
 import { createSession, updateSession } from "@/lib/firestore";
 import { logActivity } from "@/lib/activity";
-import { serverTimestamp } from "firebase/firestore";
+import { Timestamp, serverTimestamp } from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/vr-simulation")({
   head: () => ({
@@ -518,29 +520,77 @@ const STEP_ORDER: Step[] = [
   "summary",
 ];
 
-// Wording sourced directly from "Scenario 1_เปรียบเทียบ Self Reflection and AI.docx"
-// (8 ข้อ self-reflection ที่จับคู่กับสิ่งที่ AI วิเคราะห์จริง) — ตรงกันข้ามกับ
-// paraphrase เดิม ตอนนี้ใช้ถ้อยคำจากเอกสารต้นฉบับตรง ๆ เพื่อให้ self-rating กับ
-// AI rubric อ้างอิงคำถามเดียวกันแน่นอน อย่าเปลี่ยนลำดับ — index 0-3 ถูกใช้เทียบกับ
-// คะแนน AI ตรง ๆ ใน Stage3Awareness (selfBalance/selfClarity/selfAction/selfStructure)
-// index 4-7 เป็น self-reflection เพิ่มเติม (Conciseness / Speech Rate+Pause / มุมมองผู้รับ /
-// ผลกระทบทางความรู้สึก) ที่เก็บไว้แต่ไม่ได้ทำ 1:1 comparison กับ AI score เดี่ยว ๆ (เอกสาร
-// ต้นฉบับก็ปล่อยช่อง "Scoring 4 Dimensions" ว่างไว้สำหรับข้อเหล่านี้เช่นกัน)
-//
-// ข้อ 6 (index 5): เอกสารต้นฉบับระบุ "Speech Rate + Pause + Voice Clarity" แต่ตัด
-// Voice Clarity ออกตามที่ผู้ใช้ระบุ — ระบบไม่ได้ส่งไฟล์เสียงให้ AI วิเคราะห์โดยตรง
-// (มีแค่ transcript ข้อความ) จึงประเมิน "ความชัดเจนของน้ำเสียง" จริง ๆ ไม่ได้ เหลือแค่
-// จังหวะ/ความเร็วในการพูดที่ผู้พูดประเมินตนเองได้
-const RATING_STATEMENTS = [
-  "ฉันเริ่มต้นการให้ Feedback ด้วยการกล่าวถึงจุดแข็งหรือสิ่งที่นักศึกษาทำได้ดี และลงท้ายด้วยการให้กำลังใจหรือแรงกระตุ้นพัฒนาการ",
-  "ฉันระบุสิ่งที่นักศึกษาควรพัฒนาได้อย่างชัดเจนและเฉพาะเจาะจง",
-  "ฉันเสนอแนวทางที่นักศึกษาสามารถนำไปใช้ปรับปรุงการนำเสนอครั้งต่อไปได้",
-  "Feedback ของฉันมีลำดับที่ช่วยให้นักศึกษาเข้าใจทั้งจุดแข็งและสิ่งที่ควรพัฒนา",
-  "Feedback ของฉันมีความกระชับ ตรงประเด็น และไม่มีข้อความที่ซ้ำหรือไม่จำเป็น",
-  "ฉันพูดด้วยความเร็วและจังหวะที่เหมาะสม มีการเว้นวรรคที่ช่วยให้นักศึกษาติดตามสิ่งที่ฉันสื่อสารได้",
-  "หากฉันเป็นนักศึกษา ฉันจะเข้าใจว่าตนเองทำอะไรได้ดีและควรปรับปรุงอะไรต่อไป",
-  "หากฉันเป็นนักศึกษา ฉันจะรู้สึกว่า Feedback นี้ช่วยสนับสนุนให้ฉันพัฒนาตนเอง",
-];
+// Self-rating statements are scenario-specific — each scenario has its own
+// 8-item self-reflection instrument. Only s1's set has a documented
+// item→AI-dimension mapping (see the "ข้อ N" comments below and on
+// Stage3Awareness), so the Step 3.1 self-vs-AI comparison is scenario-gated
+// to s1 only (see the "2-reflection" step's onNext in ScenarioRunner) until
+// a mapping for s2-s5's items is supplied.
+const RATING_STATEMENTS_BY_SCENARIO: Record<string, string[]> = {
+  // Wording sourced directly from "Scenario 1_เปรียบเทียบ Self Reflection and
+  // AI.docx" (8 ข้อ self-reflection ที่จับคู่กับสิ่งที่ AI วิเคราะห์จริง) — ถ้อยคำจาก
+  // เอกสารต้นฉบับตรง ๆ เพื่อให้ self-rating กับ AI rubric อ้างอิงคำถามเดียวกันแน่นอน อย่า
+  // เปลี่ยนลำดับ — index 0-3 ถูกใช้เทียบกับคะแนน AI ตรง ๆ ใน Stage3Awareness
+  // (selfBalance/selfClarity/selfAction/selfStructure) index 4-7 เป็น self-reflection
+  // เพิ่มเติม (Conciseness / Speech Rate+Pause / มุมมองผู้รับ / ผลกระทบทางความรู้สึก) ที่เก็บไว้
+  // แต่ไม่ได้ทำ 1:1 comparison กับ AI score เดี่ยว ๆ (เอกสารต้นฉบับก็ปล่อยช่อง "Scoring 4
+  // Dimensions" ว่างไว้สำหรับข้อเหล่านี้เช่นกัน)
+  //
+  // ข้อ 6 (index 5): เอกสารต้นฉบับระบุ "Speech Rate + Pause + Voice Clarity" แต่ตัด
+  // Voice Clarity ออกตามที่ผู้ใช้ระบุ — ระบบไม่ได้ส่งไฟล์เสียงให้ AI วิเคราะห์โดยตรง (มีแค่
+  // transcript ข้อความ) จึงประเมิน "ความชัดเจนของน้ำเสียง" จริง ๆ ไม่ได้ เหลือแค่จังหวะ/
+  // ความเร็วในการพูดที่ผู้พูดประเมินตนเองได้
+  s1: [
+    "ฉันเริ่มต้นการให้ Feedback ด้วยการกล่าวถึงจุดแข็งหรือสิ่งที่นักศึกษาทำได้ดี และลงท้ายด้วยการให้กำลังใจหรือแรงกระตุ้นพัฒนาการ",
+    "ฉันระบุสิ่งที่นักศึกษาควรพัฒนาได้อย่างชัดเจนและเฉพาะเจาะจง",
+    "ฉันเสนอแนวทางที่นักศึกษาสามารถนำไปใช้ปรับปรุงการนำเสนอครั้งต่อไปได้",
+    "Feedback ของฉันมีลำดับที่ช่วยให้นักศึกษาเข้าใจทั้งจุดแข็งและสิ่งที่ควรพัฒนา",
+    "Feedback ของฉันมีความกระชับ ตรงประเด็น และไม่มีข้อความที่ซ้ำหรือไม่จำเป็น",
+    "ฉันพูดด้วยความเร็วและจังหวะที่เหมาะสม มีการเว้นวรรคที่ช่วยให้นักศึกษาติดตามสิ่งที่ฉันสื่อสารได้",
+    "หากฉันเป็นนักศึกษา ฉันจะเข้าใจว่าตนเองทำอะไรได้ดีและควรปรับปรุงอะไรต่อไป",
+    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกว่า Feedback นี้ช่วยสนับสนุนให้ฉันพัฒนาตนเอง",
+  ],
+  s2: [
+    "ฉันกล่าวชื่นชมจุดแข็งของนักศึกษาอย่างเฉพาะเจาะจง",
+    "ฉันอธิบายได้ว่าทำไมสิ่งที่นักศึกษาทำจึงเป็นจุดแข็ง",
+    "ฉันช่วยให้นักศึกษามองเห็นคุณค่าและศักยภาพของตนเอง",
+    "ฉันเชื่อมโยงความสำเร็จของนักศึกษากับโอกาสในการพัฒนาต่อไป",
+    "ข้อเสนอแนะของฉันช่วยให้นักศึกษาทราบว่าควรต่อยอดสิ่งใด",
+    "Feedback ของฉันมีความสมดุลระหว่างการชื่นชมและการเสนอแนะแนวทางพัฒนา",
+    "ฉันใช้ภาษาที่สร้างแรงจูงใจและส่งเสริม Growth Mindset",
+    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกภาคภูมิใจ พร้อมทั้งอยากพัฒนาตนเองต่อไป",
+  ],
+  s3: [
+    "ฉันเริ่มต้นการสนทนาด้วยถ้อยคำที่ช่วยลดความกังวลของนักศึกษา",
+    "ฉันกล่าวถึงจุดแข็งของนักศึกษาก่อนพูดถึงข้อที่ควรปรับปรุง",
+    "ฉันอธิบายข้อผิดพลาดโดยมุ่งเน้นที่พฤติกรรมมากกว่าตัวบุคคล",
+    "ฉันหลีกเลี่ยงการใช้คำพูดที่อาจทำให้ผู้เรียนรู้สึกถูกตำหนิ",
+    "ฉันใช้ถ้อยคำที่สุภาพ ให้เกียรติ และเหมาะสม",
+    "น้ำเสียงของฉันช่วยให้นักศึกษารู้สึกได้รับการสนับสนุน",
+    "ข้อเสนอแนะของฉันมีความชัดเจนและสามารถนำไปปฏิบัติได้",
+    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกว่าตนเองยังสามารถพัฒนาได้",
+  ],
+  s4: [
+    "ฉันรับรู้อารมณ์ของนักศึกษาก่อนเริ่มให้ Feedback",
+    "ฉันใช้น้ำเสียงที่สงบและช่วยลดความตึงเครียด",
+    "ฉันแสดงความเข้าใจความรู้สึกของนักศึกษา",
+    "ฉันหลีกเลี่ยงการโต้แย้งหรือปกป้องการตัดสินใจของตนเองทันที",
+    "ฉันใช้ถ้อยคำที่ช่วยให้นักศึกษารู้สึกปลอดภัย",
+    "ฉันค่อย ๆ นำบทสนทนาเข้าสู่การพัฒนาตนเอง",
+    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกว่าอาจารย์รับฟังและเข้าใจฉัน",
+    "หลังจบบทสนทนา นักศึกษาน่าจะพร้อมรับข้อเสนอแนะมากขึ้น",
+  ],
+  s5: [
+    "ฉันใช้คำถามปลายเปิดเพื่อกระตุ้นการคิดของนักศึกษา",
+    "ฉันเปิดโอกาสให้นักศึกษาอธิบายความคิดของตนเอง",
+    "ฉันรับฟังโดยไม่รีบแทรกหรือบอกคำตอบ",
+    "ฉันเว้นจังหวะให้ผู้เรียนได้คิดก่อนตอบ",
+    "ฉันช่วยสรุปสิ่งที่นักศึกษาสะท้อนคิดได้อย่างถูกต้อง",
+    "ฉันช่วยให้นักศึกษาค้นพบแนวทางพัฒนาด้วยตนเอง",
+    "ฉันหลีกเลี่ยงการเป็นผู้ให้คำตอบทั้งหมด",
+    "หลังจบบทสนทนา นักศึกษาน่าจะมีเป้าหมายการพัฒนาที่ชัดเจน",
+  ],
+};
 
 const GOAL_OPTIONS = [
   "เพิ่มความชัดเจนของคำแนะนำ",
@@ -587,6 +637,7 @@ function ScenarioRunner({
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("1-intro");
+  const timing = useLearningTiming("vr", scenario.id, step);
 
   // Stage 1 data
   const [transcript1, setTranscript1] = useState("");
@@ -618,25 +669,38 @@ function ScenarioRunner({
   // Firestore session doc for this attempt — created once on mount, then
   // progressively filled in as each stage completes below (not just written
   // once at the end), so an abandoned mid-scenario attempt still leaves a
-  // partial record (stage3/stage4 stay null) instead of nothing at all. Both
-  // this and logActivity are best-effort/fire-and-forget — a failed write
-  // here must never block the learner's flow.
+  // partial record (stage3/stage4 stay null) instead of nothing at all.
+  // Session writes are best-effort; activity events have their own retry queue.
+  // A failed session write must never block the learner's flow.
   const [sessionId, setSessionId] = useState<string | null>(null);
-  useEffect(() => {
-    void logActivity({ type: "vr_scenario_started", scenarioId: scenario.id });
-    createSession({
-      userId,
-      scenarioId: scenario.id,
-      createdAt: serverTimestamp(),
-      stage1: null,
-      stage2: null,
-      stage3: null,
-      stage4: null,
-    })
-      .then(setSessionId)
-      .catch((e) => console.warn("Firestore session create failed", e));
+  useEffect(
+    () =>
+      deferredEffect(() => {
+        void logActivity({
+          type: "vr_scenario_started",
+          scenarioId: scenario.id,
+          sessionId: timing.runId(),
+          runId: timing.runId(),
+        });
+        createSession(
+          {
+            userId,
+            scenarioId: scenario.id,
+            createdAt: serverTimestamp(),
+            stage1: null,
+            stage2: null,
+            stage3: null,
+            stage4: null,
+          },
+          timing.runId(),
+        )
+          .then(setSessionId)
+          .catch((e) => console.warn("Firestore session create failed", e));
+      }),
+    // Create the session once per mounted run, independently of step changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [],
+  );
 
   const advanceStep = useCallback(() => {
     setStep((prev) => {
@@ -929,7 +993,9 @@ function ScenarioRunner({
                           transcript: result.transcript,
                           durationSeconds: result.seconds,
                           recordingUrl: null, // in-memory only, never uploaded — see PROJECT_CONTEXT.md §5
-                          startedAt: null,
+                          startedAt: timing.startedAt()
+                            ? Timestamp.fromDate(new Date(timing.startedAt()!))
+                            : null,
                           completedAt: serverTimestamp(),
                         },
                       }).catch((e) => console.warn("Firestore session stage1 update failed", e));
@@ -958,6 +1024,9 @@ function ScenarioRunner({
                   <Stage2Rating
                     ratings={ratings}
                     setRatings={setRatings}
+                    statements={
+                      RATING_STATEMENTS_BY_SCENARIO[scenario.id] ?? RATING_STATEMENTS_BY_SCENARIO.s1
+                    }
                     onBack={() => setStep("2-playback")}
                     onNext={() => setStep("2-reflection")}
                   />
@@ -985,7 +1054,12 @@ function ScenarioRunner({
                         scenarioId: scenario.id,
                         sessionId: sessionId ?? undefined,
                       });
-                      setStep("3-awareness");
+                      // Step 3.1's self-vs-AI comparison reads ratings[0/1/2/7]
+                      // against a mapping only s1's statement set has been
+                      // authored against (see RATING_STATEMENTS_BY_SCENARIO
+                      // above) — skip straight to the radar step for every
+                      // other scenario until a mapping for their items exists.
+                      setStep(scenario.id === "s1" ? "3-awareness" : "3-radar");
                     }}
                   />
                 )}
@@ -1033,7 +1107,9 @@ function ScenarioRunner({
                 customGoal={customGoal}
                 setCustomGoal={setCustomGoal}
                 personalGoal={personalGoal}
-                suggestedGoals={report1?.suggestedGoals?.length ? report1.suggestedGoals : GOAL_OPTIONS}
+                suggestedGoals={
+                  report1?.suggestedGoals?.length ? report1.suggestedGoals : GOAL_OPTIONS
+                }
                 onNext={() => {
                   if (sessionId) {
                     updateSession(sessionId, {
@@ -1528,7 +1604,7 @@ function StageRecord({
         onClick={() =>
           onDone({
             transcript,
-            seconds: recorder.lastResult?.durationSeconds || recorder.elapsedSeconds || 60,
+            seconds: recorder.lastResult?.durationSeconds ?? recorder.elapsedSeconds ?? 0,
             audioUrl: recorder.lastResult?.url ?? null,
           })
         }
@@ -1639,7 +1715,7 @@ function Stage2Playback({
   }, []);
 
   const sentences = transcript
-    .split(/(?<=[\.!\?…])\s+|(?<=ค่ะ|ครับ|นะคะ|นะครับ)\s+/)
+    .split(/(?<=[.!?…])\s+|(?<=ค่ะ|ครับ|นะคะ|นะครับ)\s+/)
     .filter((s) => s.trim().length);
 
   const words = transcript.trim().split(/\s+/).filter(Boolean).length;
@@ -1764,11 +1840,13 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 function Stage2Rating({
   ratings,
   setRatings,
+  statements,
   onBack,
   onNext,
 }: {
   ratings: number[];
   setRatings: (v: number[]) => void;
+  statements: string[];
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -1784,7 +1862,7 @@ function Stage2Rating({
       </p>
 
       <div className="space-y-4">
-        {RATING_STATEMENTS.map((stmt, i) => (
+        {statements.map((stmt, i) => (
           <div key={i} className="rounded-2xl border border-border p-4">
             <div className="mb-3 text-sm text-slate-deep">
               <span className="mr-2 font-bold text-mint-primary">{i + 1}.</span>

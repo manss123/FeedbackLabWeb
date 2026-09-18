@@ -1,0 +1,28 @@
+flowchart TB
+  lecturer["University lecturer<br/>Participant actor"]
+  admin["Research administrator<br/>Authorized admin actor"]
+  login(["Sign in and complete setup<br/>Google / consent / profile"])
+  learn(["Study and take assessments<br/>Modules / pretest / posttest"])
+  practice(["Practice with Unity avatar<br/>Speech or manually entered feedback"])
+  reflect(["Review and improve feedback<br/>Local audio / reflection / AI coaching"])
+  progress(["View progress and submit survey<br/>Current scores and eligibility"])
+  review(["Review research records<br/>Participant / learning / activity"])
+  usage(["Inspect session and timing data<br/>Observed overlaps / step durations"])
+  export(["Export filtered datasets<br/>CSV / JSON / codebook"])
+  certificate(["Issue certificate [PLANNED]"])
+  lecturer --- login
+  lecturer --- learn
+  lecturer --- practice
+  lecturer --- reflect
+  lecturer --- progress
+  admin --- review
+  admin --- usage
+  admin --- export
+  lecturer -.-> certificate
+  classDef current fill:#eff8f5,stroke:#31816e,color:#163340
+  class login,learn,practice,reflect,progress,review,usage,export current
+  classDef local fill:#fff6e5,stroke:#b78528,color:#163340
+  classDef external fill:#eff4fc,stroke:#587cac,color:#163340
+  class lecturer,admin external
+  classDef planned fill:#faf1f7,stroke:#9c6184,color:#163340,stroke-dasharray:7 5
+  class certificate planned

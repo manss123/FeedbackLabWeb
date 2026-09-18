@@ -1,0 +1,25 @@
+flowchart TB
+  P1(["1.0 Identity and setup"])
+  P41(["4.1 Measure and identify"])
+  P2(["2.0 Learning and assessments"])
+  P3(["3.0 VR practice and coaching"])
+  E1["Lecturer"]
+  E2["Research administrator"]
+  P43(["4.3 Persist / verify delivery"])
+  P42(["4.2 Queue and retry by UID"])
+  D7[("D7 Local activity queue")]
+  D3[("D3 Firestore activity_log")]
+  P1 -->|"Identity milestone events"| P41
+  P2 -->|"Learning and assessment timing"| P41
+  P3 -->|"VR step and scenario events"| P41
+  E1 -->|"Browser lifecycle observations"| P41
+  E2 -->|"Admin browser observations"| P41
+  P43 -->|"Activity delivery status"| E1
+  P43 -->|"Activity delivery status"| E2
+  P42 -->|"Queued event envelope"| D7
+  D7 -->|"Pending same-user events"| P42
+  P43 -->|"Immutable event and server time"| D3
+  D3 -->|"Existing event for retry check"| P43
+  P41 -->|"Event envelope with client measurements"| P42
+  P42 -->|"Pending event owned by current UID"| P43
+  P43 -->|"Acknowledgement / retained failure"| P42

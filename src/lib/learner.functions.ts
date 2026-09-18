@@ -1,5 +1,6 @@
 // Mock client-side store — NO backend. All state persisted in localStorage.
 // Keeps the same export names as before so pages don't need major changes.
+import type { UserDoc } from "@/lib/firestore";
 
 export const CONSENT_DOC_VERSION = "v1-2026";
 export const POSTTEST_PASS_PERCENT = 80;
@@ -194,35 +195,41 @@ export function setAuthFromFirebaseUser(user: {
 }): void {
   if (!isBrowser()) return;
   const auth: MockAuth = { id: user.id, email: user.email, name: user.name ?? user.email };
+  // A different account must not inherit another participant's progress/drafts.
+  const existingData = loadData();
+  if (loadAuth()?.id !== user.id || existingData.profile?.id !== user.id) resetMockData();
   window.localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
   // Initialize learner data if missing
   const existing = window.localStorage.getItem(STORAGE_KEY);
   if (!existing) saveData(emptyData(profileFromAuth(auth)));
 }
 
-// Reconciles the local mock after finding a real Firestore consent record on
-// a device/browser where the mock never saw it happen (e.g. signed in
-// elsewhere before). Without this, dashboard.tsx's own consent_completed
-// check (mock-only) keeps sending the user back to /consent forever, while
-// consent.tsx's real-Firestore check keeps sending them back to /dashboard —
-// an infinite redirect loop between the two pages.
-export function markConsentCompletedLocally() {
+// Reconcile setup before rendering any learner page. Later learning progress
+// remains local until its separate Firestore migration.
+export function syncLearnerSetup(
+  userDoc: UserDoc | null,
+  destination: "/consent" | "/onboarding" | "/dashboard",
+): MockData {
   const d = loadData();
-  if (d.state.consent_completed) return;
-  d.state.consent_completed = true;
-  if (d.state.current_stage === "consent") d.state.current_stage = "onboarding";
+  d.state.consent_completed = destination !== "/consent";
+  d.state.onboarding_completed = destination === "/dashboard";
+  if (userDoc?.profile && d.profile) {
+    d.profile = {
+      ...d.profile,
+      display_name: userDoc.profile.displayName,
+      avatar_url: userDoc.profile.avatarUrl,
+      faculty: userDoc.profile.faculty,
+      department: userDoc.profile.department,
+      teaching_experience_years: userDoc.profile.teachingExperienceYears,
+    };
+  }
+  if (destination !== "/dashboard") {
+    d.state.current_stage = destination === "/consent" ? "consent" : "onboarding";
+  } else if (d.state.current_stage === "consent" || d.state.current_stage === "onboarding") {
+    d.state.current_stage = "diagnostic";
+  }
   saveData(d);
-}
-
-// Same reconciliation as markConsentCompletedLocally, for onboarding.tsx's
-// equivalent real-Firestore check (userDoc.profile) — see that function's
-// comment for why this sync-before-navigate step is required.
-export function markOnboardingCompletedLocally() {
-  const d = loadData();
-  if (d.state.onboarding_completed) return;
-  d.state.onboarding_completed = true;
-  if (d.state.current_stage === "onboarding") d.state.current_stage = "diagnostic";
-  saveData(d);
+  return d;
 }
 
 // Clears every mock-related key, not just STORAGE_KEY/AUTH_KEY — also sweeps
@@ -461,10 +468,7 @@ export async function completeVrScenario(args: {
     d.state.completed_scenarios.push(args.data.scenario_id);
     d.state.vr_scenarios_completed = d.state.completed_scenarios.length;
     d.state.total_points += 150;
-    if (
-      d.state.vr_scenarios_completed >= 5 &&
-      d.state.current_stage === "vr_simulation"
-    ) {
+    if (d.state.vr_scenarios_completed >= 5 && d.state.current_stage === "vr_simulation") {
       d.state.current_stage = "posttest";
     }
     recomputeLevel(d.state);
@@ -509,9 +513,9 @@ export const POSTTEST_QUESTIONS: PosttestQuestion[] = [
     dimension: "clarity",
     question: "ประโยค Feedback แบบใดชัดเจนที่สุด",
     options: [
-      { label: "\"งานยังไม่ค่อยดี\"", score: 1 },
-      { label: "\"เนื้อหายังขาดหลักฐานสนับสนุน\"", score: 3 },
-      { label: "\"บทนำยังไม่มีคำถามวิจัย ควรเพิ่มในย่อหน้าที่ 2\"", score: 5 },
+      { label: '"งานยังไม่ค่อยดี"', score: 1 },
+      { label: '"เนื้อหายังขาดหลักฐานสนับสนุน"', score: 3 },
+      { label: '"บทนำยังไม่มีคำถามวิจัย ควรเพิ่มในย่อหน้าที่ 2"', score: 5 },
     ],
   },
   {
@@ -566,9 +570,7 @@ export const POSTTEST_QUESTIONS: PosttestQuestion[] = [
   },
 ];
 
-export async function submitPosttest(args: {
-  data: { answers: { id: string; score: number }[] };
-}) {
+export async function submitPosttest(args: { data: { answers: { id: string; score: number }[] } }) {
   const byId = new Map(POSTTEST_QUESTIONS.map((q) => [q.id, q]));
   const dims = { empathy: 0, clarity: 0, motivation: 0, actionability: 0 };
   const dimMax = { empathy: 0, clarity: 0, motivation: 0, actionability: 0 };

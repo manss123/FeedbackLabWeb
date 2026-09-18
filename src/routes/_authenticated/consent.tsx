@@ -1,22 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { Loader2, ShieldCheck, Mic, FileText } from "lucide-react";
 import { LearnerShell } from "@/components/learner-shell";
-import {
-  CONSENT_DOC_VERSION,
-  getLearnerOverview,
-  markConsentCompletedLocally,
-  submitConsent,
-} from "@/lib/learner.functions";
+import { CONSENT_DOC_VERSION, getLearnerOverview, submitConsent } from "@/lib/learner.functions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { serverTimestamp } from "firebase/firestore";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { waitForFirebaseUser } from "@/lib/firebase-auth";
-import { getUserDoc, upsertUserDoc } from "@/lib/firestore";
+import { upsertUserDoc } from "@/lib/firestore";
 import { logActivity } from "@/lib/activity";
+import { learnerAccessKey } from "@/lib/learner-access";
 
 export const Route = createFileRoute("/_authenticated/consent")({
   head: () => ({
@@ -37,36 +32,6 @@ function ConsentPage() {
     queryFn: () => getLearnerOverview(),
   });
 
-  useEffect(() => {
-    if (data?.state?.consent_completed) {
-      navigate({ to: "/onboarding", replace: true });
-    }
-  }, [data, navigate]);
-
-  // The state above is a per-browser localStorage mock — it goes stale on a
-  // new device/browser or after it's been cleared, even though the user
-  // already has real consent on file in Firestore. Check the real record too
-  // and send a genuinely returning user straight home instead of making them
-  // sit through consent again.
-  const { data: userDoc } = useQuery({
-    queryKey: ["consent-page-user-doc"],
-    queryFn: async () => {
-      const uid = getFirebaseAuth().currentUser?.uid ?? (await waitForFirebaseUser())?.uid;
-      return uid ? getUserDoc(uid) : null;
-    },
-  });
-
-  useEffect(() => {
-    if (userDoc?.consent) {
-      // Sync the mock too, or dashboard.tsx's own (mock-only) consent check
-      // immediately bounces the user right back here — an infinite loop
-      // between the two pages.
-      markConsentCompletedLocally();
-      queryClient.invalidateQueries({ queryKey: ["learner-overview"] });
-      navigate({ to: "/dashboard", replace: true });
-    }
-  }, [userDoc, navigate, queryClient]);
-
   const [research, setResearch, clearResearchDraft] = usePersistedState<boolean>(
     "consent.research",
     false,
@@ -76,6 +41,9 @@ function ConsentPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
+      if (!research || !mic || !audio) {
+        throw new Error("ต้องให้ความยินยอมทุกข้อจึงจะเริ่มโครงการวิจัยได้");
+      }
       // Request browser mic permission as part of consent flow
       if (mic) {
         try {
@@ -85,6 +53,20 @@ function ConsentPage() {
           throw new Error("ไม่สามารถขอสิทธิ์ไมโครโฟนจากเบราว์เซอร์ได้ กรุณาอนุญาตแล้วลองใหม่");
         }
       }
+      const uid = getFirebaseAuth().currentUser?.uid ?? (await waitForFirebaseUser())?.uid;
+      if (!uid) throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");
+      // The route guard reads Firestore, so finish the durable write before
+      // marking setup complete locally or navigating to the next step.
+      await upsertUserDoc(uid, {
+        consent: {
+          documentVersion: CONSENT_DOC_VERSION,
+          researchConsent: research,
+          microphonePermission: mic,
+          audioRecordingConsent: audio,
+          createdAt: serverTimestamp(),
+        },
+      });
+      await queryClient.invalidateQueries({ queryKey: learnerAccessKey(uid) });
       const result = await submitConsent({
         data: {
           research_consent: research,
@@ -92,28 +74,7 @@ function ConsentPage() {
           audio_recording_consent: audio,
         },
       });
-
-      // Best-effort real persistence of the form content itself — session/
-      // progress state (consent_completed, current_stage, points) stays in
-      // the localStorage mock above; this never blocks navigation.
-      const uid = getFirebaseAuth().currentUser?.uid ?? (await waitForFirebaseUser())?.uid;
-      if (uid) {
-        try {
-          await upsertUserDoc(uid, {
-            consent: {
-              documentVersion: CONSENT_DOC_VERSION,
-              researchConsent: research,
-              microphonePermission: mic,
-              audioRecordingConsent: audio,
-              createdAt: serverTimestamp(),
-            },
-          });
-          void logActivity({ type: "consent_given" });
-        } catch (e) {
-          console.warn("Firestore consent write failed", e);
-        }
-      }
-
+      void logActivity({ type: "consent_given" });
       return result;
     },
     onSuccess: () => {
@@ -138,9 +99,7 @@ function ConsentPage() {
             Step 1 of 3
           </div>
           <h1 className="text-3xl font-bold">หนังสือแสดงความยินยอมเข้าร่วมโครงการวิจัย</h1>
-          <p className="text-slate-text">
-            กรุณาอ่านและให้ความยินยอมทุกข้อก่อนเริ่มกิจกรรมการวิจัย
-          </p>
+          <p className="text-slate-text">กรุณาอ่านและให้ความยินยอมทุกข้อก่อนเริ่มกิจกรรมการวิจัย</p>
         </div>
 
         {/* Research information */}
@@ -151,16 +110,17 @@ function ConsentPage() {
           </div>
           <div className="space-y-3 text-sm leading-relaxed text-slate-text">
             <p>
-              โครงการวิจัยนี้พัฒนา <strong className="text-slate-deep">Personalized VR Gamified Learning System</strong>
-              เพื่อส่งเสริมความสามารถในการให้ข้อเสนอแนะเชิงสร้างสรรค์ (Constructive Feedback) ของอาจารย์มหาวิทยาลัย
+              โครงการวิจัยนี้พัฒนา{" "}
+              <strong className="text-slate-deep">Personalized VR Gamified Learning System</strong>
+              เพื่อส่งเสริมความสามารถในการให้ข้อเสนอแนะเชิงสร้างสรรค์ (Constructive Feedback)
+              ของอาจารย์มหาวิทยาลัย
             </p>
             <p>
               ระบบจะเก็บข้อมูลการเรียนรู้ ผลการทดสอบ เสียงพูดขณะฝึก Scenario และคำตอบแบบสอบถาม
-              เพื่อการวิเคราะห์เชิงวิชาการเท่านั้น ข้อมูลจะถูกเก็บเป็นความลับและใช้เฉพาะเพื่อการวิจัย
+              เพื่อการวิเคราะห์เชิงวิชาการเท่านั้น
+              ข้อมูลจะถูกเก็บเป็นความลับและใช้เฉพาะเพื่อการวิจัย
             </p>
-            <p>
-              ผู้เข้าร่วมมีสิทธิ์ถอนตัวจากการวิจัยเมื่อใดก็ได้โดยไม่มีผลกระทบใด ๆ
-            </p>
+            <p>ผู้เข้าร่วมมีสิทธิ์ถอนตัวจากการวิจัยเมื่อใดก็ได้โดยไม่มีผลกระทบใด ๆ</p>
           </div>
         </section>
 
@@ -195,12 +155,16 @@ function ConsentPage() {
           </label>
 
           <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-border bg-background p-6 transition-colors hover:border-mint-primary/50">
-            <Checkbox checked={audio} onCheckedChange={(v) => setAudio(v === true)} className="mt-1" />
+            <Checkbox
+              checked={audio}
+              onCheckedChange={(v) => setAudio(v === true)}
+              className="mt-1"
+            />
             <div>
               <div className="font-semibold">ยินยอมให้บันทึกเสียงเพื่อการประเมิน</div>
               <div className="mt-1 text-sm text-slate-text">
-                ยินยอมให้ระบบบันทึกเสียงพูดขณะฝึก Scenario เพื่อวิเคราะห์คุณภาพการสื่อสารด้วย Speech-to-Text และ NLP
-                ไฟล์เสียงจะถูกเข้ารหัสและเก็บเพื่อการวิจัยเท่านั้น
+                ยินยอมให้ระบบบันทึกเสียงพูดขณะฝึก Scenario เพื่อวิเคราะห์คุณภาพการสื่อสารด้วย
+                Speech-to-Text และ NLP ไฟล์เสียงจะถูกเข้ารหัสและเก็บเพื่อการวิจัยเท่านั้น
               </div>
             </div>
           </label>

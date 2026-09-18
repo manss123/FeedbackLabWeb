@@ -1,30 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { Loader2, User } from "lucide-react";
 import { LearnerShell } from "@/components/learner-shell";
-import {
-  getLearnerOverview,
-  markOnboardingCompletedLocally,
-  submitOnboarding,
-} from "@/lib/learner.functions";
+import { getLearnerOverview, submitOnboarding } from "@/lib/learner.functions";
 import { toast } from "sonner";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { waitForFirebaseUser } from "@/lib/firebase-auth";
-import { getUserDoc, upsertUserDoc } from "@/lib/firestore";
+import { upsertUserDoc } from "@/lib/firestore";
 import { logActivity } from "@/lib/activity";
+import { learnerAccessKey } from "@/lib/learner-access";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
-    meta: [
-      { title: "ข้อมูลพื้นฐาน — My Feedback Lab" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "ข้อมูลพื้นฐาน — My Feedback Lab" }, { name: "robots", content: "noindex" }],
   }),
   component: OnboardingPage,
 });
-
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -34,35 +27,6 @@ function OnboardingPage() {
     queryKey: ["learner-overview"],
     queryFn: () => getLearnerOverview(),
   });
-
-  useEffect(() => {
-    if (data?.state && !data.state.consent_completed) {
-      navigate({ to: "/consent", replace: true });
-    } else if (data?.state?.onboarding_completed) {
-      navigate({ to: "/dashboard", replace: true });
-    }
-  }, [data, navigate]);
-
-  // Same cross-device staleness guard as consent.tsx: the mock above is
-  // per-browser, so a user who already submitted onboarding elsewhere would
-  // otherwise sit through the form again here. Sync the mock (not just
-  // navigate) or dashboard.tsx's own onboarding_completed check — mock-only —
-  // immediately bounces them back to /onboarding in an infinite loop.
-  const { data: userDoc } = useQuery({
-    queryKey: ["onboarding-page-user-doc"],
-    queryFn: async () => {
-      const uid = getFirebaseAuth().currentUser?.uid ?? (await waitForFirebaseUser())?.uid;
-      return uid ? getUserDoc(uid) : null;
-    },
-  });
-
-  useEffect(() => {
-    if (userDoc?.profile) {
-      markOnboardingCompletedLocally();
-      queryClient.invalidateQueries({ queryKey: ["learner-overview"] });
-      navigate({ to: "/dashboard", replace: true });
-    }
-  }, [userDoc, navigate, queryClient]);
 
   const [form, setForm, clearFormDraft] = usePersistedState<{
     display_name: string;
@@ -92,38 +56,40 @@ function OnboardingPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const result = await submitOnboarding({
-        data: {
-          display_name: form.display_name.trim(),
-          faculty: form.faculty.trim(),
+      const user = getFirebaseAuth().currentUser ?? (await waitForFirebaseUser());
+      if (!user) throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");
+      const displayName = form.display_name.trim();
+      const faculty = form.faculty.trim();
+      const teachingExperienceYears = Number(form.teaching_experience_years);
+      if (
+        !displayName ||
+        !faculty ||
+        form.teaching_experience_years === "" ||
+        !Number.isFinite(teachingExperienceYears) ||
+        teachingExperienceYears < 0
+      ) {
+        throw new Error("กรุณากรอกข้อมูลพื้นฐานให้ครบถ้วน");
+      }
+      await upsertUserDoc(user.uid, {
+        profile: {
+          displayName,
+          email: user.email ?? "",
+          avatarUrl: user.photoURL,
+          faculty,
           department: form.department.trim() || null,
-          teaching_experience_years: Number(form.teaching_experience_years) || 0,
+          teachingExperienceYears,
         },
       });
-
-      // Best-effort real persistence of the form content itself — session/
-      // progress state (onboarding_completed, current_stage, points) stays
-      // in the localStorage mock above; this never blocks navigation.
-      const uid = getFirebaseAuth().currentUser?.uid ?? (await waitForFirebaseUser())?.uid;
-      if (uid) {
-        const authUser = getFirebaseAuth().currentUser;
-        try {
-          await upsertUserDoc(uid, {
-            profile: {
-              displayName: form.display_name.trim(),
-              email: authUser?.email ?? "",
-              avatarUrl: authUser?.photoURL ?? null,
-              faculty: form.faculty.trim(),
-              department: form.department.trim() || null,
-              teachingExperienceYears: Number(form.teaching_experience_years) || 0,
-            },
-          });
-          void logActivity({ type: "onboarding_completed" });
-        } catch (e) {
-          console.warn("Firestore profile write failed", e);
-        }
-      }
-
+      await queryClient.invalidateQueries({ queryKey: learnerAccessKey(user.uid) });
+      const result = await submitOnboarding({
+        data: {
+          display_name: displayName,
+          faculty,
+          department: form.department.trim() || null,
+          teaching_experience_years: teachingExperienceYears,
+        },
+      });
+      void logActivity({ type: "onboarding_completed" });
       return result;
     },
     onSuccess: () => {
@@ -197,9 +163,6 @@ function OnboardingPage() {
               className="w-40 rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-mint-primary"
             />
           </Field>
-
-
-
 
           <button
             type="submit"

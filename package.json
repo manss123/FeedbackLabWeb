@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "emu": "firebase emulators:start --only auth,functions,firestore,storage --export-on-exit=./emulator-data --import=./emulator-data",
+    "emu": "npm --prefix functions run build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:start --only auth,functions,firestore,storage --export-on-exit=./emulator-data --import=./emulator-data",
+    "emu:check": "node scripts/check-functions-emulator.mjs",
     "emu:export": "node scripts/emu-export.mjs"
   },
   "dependencies": {

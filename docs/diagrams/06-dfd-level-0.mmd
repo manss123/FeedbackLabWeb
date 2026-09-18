@@ -1,0 +1,30 @@
+flowchart LR
+  E1["Lecturer"]
+  P0(["0 FeedbackLab"])
+  E2["Research administrator"]
+  E3["Firebase Auth / Google"]
+  E4["Gemini"]
+  E5["Speech recognition service"]
+  E6["Google Cloud TTS"]
+  E1 -->|"Sign-in and setup input"| P0
+  E2 -->|"Admin sign-in request"| P0
+  P0 -->|"Setup and route status"| E1
+  P0 -->|"Identity status"| E2
+  P0 -->|"Authentication request"| E3
+  E3 -->|"Authenticated identity"| P0
+  E1 -->|"Answers and module actions"| P0
+  P0 -->|"Learning content and results"| E1
+  E1 -->|"Speech, text and reflection"| P0
+  P0 -->|"Scene, playback and coaching"| E1
+  P0 -->|"Transcript and coaching context"| E4
+  E4 -->|"AI response or failure"| P0
+  P0 -->|"Speech recognition input"| E5
+  E5 -->|"Transcript or recognition error"| P0
+  P0 -->|"NPC text and voice request"| E6
+  E6 -->|"NPC audio or service error"| P0
+  E1 -->|"Browser lifecycle observations"| P0
+  E2 -->|"Admin browser observations"| P0
+  P0 -->|"Activity delivery status"| E1
+  P0 -->|"Activity delivery status"| E2
+  E2 -->|"Authorized filters and export request"| P0
+  P0 -->|"Research views and files"| E2

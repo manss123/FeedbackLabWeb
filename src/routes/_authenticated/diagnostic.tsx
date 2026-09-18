@@ -1,3 +1,4 @@
+import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -22,10 +23,7 @@ import { logActivity } from "@/lib/activity";
 
 export const Route = createFileRoute("/_authenticated/diagnostic")({
   head: () => ({
-    meta: [
-      { title: "แบบทดสอบวินิจฉัย — My Feedback Lab" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "แบบทดสอบวินิจฉัย — My Feedback Lab" }, { name: "robots", content: "noindex" }],
   }),
   component: DiagnosticPage,
 });
@@ -63,6 +61,8 @@ function DiagnosticPage() {
     total: number;
   }>(null);
 
+  const timing = useLearningTiming("assessment", "diagnostic", "form", !isLoading && !result);
+
   const mutation = useMutation({
     mutationFn: async () =>
       submitDiagnostic({
@@ -74,10 +74,11 @@ function DiagnosticPage() {
         },
       }),
     onSuccess: (r) => {
+      timing.finish();
       setResult(r);
       clearAnswersDraft();
       qc.invalidateQueries({ queryKey: ["learner-overview"] });
-      void logActivity({ type: "diagnostic_submitted" });
+      void logActivity({ type: "diagnostic_submitted", runId: timing.runId() });
       toast.success("บันทึกผลการวินิจฉัยเรียบร้อย");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -196,18 +197,14 @@ function DiagnosticPage() {
                           type="radio"
                           className="sr-only"
                           checked={selected}
-                          onChange={() =>
-                            setAnswers((a) => ({ ...a, [q.id]: opt.score }))
-                          }
+                          onChange={() => setAnswers((a) => ({ ...a, [q.id]: opt.score }))}
                         />
                         <span
                           className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 ${
                             selected ? "border-mint-primary" : "border-slate-text/40"
                           }`}
                         >
-                          {selected && (
-                            <span className="h-2 w-2 rounded-full bg-mint-primary" />
-                          )}
+                          {selected && <span className="h-2 w-2 rounded-full bg-mint-primary" />}
                         </span>
                         <span className="text-sm text-slate-deep">{opt.label}</span>
                       </label>
@@ -227,9 +224,7 @@ function DiagnosticPage() {
           {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           ส่งคำตอบและสร้าง Learner Profile
         </button>
-        {!all && (
-          <p className="mt-3 text-center text-xs text-slate-text">กรุณาตอบให้ครบทุกข้อ</p>
-        )}
+        {!all && <p className="mt-3 text-center text-xs text-slate-text">กรุณาตอบให้ครบทุกข้อ</p>}
       </div>
     </LearnerShell>
   );

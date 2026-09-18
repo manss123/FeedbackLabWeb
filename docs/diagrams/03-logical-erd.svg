@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1150" viewBox="0 0 1400 1150" role="img" aria-labelledby="title desc"><title id="title">03  Logical ERD / Firestore Document Model</title><desc id="desc">Collections and embedded fields, not SQL tables. Dashed relationships are optional logical references.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">03  Logical ERD / Firestore Document Model</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Collections and embedded fields, not SQL tables. Dashed relationships are optional logical references.</text>
+<polyline points="55,112 1345,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="55" y="165" width="365" height="255" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="237.5" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">users / {uid}</text>
+<text x="237.5" y="225" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Document ID: Firebase UID</text>
+<text x="237.5" y="250" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">profile: map</text>
+<text x="237.5" y="275" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">consent: map</text>
+<text x="237.5" y="300" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Other declared result/progress maps:</text>
+<text x="237.5" y="325" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">not yet fully persisted in Firestore</text>
+<rect x="535" y="165" width="370" height="300" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="720.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">sessions / {sessionId}</text>
+<text x="720.0" y="225" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">userId / scenarioId</text>
+<text x="720.0" y="250" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">createdAt: server timestamp</text>
+<text x="720.0" y="275" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">stage1: transcript / duration / times</text>
+<text x="720.0" y="300" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">stage2: self-ratings / reflection</text>
+<text x="720.0" y="325" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">stage3: nullable AI scores / goals</text>
+<text x="720.0" y="350" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">stage4: round two / nullable AI scores</text>
+<rect x="535" y="575" width="370" height="450" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="720.0" y="607" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">activity_log / {eventId}</text>
+<text x="720.0" y="635" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">eventId / userId / type / schemaVersion</text>
+<text x="720.0" y="660" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">createdAt: server receipt timestamp</text>
+<text x="720.0" y="685" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">occurredAt: client event time</text>
+<text x="720.0" y="710" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">browserId / tabId / webSessionId</text>
+<text x="720.0" y="735" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">authTime / deviceCategory / browserFamily</text>
+<text x="720.0" y="760" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">runId / stepVisitId / pageVisitId</text>
+<text x="720.0" y="785" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">moduleId / scenarioId / sessionId</text>
+<text x="720.0" y="810" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">stepId / assessmentId / path / reason</text>
+<text x="720.0" y="835" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">startedAtClient / endedAtClient</text>
+<text x="720.0" y="860" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">elapsed / visible / active seconds</text>
+<text x="720.0" y="885" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">unobservedSeconds / visibility / idle</text>
+<rect x="1020" y="165" width="325" height="205" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1182.5" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">tts_logs / {logId}</text>
+<text x="1182.5" y="225" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">uid: Firebase UID or anonymous</text>
+<text x="1182.5" y="250" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">textLength / voiceName / modelName</text>
+<text x="1182.5" y="275" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">createdAt: server timestamp</text>
+<rect x="55" y="575" width="365" height="250" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="237.5" y="607" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Event grouping fields</text>
+<text x="237.5" y="635" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">browserId: browser storage identity</text>
+<text x="237.5" y="660" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">webSessionId: authenticated document</text>
+<text x="237.5" y="685" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">runId: learning / assessment attempt</text>
+<text x="237.5" y="710" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">stepVisitId: repeated step visit</text>
+<text x="237.5" y="735" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">These are NOT separate collections.</text>
+<rect x="1020" y="575" width="325" height="180" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1182.5" y="607" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Static source definitions</text>
+<text x="1182.5" y="635" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Module IDs / scenario IDs</text>
+<text x="1182.5" y="660" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Defined in application source</text>
+<text x="1182.5" y="685" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">No enforced foreign keys</text>
+<polyline points="420,280 535,280" fill="none" stroke="#647d88" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="535,280 525.0950818741205,284.78462087522354 525.0950818741205,275.21537912477646" fill="#647d88"/>
+<text x="427" y="260" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">0..1 to 0..N</text>
+<polyline points="235,420 235,510 475,510 475,710 535,710" fill="none" stroke="#647d88" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="535,710 525.0950818741205,714.7846208752235 525.0950818741205,705.2153791247765" fill="#647d88"/>
+<text x="265" y="496" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">UID reference</text>
+<polyline points="720,465 720,575" fill="none" stroke="#647d88" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="720,575 715.2153791247765,565.0950818741205 724.7846208752235,565.0950818741205" fill="#647d88"/>
+<text x="737" y="530" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">optional sessionId</text>
+<polyline points="420,815 535,815" fill="none" stroke="#647d88" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="435" y="800" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">group by</text>
+<text x="55" y="1070" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">users may be partial or absent while events/sessions exist. tts_logs may be anonymous and is deliberately unlinked.</text>
+<text x="55" y="1095" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Audio files are not stored. A VR session contains both rounds; full retry score history is not a separate entity.</text>
+<text x="55" y="1122" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1800" viewBox="0 0 1800 1800" role="img" aria-labelledby="title desc"><title id="title">DFD Level 2 - VR Practice and Coaching</title><desc id="desc">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">DFD Level 2 - VR Practice and Coaching</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</text>
+<polyline points="55,112 1745,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="720" y="299.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="331.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">3.1 Capture and replay</text>
+<text x="900.0" y="359.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Temporary audio / speech / manual text</text>
+<rect x="40" y="165" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="410,206 575,206 685,342.5 720,342.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,342.5 710.0950818741205,347.28462087522354 710.0950818741205,337.71537912477646" fill="#647d88"/>
+<text x="430" y="181" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Speech, text and reflection</text>
+<rect x="40" y="273" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="305" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E5  Speech recognition service</text>
+<polyline points="410,314 575,314 685,354.5 720,354.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,354.5 710.0950818741205,359.28462087522354 710.0950818741205,349.71537912477646" fill="#647d88"/>
+<text x="430" y="289" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Transcript or recognition</text>
+<text x="430" y="306" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">error</text>
+<rect x="40" y="381" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="413" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D5 Temporary audio memory</text>
+<polyline points="52,391 398,391" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,453 398,453" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,422 575,422 685,366.5 720,366.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,366.5 710.0950818741205,371.28462087522354 710.0950818741205,361.71537912477646" fill="#647d88"/>
+<text x="430" y="397" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Local playback audio</text>
+<rect x="1390" y="165" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E5  Speech recognition service</text>
+<polyline points="1080,348.5 1160,348.5 1260,206 1390,206" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,206 1380.0950818741205,210.78462087522354 1380.0950818741205,201.21537912477646" fill="#647d88"/>
+<text x="1180" y="181" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Speech recognition input</text>
+<rect x="1390" y="273" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="305" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D5 Temporary audio memory</text>
+<polyline points="1402,283 1748,283" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,345 1748,345" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,360.5 1160,360.5 1260,314 1390,314" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,314 1380.0950818741205,318.78462087522354 1380.0950818741205,309.21537912477646" fill="#647d88"/>
+<text x="1180" y="289" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Temporary audio blob</text>
+<polyline points="40,574 1760,574" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="738.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="770.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">3.2 Obtain coaching / NPC audio</text>
+<text x="900.0" y="798.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Real Gemini / TTS response or error</text>
+<rect x="40" y="604" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="636" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E4  Gemini</text>
+<polyline points="410,645 575,645 685,787.5 720,787.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,787.5 710.0950818741205,792.2846208752235 710.0950818741205,782.7153791247765" fill="#647d88"/>
+<text x="430" y="620" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">AI response or failure</text>
+<rect x="40" y="712" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="744" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E6  Google Cloud TTS</text>
+<polyline points="410,753 575,753 685,799.5 720,799.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,799.5 710.0950818741205,804.2846208752235 710.0950818741205,794.7153791247765" fill="#647d88"/>
+<text x="430" y="728" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">NPC audio or service error</text>
+<rect x="1390" y="604" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="636" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E4  Gemini</text>
+<polyline points="1080,781.5 1160,781.5 1260,645 1390,645" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,645 1380.0950818741205,649.7846208752235 1380.0950818741205,640.2153791247765" fill="#647d88"/>
+<text x="1180" y="620" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Transcript and coaching</text>
+<text x="1180" y="637" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">context</text>
+<rect x="1390" y="712" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="744" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E6  Google Cloud TTS</text>
+<polyline points="1080,793.5 1160,793.5 1260,753 1390,753" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,753 1380.0950818741205,757.7846208752235 1380.0950818741205,748.2153791247765" fill="#647d88"/>
+<text x="1180" y="728" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">NPC text and voice request</text>
+<rect x="1390" y="820" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="852" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D6 Firestore tts_logs</text>
+<polyline points="1402,830 1748,830" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,892 1748,892" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,805.5 1160,805.5 1260,861 1390,861" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,861 1380.0950818741205,865.7846208752235 1380.0950818741205,856.2153791247765" fill="#647d88"/>
+<text x="1180" y="836" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">TTS usage metadata</text>
+<polyline points="40,1013 1760,1013" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="1231.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="1263.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">3.3 Save stages and outcomes</text>
+<text x="900.0" y="1291.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Reflection / both rounds / stage times</text>
+<rect x="1390" y="1043" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1075" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="1080,1268.5 1160,1268.5 1260,1084 1390,1084" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1084 1380.0950818741205,1088.7846208752235 1380.0950818741205,1079.2153791247765" fill="#647d88"/>
+<text x="1180" y="1059" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Scene, playback and coaching</text>
+<rect x="1390" y="1151" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="1183" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D2 Firestore sessions</text>
+<polyline points="1402,1161 1748,1161" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,1223 1748,1223" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,1280.5 1160,1280.5 1260,1192 1390,1192" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1192 1380.0950818741205,1196.7846208752235 1380.0950818741205,1187.2153791247765" fill="#647d88"/>
+<text x="1180" y="1167" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">VR stage records</text>
+<rect x="1390" y="1259" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="1291" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D4 Local learner state</text>
+<polyline points="1402,1269 1748,1269" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,1331 1748,1331" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,1292.5 1160,1292.5 1260,1300 1390,1300" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1300 1380.0950818741205,1304.7846208752235 1380.0950818741205,1295.2153791247765" fill="#647d88"/>
+<text x="1180" y="1275" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Scenario completion progress</text>
+<rect x="1390" y="1367" width="370" height="82" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1575.0" y="1399" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">4.0 Usage event persistence</text>
+<polyline points="1080,1304.5 1160,1304.5 1260,1408 1390,1408" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1408 1380.0950818741205,1412.7846208752235 1380.0950818741205,1403.2153791247765" fill="#647d88"/>
+<text x="1180" y="1383" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">VR step and scenario events</text>
+<polyline points="40,1560 1760,1560" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<polyline points="900,409.5 900,738.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="900,738.5 895.2153791247765,728.5950818741205 904.7846208752235,728.5950818741205" fill="#647d88"/>
+<text x="920" y="445.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">Transcript, scenario context</text>
+<text x="920" y="465.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">and goals</text>
+<polyline points="1080,389.5 1112,389.5 1112,1321.5 1080,1321.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1080,1321.5 1089.9049181258795,1316.7153791247765 1089.9049181258795,1326.2846208752235" fill="#647d88"/>
+<text x="1085" y="416.5" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F2</text>
+<text x="55" y="1647" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F2: 3.1 Capture and replay -&gt; 3.3 Save stages and outcomes: Playback, manual input and reflection</text>
+<polyline points="900,848.5 900,1231.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="900,1231.5 895.2153791247765,1221.5950818741205 904.7846208752235,1221.5950818741205" fill="#647d88"/>
+<text x="920" y="884.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">Coaching / NPC audio or</text>
+<text x="920" y="904.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">failure</text>
+<text x="55" y="1735" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Blue: external entity. Green: process. Amber with double lines: data store. No entity-to-store or store-to-store shortcuts.</text>
+<text x="55" y="1772" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

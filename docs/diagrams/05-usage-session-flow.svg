@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1070" viewBox="0 0 1400 1070" role="img" aria-labelledby="title desc"><title id="title">05  Usage Logging and Concurrent Sessions</title><desc id="desc">Implemented event pipeline and research interpretation, including offline retry and account isolation.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">05  Usage Logging and Concurrent Sessions</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Implemented event pipeline and research interpretation, including offline retry and account isolation.</text>
+<polyline points="55,112 1345,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="55" y="160" width="370" height="120" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="240.0" y="192" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Browser A / Tab 1</text>
+<text x="240.0" y="220" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Participant UID + random browserId</text>
+<text x="240.0" y="245" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Unique document webSessionId</text>
+<rect x="515" y="160" width="370" height="120" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="700.0" y="192" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Browser A / Tab 2</text>
+<text x="700.0" y="220" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Same browserId for same account</text>
+<text x="700.0" y="245" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Different tabId and webSessionId</text>
+<rect x="975" y="160" width="370" height="120" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1160.0" y="192" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Browser B / another device</text>
+<text x="1160.0" y="220" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Different browser storage identity</text>
+<text x="1160.0" y="245" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Physical hardware is not verified</text>
+<rect x="330" y="375" width="740" height="120" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="700.0" y="407" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Capture observations and measured intervals</text>
+<text x="700.0" y="435" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Page visits / step visits / assessments / focus / visibility / idle</text>
+<text x="700.0" y="460" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">30-second heartbeat; client time plus monotonic durations</text>
+<rect x="55" y="610" width="370" height="130" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="240.0" y="642" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Durable per-event queue</text>
+<text x="240.0" y="670" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Stable event ID and original UID</text>
+<text x="240.0" y="695" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Retry only under the same account</text>
+<text x="240.0" y="720" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">localStorage; memory if unavailable</text>
+<rect x="515" y="610" width="370" height="130" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="700.0" y="642" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Immutable Firestore event</text>
+<text x="700.0" y="670" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Server createdAt on first write</text>
+<text x="700.0" y="695" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Existing event ID verifies delivery</text>
+<text x="700.0" y="720" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">No duplicated retry record</text>
+<rect x="975" y="610" width="370" height="130" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1160.0" y="642" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Research analysis</text>
+<text x="1160.0" y="670" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Group by user + webSessionId</text>
+<text x="1160.0" y="695" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Compare bounded heartbeat intervals</text>
+<text x="1160.0" y="720" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Same-browser / other-browser peers</text>
+<polyline points="240,280 240,325 700,325 700,375" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="700,375 695.2153791247765,365.0950818741206 704.7846208752235,365.0950818741206" fill="#647d88"/>
+<polyline points="700,280 700,325 700,325 700,375" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="700,375 695.2153791247765,365.0950818741206 704.7846208752235,365.0950818741206" fill="#647d88"/>
+<polyline points="1160,280 1160,325 700,325 700,375" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="700,375 695.2153791247765,365.0950818741206 704.7846208752235,365.0950818741206" fill="#647d88"/>
+<polyline points="330,435 240,435 240,610" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="240,610 235.21537912477646,600.0950818741205 244.78462087522354,600.0950818741205" fill="#647d88"/>
+<text x="65" y="535" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">queue before network send</text>
+<polyline points="425,675 515,675" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="515,675 505.0950818741206,679.7846208752235 505.0950818741206,670.2153791247765" fill="#647d88"/>
+<text x="447" y="660" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">retry</text>
+<polyline points="885,675 975,675" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="975,675 965.0950818741205,679.7846208752235 965.0950818741205,670.2153791247765" fill="#647d88"/>
+<text x="895" y="660" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">admin read</text>
+<rect x="260" y="840" width="880" height="130" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="700.0" y="872" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Interpretation limits</text>
+<text x="700.0" y="900" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Active proxy = visible + focused + interaction in the preceding 60 seconds.</text>
+<text x="700.0" y="925" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Timer gaps over 45 seconds are unobserved, not engagement.</text>
+<text x="700.0" y="950" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">No end event does not prove an open session; cross-device clocks can differ.</text>
+<polyline points="1160,740 1160,805 700,805 700,840" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="700,840 695.2153791247765,830.0950818741205 704.7846208752235,830.0950818741205" fill="#647d88"/>
+<text x="55" y="1005" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Only positive overlaps of valid heartbeat intervals up to 45 seconds are counted. Historical missing times remain null.</text>
+<text x="55" y="1042" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

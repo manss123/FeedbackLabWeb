@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1060" viewBox="0 0 1400 1060" role="img" aria-labelledby="title desc"><title id="title">04  User Use Cases</title><desc id="desc">Actor associations and current user capabilities; planned certificate issuance is explicitly separated.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">04  User Use Cases</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Actor associations and current user capabilities; planned certificate issuance is explicitly separated.</text>
+<polyline points="55,112 1345,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="50" y="175" width="250" height="100" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="175.0" y="207" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">University lecturer</text>
+<text x="175.0" y="235" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Participant actor</text>
+<rect x="1100" y="175" width="250" height="100" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1225.0" y="207" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Research administrator</text>
+<text x="1225.0" y="235" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Authorized admin actor</text>
+<ellipse cx="605.0" cy="220.0" rx="220.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="605.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Sign in and complete setup</text>
+<text x="605.0" y="225" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Google / consent / profile</text>
+<polyline points="300,225 340,225 340,220 385,220" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="605.0" cy="375.0" rx="220.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="605.0" y="352" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Study and take assessments</text>
+<text x="605.0" y="380" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Modules / pretest / posttest</text>
+<polyline points="300,225 340,225 340,375 385,375" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="605.0" cy="530.0" rx="220.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="605.0" y="507" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Practice with Unity avatar</text>
+<text x="605.0" y="535" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Speech or manually entered feedback</text>
+<polyline points="300,225 340,225 340,530 385,530" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="605.0" cy="685.0" rx="220.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="605.0" y="662" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Review and improve feedback</text>
+<text x="605.0" y="690" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Local audio / reflection / AI coaching</text>
+<polyline points="300,225 340,225 340,685 385,685" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="605.0" cy="840.0" rx="220.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="605.0" y="817" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">View progress and submit survey</text>
+<text x="605.0" y="845" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Current scores and eligibility</text>
+<polyline points="300,225 340,225 340,840 385,840" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="1135.0" cy="420.0" rx="210.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1135.0" y="397" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Review research records</text>
+<text x="1135.0" y="425" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Participant / learning / activity</text>
+<polyline points="1225,275 1370,275 1370,420 1345,420" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="1135.0" cy="600.0" rx="210.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1135.0" y="577" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Inspect session and timing data</text>
+<text x="1135.0" y="605" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Observed overlaps / step durations</text>
+<polyline points="1225,275 1370,275 1370,600 1345,600" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="1135.0" cy="780.0" rx="210.0" ry="55.0" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1135.0" y="757" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Export filtered datasets</text>
+<text x="1135.0" y="785" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">CSV / JSON / codebook</text>
+<polyline points="1225,275 1370,275 1370,780 1345,780" fill="none" stroke="#647d88" stroke-width="2"/>
+<ellipse cx="1135.0" cy="945.0" rx="210.0" ry="40.0" fill="#faf1f7" stroke="#9c6184" stroke-width="2"/>
+<text x="1135.0" y="937" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Issue certificate [PLANNED]</text>
+<polyline points="175,275 175,945 925,945" fill="none" stroke="#647d88" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="55" y="1010" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Passive telemetry is a supporting system function, not an action the lecturer must perform. No audio-upload use case.</text>
+<text x="55" y="1032" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

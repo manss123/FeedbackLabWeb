@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1584" viewBox="0 0 1800 1584" role="img" aria-labelledby="title desc"><title id="title">DFD Level 2 - Research Reporting</title><desc id="desc">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">DFD Level 2 - Research Reporting</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</text>
+<polyline points="55,112 1745,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="720" y="353.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="385.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">5.1 Authorize and read</text>
+<text x="900.0" y="413.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Callable requireAdmin / Admin SDK</text>
+<rect x="40" y="165" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="410,206 575,206 685,390.5 720,390.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,390.5 710.0950818741205,395.28462087522354 710.0950818741205,385.71537912477646" fill="#647d88"/>
+<text x="430" y="181" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Authorized filters and</text>
+<text x="430" y="198" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">export request</text>
+<rect x="40" y="273" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="305" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D1 Firestore users</text>
+<polyline points="52,283 398,283" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,345 398,345" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,314 575,314 685,402.5 720,402.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,402.5 710.0950818741205,407.28462087522354 710.0950818741205,397.71537912477646" fill="#647d88"/>
+<text x="430" y="289" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Participant records</text>
+<rect x="40" y="381" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="413" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D2 Firestore sessions</text>
+<polyline points="52,391 398,391" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,453 398,453" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,422 575,422 685,414.5 720,414.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,414.5 710.0950818741205,419.28462087522354 710.0950818741205,409.71537912477646" fill="#647d88"/>
+<text x="430" y="397" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">VR session records</text>
+<rect x="40" y="489" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="521" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D3 Firestore activity_log</text>
+<polyline points="52,499 398,499" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,561 398,561" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,530 575,530 685,426.5 720,426.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,426.5 710.0950818741205,431.28462087522354 710.0950818741205,421.71537912477646" fill="#647d88"/>
+<text x="430" y="505" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Activity and timing records</text>
+<polyline points="40,682 1760,682" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="792.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="824.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">5.2 Transform and filter</text>
+<text x="900.0" y="852.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Participants / VR / events / timed steps</text>
+<polyline points="40,1013 1760,1013" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="1123.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="1155.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">5.3 Present and export</text>
+<text x="900.0" y="1183.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Web overlap / CSV / JSON / codebook</text>
+<rect x="1390" y="1043" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1075" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="1080,1178.5 1160,1178.5 1260,1084 1390,1084" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1084 1380.0950818741205,1088.7846208752235 1380.0950818741205,1079.2153791247765" fill="#647d88"/>
+<text x="1180" y="1059" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Research views and files</text>
+<polyline points="40,1344 1760,1344" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<polyline points="900,463.5 900,792.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="900,792.5 895.2153791247765,782.5950818741205 904.7846208752235,782.5950818741205" fill="#647d88"/>
+<text x="920" y="499.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">Authorized records and filter</text>
+<text x="920" y="519.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">settings</text>
+<polyline points="900,902.5 900,1123.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="900,1123.5 895.2153791247765,1113.5950818741205 904.7846208752235,1113.5950818741205" fill="#647d88"/>
+<text x="920" y="938.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">Filtered research rows and</text>
+<text x="920" y="958.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">metadata</text>
+<text x="55" y="1519" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Blue: external entity. Green: process. Amber with double lines: data store. No entity-to-store or store-to-store shortcuts.</text>
+<text x="55" y="1556" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

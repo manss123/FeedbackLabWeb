@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="990" viewBox="0 0 1400 990" role="img" aria-labelledby="title desc"><title id="title">02  System Framework</title><desc id="desc">Intended learning sequence with implemented research observation; prerequisites are not all server-enforced.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">02  System Framework</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Intended learning sequence with implemented research observation; prerequisites are not all server-enforced.</text>
+<polyline points="55,112 1345,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="55" y="160" width="350" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="230.0" y="192" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Participant setup</text>
+<text x="230.0" y="220" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Google sign-in / consent / profile</text>
+<rect x="525" y="160" width="350" height="110" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="700.0" y="192" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Baseline assessment</text>
+<text x="700.0" y="220" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Current result store: localStorage</text>
+<rect x="995" y="160" width="350" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1170.0" y="192" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">5E learning modules</text>
+<text x="1170.0" y="220" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Engage / Explore / Explain</text>
+<text x="1170.0" y="245" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Elaborate / Evaluate</text>
+<rect x="995" y="350" width="350" height="115" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1170.0" y="382" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">1  Concrete experience</text>
+<text x="1170.0" y="410" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Observe scenario</text>
+<text x="1170.0" y="435" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Speak / transcribe / type feedback</text>
+<rect x="525" y="350" width="350" height="115" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="700.0" y="382" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">2  Reflective observation</text>
+<text x="700.0" y="410" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Replay temporary audio</text>
+<text x="700.0" y="435" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Self-rate and reflect</text>
+<rect x="55" y="350" width="350" height="115" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="230.0" y="382" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">3  Abstract conceptualization</text>
+<text x="230.0" y="410" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Real AI coaching if available</text>
+<text x="230.0" y="435" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Choose improvement goals</text>
+<rect x="55" y="550" width="350" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="230.0" y="582" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">4  Active experimentation</text>
+<text x="230.0" y="610" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Try again / compare available results</text>
+<rect x="525" y="550" width="350" height="110" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="700.0" y="582" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Post-assessment and survey</text>
+<text x="700.0" y="610" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Current result store: localStorage</text>
+<rect x="995" y="550" width="350" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="1170.0" y="582" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Progress / score summary</text>
+<text x="1170.0" y="610" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Certificate issuance is planned</text>
+<rect x="310" y="780" width="780" height="105" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="700.0" y="812" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Research observation across the learning journey</text>
+<text x="700.0" y="840" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">VR stages + immutable activity + timed steps + web-session intervals</text>
+<polyline points="405,215 525,215" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="525,215 515.0950818741205,219.78462087522354 515.0950818741205,210.21537912477646" fill="#647d88"/>
+<polyline points="875,215 995,215" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="995,215 985.0950818741205,219.78462087522354 985.0950818741205,210.21537912477646" fill="#647d88"/>
+<polyline points="1170,270 1170,350" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1170,350 1165.2153791247765,340.0950818741206 1174.7846208752235,340.0950818741206" fill="#647d88"/>
+<polyline points="995,405 875,405" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="875,405 884.9049181258795,400.21537912477646 884.9049181258795,409.78462087522354" fill="#647d88"/>
+<polyline points="525,405 405,405" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="405,405 414.9049181258794,400.21537912477646 414.9049181258794,409.78462087522354" fill="#647d88"/>
+<polyline points="230,465 230,550" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="230,550 225.21537912477646,540.0950818741205 234.78462087522354,540.0950818741205" fill="#647d88"/>
+<polyline points="405,605 525,605" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="525,605 515.0950818741205,609.7846208752235 515.0950818741205,600.2153791247765" fill="#647d88"/>
+<polyline points="875,605 995,605" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="995,605 985.0950818741205,609.7846208752235 985.0950818741205,600.2153791247765" fill="#647d88"/>
+<polyline points="230,660 230,715 1370,715 1370,405 1345,405" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1345,405 1354.9049181258795,400.21537912477646 1354.9049181258795,409.78462087522354" fill="#647d88"/>
+<text x="560" y="705" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">next scenario / practice</text>
+<polyline points="700,660 700,780" fill="none" stroke="#647d88" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="700,780 695.2153791247765,770.0950818741205 704.7846208752235,770.0950818741205" fill="#647d88"/>
+<text x="710" y="752" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">timing events</text>
+<text x="55" y="929" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Module 1 has detailed activities; Modules 2-5 still contain placeholder content. Missing AI output remains unavailable.</text>
+<text x="55" y="962" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

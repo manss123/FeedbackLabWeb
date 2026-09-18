@@ -1,0 +1,20 @@
+flowchart TB
+  E1["Lecturer"]
+  P11(["1.1 Authenticate identity"])
+  E2["Research administrator"]
+  P13(["1.3 Resolve access and log"])
+  E3["Firebase Auth / Google"]
+  P12(["1.2 Read and save setup"])
+  D1[("D1 Firestore users")]
+  P4(["4.0 Usage event persistence"])
+  E1 -->|"Sign-in and setup input"| P11
+  E2 -->|"Admin sign-in request"| P11
+  P13 -->|"Setup and route status"| E1
+  P13 -->|"Identity status"| E2
+  P11 -->|"Authentication request"| E3
+  E3 -->|"Authenticated identity"| P11
+  P12 -->|"Profile and consent"| D1
+  D1 -->|"Stored setup status"| P12
+  P13 -->|"Identity milestone events"| P4
+  P11 -->|"Authenticated UID and setup input"| P12
+  P12 -->|"Stored setup state / read error"| P13

@@ -1,0 +1,15 @@
+flowchart TB
+  E2["Research administrator"]
+  P51(["5.1 Authorize and read"])
+  P53(["5.3 Present and export"])
+  D1[("D1 Firestore users")]
+  D2[("D2 Firestore sessions")]
+  D3[("D3 Firestore activity_log")]
+  P52(["5.2 Transform and filter"])
+  E2 -->|"Authorized filters and export request"| P51
+  P53 -->|"Research views and files"| E2
+  D1 -->|"Participant records"| P51
+  D2 -->|"VR session records"| P51
+  D3 -->|"Activity and timing records"| P51
+  P51 -->|"Authorized records and filter settings"| P52
+  P52 -->|"Filtered research rows and metadata"| P53

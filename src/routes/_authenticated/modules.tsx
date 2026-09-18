@@ -1,6 +1,10 @@
+import { TrackedYouTube } from "@/components/tracked-youtube";
+import { LEARNING_VIDEOS } from "@/lib/learning-videos";
+import { deferredEffect } from "@/lib/deferred-effect";
+import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Loader2,
   BookOpenText,
@@ -31,10 +35,7 @@ import badgeM5 from "@/assets/badge-m5.png";
 
 export const Route = createFileRoute("/_authenticated/modules")({
   head: () => ({
-    meta: [
-      { title: "บทเรียน 5 โมดูล — My Feedback Lab" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "บทเรียน 5 โมดูล — My Feedback Lab" }, { name: "robots", content: "noindex" }],
   }),
   component: ModulesPage,
 });
@@ -130,7 +131,8 @@ const CONCEPT_NODES: ConceptNode[] = [
     icon: "📖",
     title: "ความหมายของ Constructive Feedback",
     body: "ข้อมูลที่สะท้อนช่องว่างระหว่างสถานะปัจจุบันของผู้เรียนกับเป้าหมาย พร้อมชี้แนวทางพัฒนา — ไม่ใช่การประเมินตัดสิน",
-    example: "ตัวอย่าง: “ย่อหน้าที่ 2 ยังขาดหลักฐานสนับสนุน ลองเพิ่มสถิติจากแหล่งที่คุณอ้างไว้ในบทที่ 1 ดู”",
+    example:
+      "ตัวอย่าง: “ย่อหน้าที่ 2 ยังขาดหลักฐานสนับสนุน ลองเพิ่มสถิติจากแหล่งที่คุณอ้างไว้ในบทที่ 1 ดู”",
   },
   {
     id: "importance",
@@ -159,8 +161,7 @@ interface QuizItem {
 const QUIZ_ITEMS: QuizItem[] = [
   {
     id: "q1",
-    scenario:
-      "นักศึกษาส่งรายงานที่มีจุดแข็งชัดเจนแต่บทสรุปยังอ่อน คุณจะพูดกับเขาว่าอย่างไร",
+    scenario: "นักศึกษาส่งรายงานที่มีจุดแข็งชัดเจนแต่บทสรุปยังอ่อน คุณจะพูดกับเขาว่าอย่างไร",
     options: [
       {
         text: "“บทสรุปแย่มาก เขียนใหม่ทั้งหมด”",
@@ -170,8 +171,7 @@ const QUIZ_ITEMS: QuizItem[] = [
       {
         text: "“การวิเคราะห์ในบทที่ 2 หนักแน่นมาก ลองต่อยอดตรรกะนั้นให้บทสรุปชัดขึ้นได้ไหม”",
         correct: true,
-        explanation:
-          "ยอมรับจุดแข็ง · เจาะจง · เสนอทางเดินต่อ — ครบหลัก Constructive",
+        explanation: "ยอมรับจุดแข็ง · เจาะจง · เสนอทางเดินต่อ — ครบหลัก Constructive",
       },
       {
         text: "“ก็โอเคนะ ลองแก้บทสรุปดู”",
@@ -182,8 +182,7 @@ const QUIZ_ITEMS: QuizItem[] = [
   },
   {
     id: "q2",
-    scenario:
-      "นักศึกษานำเสนอด้วยความประหม่า เนื้อหาถูกแต่ speaking pace เร็วเกินไป",
+    scenario: "นักศึกษานำเสนอด้วยความประหม่า เนื้อหาถูกแต่ speaking pace เร็วเกินไป",
     options: [
       {
         text: "“พูดเร็วเกินไป ฟังไม่ทัน”",
@@ -204,8 +203,7 @@ const QUIZ_ITEMS: QuizItem[] = [
   },
   {
     id: "q3",
-    scenario:
-      "นักศึกษามาถามงานที่ยังไม่เสร็จและดูท้อ อยากได้กำลังใจก่อน",
+    scenario: "นักศึกษามาถามงานที่ยังไม่เสร็จและดูท้อ อยากได้กำลังใจก่อน",
     options: [
       {
         text: "เริ่มจากชี้ข้อผิดพลาดทันทีเพื่อประหยัดเวลา",
@@ -309,8 +307,8 @@ function ModulesPage() {
           </div>
           <h1 className="text-3xl font-bold">บทเรียน Constructive Feedback</h1>
           <p className="text-slate-text">
-            แต่ละโมดูลใช้เวลาประมาณ 10 นาที ผ่าน 5 กิจกรรมตามหลัก 5E
-            (Engage · Explore · Explain · Elaborate · Evaluate) พร้อม Badge เมื่อจบโมดูล
+            แต่ละโมดูลใช้เวลาประมาณ 10 นาที ผ่าน 5 กิจกรรมตามหลัก 5E (Engage · Explore · Explain ·
+            Elaborate · Evaluate) พร้อม Badge เมื่อจบโมดูล
           </p>
         </div>
 
@@ -334,7 +332,8 @@ function ModulesPage() {
                   key={m.id}
                   className="inline-flex items-center gap-1.5 rounded-full bg-mint-light px-3 py-1 text-xs font-semibold text-mint-primary"
                 >
-                  <img src={m.badgeImage} alt="" className="h-4 w-4 rounded-full object-cover" /> {m.badge}
+                  <img src={m.badgeImage} alt="" className="h-4 w-4 rounded-full object-cover" />{" "}
+                  {m.badge}
                 </span>
               ))}
             </div>
@@ -362,7 +361,11 @@ function ModulesPage() {
                 <div
                   className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br p-1 ${m.color} ${locked ? "grayscale opacity-60" : ""}`}
                 >
-                  <img src={m.badgeImage} alt={m.badge} className="h-full w-full object-contain drop-shadow-sm" />
+                  <img
+                    src={m.badgeImage}
+                    alt={m.badge}
+                    className="h-full w-full object-contain drop-shadow-sm"
+                  />
                 </div>
                 <div className="flex-1">
                   <div className="mb-1 flex items-center gap-2 text-xs text-slate-text">
@@ -445,36 +448,32 @@ function ModuleRunner({
   const [reflectionSaved, setReflectionSaved] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
 
-  // Time tracking per stage
-  const stageStartRef = useRef<number>(Date.now());
-  const timesRef = useRef<Record<string, number>>({});
-  useEffect(() => {
-    stageStartRef.current = Date.now();
-  }, [stage]);
-  const recordTime = (s: StageId) => {
-    timesRef.current[s] = Math.round((Date.now() - stageStartRef.current) / 1000);
-  };
+  const timing = useLearningTiming("module", moduleId, stage);
 
   // Fires once per open, including re-opening an already-completed module —
   // a re-engagement signal is informative, not noise, at this data volume.
-  useEffect(() => {
-    void logActivity({ type: "module_started", moduleId });
+  useEffect(
+    () =>
+      deferredEffect(() => {
+        void logActivity({ type: "module_started", moduleId, runId: timing.runId() });
+      }),
+    // One start event per mounted run; step changes retain the run.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [],
+  );
 
   const mutation = useMutation({
     mutationFn: (id: string) => completeModule({ data: { module_id: id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["learner-overview"] });
-      void logActivity({ type: "module_completed", moduleId });
+      void logActivity({ type: "module_completed", moduleId, runId: timing.runId() });
     },
   });
 
   // ----- Derived gating -----
   const engageDone = videoDone;
   const exploreDone = openedNodes.size >= 3;
-  const explainDone =
-    Object.keys(quizAnswers).length >= QUIZ_ITEMS.length;
+  const explainDone = Object.keys(quizAnswers).length >= QUIZ_ITEMS.length;
   const elaborateDone = matchedIds.size >= MATCH_PAIRS.length;
   const evaluateDone = reflectionSaved;
 
@@ -518,8 +517,16 @@ function ModuleRunner({
   };
 
   const nextStage = () => {
-    recordTime(stage);
-    const order: StageId[] = ["intro", "engage", "explore", "explain", "elaborate", "evaluate", "summary"];
+    timing.finish("next_step");
+    const order: StageId[] = [
+      "intro",
+      "engage",
+      "explore",
+      "explain",
+      "elaborate",
+      "evaluate",
+      "summary",
+    ];
     const i = order.indexOf(stage);
     if (i < order.length - 1) {
       const next = order[i + 1];
@@ -528,6 +535,8 @@ function ModuleRunner({
         // trigger completion
         if (!alreadyCompleted) {
           mutation.mutate(moduleId);
+        } else {
+          void logActivity({ type: "module_completed", moduleId, runId: timing.runId() });
         }
         setTimeout(() => setShowBadge(true), 400);
       }
@@ -535,7 +544,15 @@ function ModuleRunner({
   };
 
   const prevStage = () => {
-    const order: StageId[] = ["intro", "engage", "explore", "explain", "elaborate", "evaluate", "summary"];
+    const order: StageId[] = [
+      "intro",
+      "engage",
+      "explore",
+      "explain",
+      "elaborate",
+      "evaluate",
+      "summary",
+    ];
     const i = order.indexOf(stage);
     if (i > 0) setStage(order[i - 1]);
   };
@@ -598,14 +615,14 @@ function ModuleRunner({
         </div>
 
         {/* Screens */}
-        {stage === "intro" && (
-          <IntroScreen meta={meta} onStart={nextStage} isM1={isM1} />
-        )}
+        {stage === "intro" && <IntroScreen meta={meta} onStart={nextStage} isM1={isM1} />}
 
         {isM1 ? (
           <>
             {stage === "engage" && (
               <EngageScreen
+                moduleId={moduleId}
+                runId={timing.runId()}
                 videoDone={videoDone}
                 setVideoDone={setVideoDone}
                 note={videoNote}
@@ -779,7 +796,11 @@ function IntroScreen({
   return (
     <div className="animate-fade-in">
       <div className={`mb-6 rounded-3xl bg-gradient-to-br p-8 ${meta.color}`}>
-        <img src={meta.badgeImage} alt={meta.badge} className="mb-4 h-24 w-24 object-contain drop-shadow-md" />
+        <img
+          src={meta.badgeImage}
+          alt={meta.badge}
+          className="mb-4 h-24 w-24 object-contain drop-shadow-md"
+        />
         <div className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-deep/70">
           Module {meta.order} · {meta.subtitle}
         </div>
@@ -826,86 +847,52 @@ function IntroScreen({
 }
 
 function EngageScreen({
+  moduleId,
+  runId,
   videoDone,
   setVideoDone,
   note,
   setNote,
 }: {
+  moduleId: string;
+  runId: string;
   videoDone: boolean;
   setVideoDone: (v: boolean) => void;
   note: string;
   setNote: (v: string) => void;
 }) {
-  // Mock video with a 6-second timer that auto-completes
-  const [elapsed, setElapsed] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  useEffect(() => {
-    if (!playing) return;
-    const t = setInterval(() => {
-      setElapsed((e) => {
-        if (e + 1 >= 6) {
-          clearInterval(t);
-          setVideoDone(true);
-          setPlaying(false);
-          return 6;
-        }
-        return e + 1;
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, [playing, setVideoDone]);
+  const video = LEARNING_VIDEOS[moduleId];
 
   return (
     <section className="animate-fade-in">
       <div className="mb-2 text-xs font-bold uppercase tracking-wider text-mint-primary">
         กิจกรรมที่ 1 · Engage
       </div>
-      <h2 className="mb-1 text-2xl font-bold text-slate-deep">
-        Video: อาจารย์ A vs อาจารย์ B
-      </h2>
+      <h2 className="mb-1 text-2xl font-bold text-slate-deep">Video: อาจารย์ A vs อาจารย์ B</h2>
       <p className="mb-6 text-sm text-slate-text">
         ชมสถานการณ์สั้น ๆ ที่อาจารย์สองท่านให้ Feedback ต่างสไตล์ แล้วสังเกตความรู้สึกของนักศึกษา
       </p>
 
-      <div className="relative mb-4 aspect-video overflow-hidden rounded-2xl bg-slate-deep">
-        <div className="absolute inset-0 flex items-center justify-center">
-          {!playing && !videoDone ? (
-            <button
-              onClick={() => setPlaying(true)}
-              className="flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 font-bold text-slate-deep hover:bg-white"
-            >
-              <PlayCircle className="h-6 w-6" /> เล่นวิดีโอ (ตัวอย่าง 6 วินาที)
-            </button>
-          ) : (
-            <div className="w-full px-8 text-center text-white">
-              <div className="mb-4 text-sm opacity-70">Scenario Video (Mock)</div>
-              <div className="grid grid-cols-2 gap-4">
-                <div
-                  className={`rounded-xl border p-4 transition-all ${
-                    elapsed < 3 ? "border-emerald-400 bg-emerald-400/10" : "border-white/20 opacity-50"
-                  }`}
-                >
-                  <div className="mb-1 text-xs opacity-70">อาจารย์ A</div>
-                  <div className="text-lg">“งานคุณมีจุดแข็ง...ลองต่อยอด”</div>
-                </div>
-                <div
-                  className={`rounded-xl border p-4 transition-all ${
-                    elapsed >= 3 ? "border-rose-400 bg-rose-400/10" : "border-white/20 opacity-50"
-                  }`}
-                >
-                  <div className="mb-1 text-xs opacity-70">อาจารย์ B</div>
-                  <div className="text-lg">“ยังไม่ได้เรื่อง แก้ใหม่ทั้งหมด”</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="absolute bottom-0 left-0 h-1 bg-mint-primary transition-all" style={{ width: `${(elapsed / 6) * 100}%` }} />
-      </div>
+      {video?.test && (
+        <p className="mb-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+          วิดีโอทดสอบระบบ YouTube — ยังไม่ใช่เนื้อหาบทเรียน อาจารย์ A vs อาจารย์ B
+        </p>
+      )}
+      {video ? (
+        <TrackedYouTube
+          videoId={video.id}
+          isTest={video.test}
+          moduleId={moduleId}
+          runId={runId}
+          onEnded={() => setVideoDone(true)}
+        />
+      ) : (
+        <p role="status">ยังไม่มีวิดีโอสำหรับบทเรียนนี้</p>
+      )}
 
       {videoDone && (
         <div className="mb-4 flex items-center gap-2 rounded-xl bg-mint-light px-4 py-3 text-sm font-semibold text-mint-primary">
-          <CheckCircle2 className="h-4 w-4" /> ดูวิดีโอจบแล้ว — สังเกตความต่างของทั้งสองสไตล์
+          <CheckCircle2 className="h-4 w-4" /> วิดีโอเล่นถึงจุดสิ้นสุดแล้ว
         </div>
       )}
 
@@ -1096,11 +1083,8 @@ function ExplainScreen({
         <div className="mt-5 flex items-center justify-between rounded-2xl bg-mint-light p-4">
           <span className="text-sm font-semibold text-slate-deep">คะแนน Mini Quiz</span>
           <span className="text-xl font-bold text-mint-primary">
-            {QUIZ_ITEMS.reduce(
-              (acc, q) => acc + (q.options[answers[q.id]]?.correct ? 1 : 0),
-              0,
-            )}{" "}
-            / {QUIZ_ITEMS.length}
+            {QUIZ_ITEMS.reduce((acc, q) => acc + (q.options[answers[q.id]]?.correct ? 1 : 0), 0)} /{" "}
+            {QUIZ_ITEMS.length}
           </span>
         </div>
       )}
@@ -1135,7 +1119,11 @@ function ElaborateScreen({
   };
 
   const principleMonograms: Record<string, string> = {
-    p1: "S", p2: "E", p3: "M", p4: "A", p5: "T",
+    p1: "S",
+    p2: "E",
+    p3: "M",
+    p4: "A",
+    p5: "T",
   };
   const descMonograms = ["I", "II", "III", "IV", "V"];
 
@@ -1334,8 +1322,8 @@ function EvaluateScreen({
       </div>
       <h2 className="mb-1 text-2xl font-bold text-slate-deep">Reflection</h2>
       <p className="mb-6 text-sm text-slate-text">
-        การเขียนสะท้อนคิดช่วยตกผลึกความรู้ — งานวิจัยชี้ว่าพิมพ์ดีกว่าอัดเสียงในการกระตุ้น
-        deep reflection
+        การเขียนสะท้อนคิดช่วยตกผลึกความรู้ — งานวิจัยชี้ว่าพิมพ์ดีกว่าอัดเสียงในการกระตุ้น deep
+        reflection
       </p>
 
       <div className="mb-4 rounded-2xl border border-border bg-background p-5">
@@ -1354,7 +1342,8 @@ function EvaluateScreen({
           <span>{reflection.length} ตัวอักษร</span>
           {keywordsFound.length > 0 && (
             <span className="inline-flex items-center gap-1 font-semibold text-mint-primary">
-              <Sparkles className="h-3 w-3" /> ตรวจพบคำเชิงบวก: {keywordsFound.slice(0, 5).join(", ")}
+              <Sparkles className="h-3 w-3" /> ตรวจพบคำเชิงบวก:{" "}
+              {keywordsFound.slice(0, 5).join(", ")}
             </span>
           )}
         </div>
@@ -1364,9 +1353,7 @@ function EvaluateScreen({
         onClick={onSave}
         disabled={saved}
         className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all ${
-          saved
-            ? "bg-mint-light text-mint-primary"
-            : "bg-slate-deep text-white hover:opacity-90"
+          saved ? "bg-mint-light text-mint-primary" : "bg-slate-deep text-white hover:opacity-90"
         }`}
       >
         {saved ? (
@@ -1410,14 +1397,16 @@ function SummaryScreen({
       {showBadge && (
         <div className="mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-amber-100 via-mint-light to-emerald-100 p-8 text-center">
           <div className="animate-scale-in">
-            <img src={meta.badgeImage} alt={meta.badge} className="mx-auto mb-2 h-32 w-32 object-contain drop-shadow-lg animate-scale-in" />
+            <img
+              src={meta.badgeImage}
+              alt={meta.badge}
+              className="mx-auto mb-2 h-32 w-32 object-contain drop-shadow-lg animate-scale-in"
+            />
             <div className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-deep/70">
               Badge Unlocked
             </div>
             <h2 className="mb-1 text-2xl font-bold text-slate-deep">{meta.badge}</h2>
-            <p className="text-sm text-slate-text">
-              คุณจบ Module {meta.order} เรียบร้อยแล้ว
-            </p>
+            <p className="text-sm text-slate-text">คุณจบ Module {meta.order} เรียบร้อยแล้ว</p>
           </div>
         </div>
       )}
@@ -1430,7 +1419,10 @@ function SummaryScreen({
           </div>
           <div className="mb-2 text-3xl font-bold text-slate-deep">{cognitivePct}%</div>
           <div className="mb-2 h-2 overflow-hidden rounded-full bg-secondary">
-            <div className="h-full rounded-full bg-mint-primary" style={{ width: `${cognitivePct}%` }} />
+            <div
+              className="h-full rounded-full bg-mint-primary"
+              style={{ width: `${cognitivePct}%` }}
+            />
           </div>
           <div className="text-xs text-slate-text">
             Quiz {quizScore}/{QUIZ_ITEMS.length} · Matching {matchScore}/{MATCH_PAIRS.length}
@@ -1442,10 +1434,14 @@ function SummaryScreen({
           </div>
           <div className="mb-2 text-3xl font-bold text-slate-deep">{affectivePct}%</div>
           <div className="mb-2 h-2 overflow-hidden rounded-full bg-secondary">
-            <div className="h-full rounded-full bg-mint-primary" style={{ width: `${affectivePct}%` }} />
+            <div
+              className="h-full rounded-full bg-mint-primary"
+              style={{ width: `${affectivePct}%` }}
+            />
           </div>
           <div className="text-xs text-slate-text">
-            คำเชิงบวกที่ตรวจพบ: {reflectionKeywords.length > 0 ? reflectionKeywords.slice(0, 4).join(", ") : "—"}
+            คำเชิงบวกที่ตรวจพบ:{" "}
+            {reflectionKeywords.length > 0 ? reflectionKeywords.slice(0, 4).join(", ") : "—"}
           </div>
         </div>
       </div>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1380" viewBox="0 0 1800 1380" role="img" aria-labelledby="title desc"><title id="title">06  DFD Level 0 - Context Diagram</title><desc id="desc">System boundary includes the web app, Unity interface, server functions and internal data stores.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">06  DFD Level 0 - Context Diagram</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">System boundary includes the web app, Unity interface, server functions and internal data stores.</text>
+<polyline points="55,112 1745,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="665" y="545" width="470" height="140" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="577" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">0  FeedbackLab</text>
+<text x="900.0" y="605" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Learning / VR / coaching</text>
+<text x="900.0" y="630" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Usage observation / research reporting</text>
+<rect x="55" y="320" width="400" height="110" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="255.0" y="352" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Lecturer</text>
+<text x="255.0" y="380" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Learning participant</text>
+<rect x="55" y="865" width="400" height="110" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="255.0" y="897" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Research administrator</text>
+<text x="255.0" y="925" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Research access and exports</text>
+<rect x="700" y="160" width="400" height="110" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="900.0" y="192" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Firebase Auth / Google</text>
+<text x="900.0" y="220" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Authentication service</text>
+<rect x="1345" y="320" width="400" height="110" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1545.0" y="352" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Gemini</text>
+<text x="1545.0" y="380" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">AI coaching provider</text>
+<rect x="1345" y="600" width="400" height="110" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1545.0" y="632" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Speech recognition service</text>
+<text x="1545.0" y="660" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Browser speech service</text>
+<rect x="1345" y="880" width="400" height="110" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1545.0" y="912" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">Google Cloud TTS</text>
+<text x="1545.0" y="940" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">NPC speech synthesis</text>
+<polyline points="455,350 560,350 560,575 665,575" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="665,575 655.0950818741205,579.7846208752235 655.0950818741205,570.2153791247765" fill="#647d88"/>
+<text x="475" y="333" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Inputs / actions / observations</text>
+<polyline points="665,630 510,630 510,400 455,400" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="455,400 464.9049181258794,395.21537912477646 464.9049181258794,404.78462087522354" fill="#647d88"/>
+<text x="65" y="485" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Content / outcomes / status</text>
+<polyline points="455,900 580,900 580,655 665,655" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="665,655 655.0950818741205,659.7846208752235 655.0950818741205,650.2153791247765" fill="#647d88"/>
+<text x="65" y="1030" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Sign-in / filters / observations</text>
+<polyline points="790,685 790,965 455,965 455,945" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="455,945 459.78462087522354,954.9049181258795 450.21537912477646,954.9049181258795" fill="#647d88"/>
+<text x="465" y="990" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Identity / delivery status / research files</text>
+<polyline points="840,545 840,270" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="840,270 844.7846208752235,279.9049181258794 835.2153791247765,279.9049181258794" fill="#647d88"/>
+<text x="705" y="395" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Auth request</text>
+<polyline points="970,270 970,545" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="970,545 965.2153791247765,535.0950818741205 974.7846208752235,535.0950818741205" fill="#647d88"/>
+<text x="990" y="395" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Identity</text>
+<polyline points="1135,570 1210,570 1210,350 1345,350" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1345,350 1335.0950818741205,354.78462087522354 1335.0950818741205,345.21537912477646" fill="#647d88"/>
+<text x="1218" y="335" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Transcript + context</text>
+<polyline points="1345,395 1260,395 1260,585 1135,585" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1135,585 1144.9049181258795,580.2153791247765 1144.9049181258795,589.7846208752235" fill="#647d88"/>
+<text x="1348" y="453" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">AI response / failure</text>
+<polyline points="1135,615 1210,615 1210,635 1345,635" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1345,635 1335.0950818741205,639.7846208752235 1335.0950818741205,630.2153791247765" fill="#647d88"/>
+<text x="1218" y="620" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Speech input</text>
+<polyline points="1345,680 1260,680 1260,630 1135,630" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1135,630 1144.9049181258795,625.2153791247765 1144.9049181258795,634.7846208752235" fill="#647d88"/>
+<text x="1348" y="738" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Transcript / error</text>
+<polyline points="1135,660 1210,660 1210,915 1345,915" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1345,915 1335.0950818741205,919.7846208752235 1335.0950818741205,910.2153791247765" fill="#647d88"/>
+<text x="1218" y="900" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">NPC text + voice</text>
+<polyline points="1345,960 1260,960 1260,675 1135,675" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1135,675 1144.9049181258795,670.2153791247765 1144.9049181258795,679.7846208752235" fill="#647d88"/>
+<text x="1348" y="1018" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">NPC audio / error</text>
+<text x="55" y="1150" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">No data stores are shown at context level. Service errors are valid outputs, not fabricated success.</text>
+<text x="55" y="1175" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Speech recognition is browser-dependent. TTS is the implemented callable contract; its Unity caller is not verified here.</text>
+<text x="55" y="1285" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Notation: blue = external entity; green = numbered process; amber/double line = data store.</text>
+<text x="55" y="1310" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Named arrows are data flows. Repeated entity/store identifiers refer to the same logical endpoint.</text>
+<text x="55" y="1352" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

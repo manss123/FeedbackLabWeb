@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1800" viewBox="0 0 1800 1800" role="img" aria-labelledby="title desc"><title id="title">DFD Level 2 - Usage Event Persistence</title><desc id="desc">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">DFD Level 2 - Usage Event Persistence</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</text>
+<polyline points="55,112 1745,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="720" y="407.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="439.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">4.1 Measure and identify</text>
+<text x="900.0" y="467.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Browser / document / run / step IDs</text>
+<rect x="40" y="165" width="370" height="82" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="225.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">1.0 Identity and setup</text>
+<polyline points="410,206 575,206 685,438.5 720,438.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,438.5 710.0950818741205,443.28462087522354 710.0950818741205,433.71537912477646" fill="#647d88"/>
+<text x="430" y="181" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Identity milestone events</text>
+<rect x="40" y="273" width="370" height="82" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="225.0" y="305" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">2.0 Learning and assessments</text>
+<polyline points="410,314 575,314 685,450.5 720,450.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,450.5 710.0950818741205,455.28462087522354 710.0950818741205,445.71537912477646" fill="#647d88"/>
+<text x="430" y="289" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Learning and assessment</text>
+<text x="430" y="306" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">timing</text>
+<rect x="40" y="381" width="370" height="82" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="225.0" y="413" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">3.0 VR practice and coaching</text>
+<polyline points="410,422 575,422 685,462.5 720,462.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,462.5 710.0950818741205,467.28462087522354 710.0950818741205,457.71537912477646" fill="#647d88"/>
+<text x="430" y="397" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">VR step and scenario events</text>
+<rect x="40" y="489" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="521" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="410,530 575,530 685,474.5 720,474.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,474.5 710.0950818741205,479.28462087522354 710.0950818741205,469.71537912477646" fill="#647d88"/>
+<text x="430" y="505" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Browser lifecycle</text>
+<text x="430" y="522" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">observations</text>
+<rect x="40" y="597" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="629" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="410,638 575,638 685,486.5 720,486.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,486.5 710.0950818741205,491.28462087522354 710.0950818741205,481.71537912477646" fill="#647d88"/>
+<text x="430" y="613" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Admin browser observations</text>
+<polyline points="40,790 1760,790" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="900.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="932.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">4.2 Queue and retry by UID</text>
+<text x="900.0" y="960.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Stable event ID / original client time</text>
+<rect x="40" y="820" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="852" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D7 Local activity queue</text>
+<polyline points="52,830 398,830" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,892 398,892" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,861 575,861 685,955.5 720,955.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,955.5 710.0950818741205,960.2846208752235 710.0950818741205,950.7153791247765" fill="#647d88"/>
+<text x="430" y="836" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Pending same-user events</text>
+<rect x="1390" y="820" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="852" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D7 Local activity queue</text>
+<polyline points="1402,830 1748,830" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,892 1748,892" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,955.5 1160,955.5 1260,861 1390,861" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,861 1380.0950818741205,865.7846208752235 1380.0950818741205,856.2153791247765" fill="#647d88"/>
+<text x="1180" y="836" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Queued event envelope</text>
+<polyline points="40,1121 1760,1121" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="1285.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="1317.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">4.3 Persist / verify delivery</text>
+<text x="900.0" y="1345.5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="middle">Create-only record; retry deduplication</text>
+<rect x="40" y="1151" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="1183" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D3 Firestore activity_log</text>
+<polyline points="52,1161 398,1161" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,1223 398,1223" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,1192 575,1192 685,1340.5 720,1340.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,1340.5 710.0950818741205,1345.2846208752235 710.0950818741205,1335.7153791247765" fill="#647d88"/>
+<text x="430" y="1167" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Existing event for retry</text>
+<text x="430" y="1184" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">check</text>
+<rect x="1390" y="1151" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1183" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="1080,1328.5 1160,1328.5 1260,1192 1390,1192" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1192 1380.0950818741205,1196.7846208752235 1380.0950818741205,1187.2153791247765" fill="#647d88"/>
+<text x="1180" y="1167" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Activity delivery status</text>
+<rect x="1390" y="1259" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1291" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="1080,1340.5 1160,1340.5 1260,1300 1390,1300" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1300 1380.0950818741205,1304.7846208752235 1380.0950818741205,1295.2153791247765" fill="#647d88"/>
+<text x="1180" y="1275" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Activity delivery status</text>
+<rect x="1390" y="1367" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="1399" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D3 Firestore activity_log</text>
+<polyline points="1402,1377 1748,1377" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,1439 1748,1439" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,1352.5 1160,1352.5 1260,1408 1390,1408" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1408 1380.0950818741205,1412.7846208752235 1380.0950818741205,1403.2153791247765" fill="#647d88"/>
+<text x="1180" y="1383" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Immutable event and server</text>
+<text x="1180" y="1400" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">time</text>
+<polyline points="40,1560 1760,1560" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<polyline points="900,517.5 900,900.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="900,900.5 895.2153791247765,890.5950818741205 904.7846208752235,890.5950818741205" fill="#647d88"/>
+<text x="920" y="553.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">Event envelope with client</text>
+<text x="920" y="573.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">measurements</text>
+<polyline points="900,1010.5 900,1285.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="900,1285.5 895.2153791247765,1275.5950818741205 904.7846208752235,1275.5950818741205" fill="#647d88"/>
+<text x="920" y="1046.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">Pending event owned by current</text>
+<text x="920" y="1066.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">UID</text>
+<polyline points="1080,1375.5 1129,1375.5 1129,990.5 1080,990.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1080,990.5 1089.9049181258795,985.7153791247765 1089.9049181258795,995.2846208752235" fill="#647d88"/>
+<text x="1085" y="1402.5" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F3</text>
+<text x="55" y="1669" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F3: 4.3 Persist / verify delivery -&gt; 4.2 Queue and retry by UID: Acknowledgement / retained failure</text>
+<text x="55" y="1735" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Blue: external entity. Green: process. Amber with double lines: data store. No entity-to-store or store-to-store shortcuts.</text>
+<text x="55" y="1772" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

@@ -197,7 +197,14 @@ export async function upsertUserDoc(
   await setDoc(doc(getDb(), COLLECTIONS.users, userId), data, { merge: true });
 }
 
-export async function createSession(data: WithFieldValue<SessionDoc>): Promise<string> {
+export async function createSession(
+  data: WithFieldValue<SessionDoc>,
+  sessionId?: string,
+): Promise<string> {
+  if (sessionId) {
+    await setDoc(doc(getDb(), COLLECTIONS.sessions, sessionId), data as DocumentData);
+    return sessionId;
+  }
   const ref = await addDoc(collection(getDb(), COLLECTIONS.sessions), data as DocumentData);
   return ref.id;
 }

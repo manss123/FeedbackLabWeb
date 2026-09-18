@@ -1,3 +1,4 @@
+import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -18,7 +19,13 @@ export const Route = createFileRoute("/_authenticated/survey")({
   component: SurveyPage,
 });
 
-const likertLabels = ["ไม่เห็นด้วยอย่างยิ่ง", "ไม่เห็นด้วย", "ปานกลาง", "เห็นด้วย", "เห็นด้วยอย่างยิ่ง"];
+const likertLabels = [
+  "ไม่เห็นด้วยอย่างยิ่ง",
+  "ไม่เห็นด้วย",
+  "ปานกลาง",
+  "เห็นด้วย",
+  "เห็นด้วยอย่างยิ่ง",
+];
 
 const items = [
   {
@@ -70,6 +77,13 @@ function SurveyPage() {
     }
   }, [data, navigate]);
 
+  const timing = useLearningTiming(
+    "assessment",
+    "survey",
+    "form",
+    !isLoading && !!data?.state?.posttest_completed && !data?.survey,
+  );
+
   const mutation = useMutation({
     mutationFn: async () =>
       submitSurvey({
@@ -82,11 +96,12 @@ function SurveyPage() {
         },
       }),
     onSuccess: () => {
+      timing.finish();
       toast.success("ขอบคุณสำหรับความคิดเห็น");
       clearAnswersDraft();
       clearCommentsDraft();
       qc.invalidateQueries({ queryKey: ["learner-overview"] });
-      void logActivity({ type: "survey_submitted" });
+      void logActivity({ type: "survey_submitted", runId: timing.runId() });
       navigate({ to: "/certificate" });
     },
     onError: (e: Error) => toast.error(e.message),

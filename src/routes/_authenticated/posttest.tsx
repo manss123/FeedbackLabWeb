@@ -1,8 +1,19 @@
+import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { usePersistedState } from "@/hooks/use-persisted-state";
-import { Loader2, ClipboardCheck, CheckCircle2, XCircle, ArrowRight, PlayCircle, Pause, BookOpenText, Sparkles } from "lucide-react";
+import {
+  Loader2,
+  ClipboardCheck,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+  PlayCircle,
+  Pause,
+  BookOpenText,
+  Sparkles,
+} from "lucide-react";
 import { LearnerShell } from "@/components/learner-shell";
 import {
   getLearnerOverview,
@@ -55,6 +66,13 @@ function PosttestPage() {
     total: number;
   }>(null);
 
+  const timing = useLearningTiming(
+    "assessment",
+    "posttest",
+    "form",
+    !isLoading && wrapUpDone && !result,
+  );
+
   const mutation = useMutation({
     mutationFn: async () =>
       submitPosttest({
@@ -66,10 +84,11 @@ function PosttestPage() {
         },
       }),
     onSuccess: (r) => {
+      timing.finish();
       setResult(r);
       clearAnswersDraft();
       qc.invalidateQueries({ queryKey: ["learner-overview"] });
-      void logActivity({ type: "posttest_submitted" });
+      void logActivity({ type: "posttest_submitted", runId: timing.runId() });
       if (r.passed) toast.success(`ผ่านเกณฑ์ ${POSTTEST_PASS_PERCENT}% แล้ว!`);
       else toast.error("ยังไม่ผ่านเกณฑ์ ทบทวนบทเรียนแล้วลองอีกครั้ง");
     },
@@ -95,7 +114,6 @@ function PosttestPage() {
       </LearnerShell>
     );
   }
-
 
   if (result) {
     return (
@@ -188,8 +206,8 @@ function PosttestPage() {
           </div>
           <h1 className="text-3xl font-bold">แบบทดสอบหลังเรียน</h1>
           <p className="text-slate-text">
-            ประเมินสมรรถนะ Constructive Feedback ทั้ง 4 มิติ — ต้องได้อย่างน้อย {POSTTEST_PASS_PERCENT}%
-            จึงจะรับใบรับรองได้
+            ประเมินสมรรถนะ Constructive Feedback ทั้ง 4 มิติ — ต้องได้อย่างน้อย{" "}
+            {POSTTEST_PASS_PERCENT}% จึงจะรับใบรับรองได้
           </p>
         </div>
 
@@ -200,7 +218,9 @@ function PosttestPage() {
                 <span className="rounded-md bg-mint-light px-2 py-0.5 text-xs font-bold text-mint-primary">
                   {dimensionLabels[q.dimension]}
                 </span>
-                <span className="text-xs text-slate-text">ข้อ {i + 1} / {POSTTEST_QUESTIONS.length}</span>
+                <span className="text-xs text-slate-text">
+                  ข้อ {i + 1} / {POSTTEST_QUESTIONS.length}
+                </span>
               </div>
               <div className="mb-4 font-semibold text-slate-deep">{q.question}</div>
               <div className="space-y-2">
@@ -344,8 +364,8 @@ function WrapUpScreen({ onDone }: { onDone: () => void }) {
         </div>
         <h1 className="text-3xl font-bold">สรุปเนื้อหา 5 โมดูล ก่อนทำแบบทดสอบหลังเรียน</h1>
         <p className="text-slate-text">
-          ทบทวนสาระสำคัญของบทเรียนทั้งหมดผ่านวิดีโอสรุปสั้น ๆ
-          เพื่อเตรียมความพร้อมก่อนประเมินสมรรถนะ Constructive Feedback
+          ทบทวนสาระสำคัญของบทเรียนทั้งหมดผ่านวิดีโอสรุปสั้น ๆ เพื่อเตรียมความพร้อมก่อนประเมินสมรรถนะ
+          Constructive Feedback
         </p>
       </div>
 
@@ -365,7 +385,9 @@ function WrapUpScreen({ onDone }: { onDone: () => void }) {
               <>
                 <div className="mb-2 text-5xl">{current.emoji}</div>
                 <div className="mb-1 text-xs uppercase tracking-widest text-white/60">
-                  {watched ? "จบวิดีโอสรุปแล้ว" : `บทที่ ${currentIdx + 1} / ${WRAPUP_CHAPTERS.length}`}
+                  {watched
+                    ? "จบวิดีโอสรุปแล้ว"
+                    : `บทที่ ${currentIdx + 1} / ${WRAPUP_CHAPTERS.length}`}
                 </div>
                 <div className="mb-3 text-lg font-bold">{current.title}</div>
                 <p className="max-w-lg text-sm text-white/80">{current.key}</p>
@@ -392,8 +414,7 @@ function WrapUpScreen({ onDone }: { onDone: () => void }) {
           </div>
           <div className="tabular-nums text-xs text-white/70">
             {String(Math.floor(elapsed / 60)).padStart(2, "0")}:
-            {String(elapsed % 60).padStart(2, "0")} /
-            {" "}
+            {String(elapsed % 60).padStart(2, "0")} /{" "}
             {String(Math.floor(TOTAL_WRAPUP_DURATION / 60)).padStart(2, "0")}:
             {String(TOTAL_WRAPUP_DURATION % 60).padStart(2, "0")}
           </div>
@@ -444,7 +465,8 @@ function WrapUpScreen({ onDone }: { onDone: () => void }) {
       >
         {watched ? (
           <>
-            <Sparkles className="h-4 w-4" /> เริ่มทำแบบทดสอบหลังเรียน <ArrowRight className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" /> เริ่มทำแบบทดสอบหลังเรียน{" "}
+            <ArrowRight className="h-4 w-4" />
           </>
         ) : (
           "รับชมวิดีโอให้จบก่อนทำ Posttest"
@@ -453,4 +475,3 @@ function WrapUpScreen({ onDone }: { onDone: () => void }) {
     </div>
   );
 }
-

@@ -20,6 +20,10 @@ export async function signInWithGoogle(): Promise<User> {
 }
 
 export async function signOutOfFirebase(): Promise<void> {
+  const { logActivity } = await import("@/lib/activity");
+  window.dispatchEvent(new Event("feedbacklab:signout"));
+  await logActivity({ type: "signed_out" });
+  await logActivity({ type: "web_session_ended", reason: "explicit_sign_out" });
   await signOut(getFirebaseAuth());
 }
 

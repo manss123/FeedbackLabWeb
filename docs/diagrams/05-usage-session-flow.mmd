@@ -1,0 +1,23 @@
+flowchart TB
+  a["Browser A / Tab 1<br/>Participant UID + random browserId<br/>Unique document webSessionId"]
+  b["Browser A / Tab 2<br/>Same browserId for same account<br/>Different tabId and webSessionId"]
+  c["Browser B / another device<br/>Different browser storage identity<br/>Physical hardware is not verified"]
+  track["Capture observations and measured intervals<br/>Page visits / step visits / assessments / focus / visibility / idle<br/>30-second heartbeat; client time plus monotonic durations"]
+  queue["Durable per-event queue<br/>Stable event ID and original UID<br/>Retry only under the same account<br/>localStorage; memory if unavailable"]
+  store["Immutable Firestore event<br/>Server createdAt on first write<br/>Existing event ID verifies delivery<br/>No duplicated retry record"]
+  analysis["Research analysis<br/>Group by user + webSessionId<br/>Compare bounded heartbeat intervals<br/>Same-browser / other-browser peers"]
+  limits["Interpretation limits<br/>Active proxy = visible + focused + interaction in the preceding 60 seconds.<br/>Timer gaps over 45 seconds are unobserved, not engagement.<br/>No end event does not prove an open session; cross-device clocks can differ."]
+  a --> track
+  b --> track
+  c --> track
+  track -->|"queue before network send"| queue
+  queue -->|"retry"| store
+  store -->|"admin read"| analysis
+  analysis --> limits
+  classDef current fill:#eff8f5,stroke:#31816e,color:#163340
+  class a,b,c,track,store,analysis current
+  classDef local fill:#fff6e5,stroke:#b78528,color:#163340
+  class queue local
+  classDef external fill:#eff4fc,stroke:#587cac,color:#163340
+  class limits external
+  classDef planned fill:#faf1f7,stroke:#9c6184,color:#163340,stroke-dasharray:7 5

@@ -1,0 +1,29 @@
+flowchart TB
+  browser["Lecturer browser<br/>React / TanStack Start<br/>Firebase client SDK"]
+  auth["Firebase Authentication<br/>Google sign-in<br/>Route guard reads setup status"]
+  admin["Research admin<br/>Authorized callable requests<br/>Server-side requireAdmin check"]
+  hosting["Firebase Hosting<br/>Web assets and Unity build<br/>SSR rewrite"]
+  ssr["SSR / AI server functions<br/>Nitro / TanStack in Cloud Function<br/>Transcript-based coaching"]
+  gemini["Gemini API<br/>Real report or null<br/>No fabricated AI result"]
+  rules["Firestore Security Rules<br/>Client: own-data access<br/>Admin SDK: server authorization"]
+  db["Firestore<br/>users / sessions / activity_log<br/>tts_logs for NPC speech service"]
+  local["Browser localStorage<br/>Progress / assessments / survey<br/>Durable activity event queue"]
+  unity["Unity WebGL iframe<br/>Avatar / scene via postMessage<br/>Audio replay stays in memory"]
+  research["Research dashboard<br/>Participants / VR / activity / timing<br/>CSV, JSON and codebook"]
+  browser -->|"sign-in"| auth
+  browser -->|"requests"| hosting
+  hosting -->|"rewrite"| ssr
+  ssr -->|"AI request"| gemini
+  browser -->|"own data"| rules
+  rules -->|"allowed"| db
+  browser --> local
+  browser --> unity
+  admin -->|"Admin SDK"| db
+  db -->|"authorized reads"| research
+  classDef current fill:#eff8f5,stroke:#31816e,color:#163340
+  class browser,admin,hosting,ssr,rules,db,unity,research current
+  classDef local fill:#fff6e5,stroke:#b78528,color:#163340
+  class local local
+  classDef external fill:#eff4fc,stroke:#587cac,color:#163340
+  class auth,gemini external
+  classDef planned fill:#faf1f7,stroke:#9c6184,color:#163340,stroke-dasharray:7 5

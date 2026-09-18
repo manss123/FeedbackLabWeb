@@ -1,0 +1,261 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="3326" viewBox="0 0 1800 3326" role="img" aria-labelledby="title desc"><title id="title">07  DFD Level 1 - Main Processes</title><desc id="desc">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="55" y="55" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#163340" text-anchor="start">07  DFD Level 1 - Main Processes</text>
+<text x="55" y="89" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Named data flows between individual processes, external entities and data stores; repeated IDs denote the same endpoint.</text>
+<polyline points="55,112 1745,112" fill="none" stroke="#dbe5e9" stroke-width="1"/>
+<rect x="720" y="353.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="385.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">1.0 Identity and setup</text>
+<rect x="40" y="165" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="410,206 575,206 685,390.5 720,390.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,390.5 710.0950818741205,395.28462087522354 710.0950818741205,385.71537912477646" fill="#647d88"/>
+<text x="430" y="181" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Sign-in and setup input</text>
+<rect x="40" y="273" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="305" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="410,314 575,314 685,402.5 720,402.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,402.5 710.0950818741205,407.28462087522354 710.0950818741205,397.71537912477646" fill="#647d88"/>
+<text x="430" y="289" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Admin sign-in request</text>
+<rect x="40" y="381" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="413" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E3  Firebase Auth / Google</text>
+<polyline points="410,422 575,422 685,414.5 720,414.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,414.5 710.0950818741205,419.28462087522354 710.0950818741205,409.71537912477646" fill="#647d88"/>
+<text x="430" y="397" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Authenticated identity</text>
+<rect x="40" y="489" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="521" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D1 Firestore users</text>
+<polyline points="52,499 398,499" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,561 398,561" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,530 575,530 685,426.5 720,426.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,426.5 710.0950818741205,431.28462087522354 710.0950818741205,421.71537912477646" fill="#647d88"/>
+<text x="430" y="505" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Stored setup status</text>
+<rect x="1390" y="165" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="197" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="1080,390.5 1160,390.5 1260,206 1390,206" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,206 1380.0950818741205,210.78462087522354 1380.0950818741205,201.21537912477646" fill="#647d88"/>
+<text x="1180" y="181" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Setup and route status</text>
+<rect x="1390" y="273" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="305" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="1080,402.5 1160,402.5 1260,314 1390,314" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,314 1380.0950818741205,318.78462087522354 1380.0950818741205,309.21537912477646" fill="#647d88"/>
+<text x="1180" y="289" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Identity status</text>
+<rect x="1390" y="381" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="413" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E3  Firebase Auth / Google</text>
+<polyline points="1080,414.5 1160,414.5 1260,422 1390,422" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,422 1380.0950818741205,426.78462087522354 1380.0950818741205,417.21537912477646" fill="#647d88"/>
+<text x="1180" y="397" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Authentication request</text>
+<rect x="1390" y="489" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="521" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D1 Firestore users</text>
+<polyline points="1402,499 1748,499" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,561 1748,561" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,426.5 1160,426.5 1260,530 1390,530" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,530 1380.0950818741205,534.7846208752235 1380.0950818741205,525.2153791247765" fill="#647d88"/>
+<text x="1180" y="505" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Profile and consent</text>
+<polyline points="40,682 1760,682" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="792.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="824.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">2.0 Learning and assessments</text>
+<rect x="40" y="712" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="744" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="410,753 575,753 685,841.5 720,841.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,841.5 710.0950818741205,846.2846208752235 710.0950818741205,836.7153791247765" fill="#647d88"/>
+<text x="430" y="728" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Answers and module actions</text>
+<rect x="40" y="820" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="852" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D4 Local learner state</text>
+<polyline points="52,830 398,830" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,892 398,892" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,861 575,861 685,853.5 720,853.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,853.5 710.0950818741205,858.2846208752235 710.0950818741205,848.7153791247765" fill="#647d88"/>
+<text x="430" y="836" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Local progress and answers</text>
+<rect x="1390" y="712" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="744" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="1080,841.5 1160,841.5 1260,753 1390,753" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,753 1380.0950818741205,757.7846208752235 1380.0950818741205,748.2153791247765" fill="#647d88"/>
+<text x="1180" y="728" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Learning content and results</text>
+<rect x="1390" y="820" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="852" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D4 Local learner state</text>
+<polyline points="1402,830 1748,830" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,892 1748,892" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,853.5 1160,853.5 1260,861 1390,861" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,861 1380.0950818741205,865.7846208752235 1380.0950818741205,856.2153791247765" fill="#647d88"/>
+<text x="1180" y="836" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Results and progress</text>
+<polyline points="40,1013 1760,1013" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="1447.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="1479.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">3.0 VR practice and coaching</text>
+<rect x="40" y="1043" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="1075" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="410,1084 575,1084 685,1478.5 720,1478.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,1478.5 710.0950818741205,1483.2846208752235 710.0950818741205,1473.7153791247765" fill="#647d88"/>
+<text x="430" y="1059" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Speech, text and reflection</text>
+<rect x="40" y="1151" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="1183" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E4  Gemini</text>
+<polyline points="410,1192 575,1192 685,1490.5 720,1490.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,1490.5 710.0950818741205,1495.2846208752235 710.0950818741205,1485.7153791247765" fill="#647d88"/>
+<text x="430" y="1167" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">AI response or failure</text>
+<rect x="40" y="1259" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="1291" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E5  Speech recognition service</text>
+<polyline points="410,1300 575,1300 685,1502.5 720,1502.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,1502.5 710.0950818741205,1507.2846208752235 710.0950818741205,1497.7153791247765" fill="#647d88"/>
+<text x="430" y="1275" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Transcript or recognition</text>
+<text x="430" y="1292" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">error</text>
+<rect x="40" y="1367" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="1399" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E6  Google Cloud TTS</text>
+<polyline points="410,1408 575,1408 685,1514.5 720,1514.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,1514.5 710.0950818741205,1519.2846208752235 710.0950818741205,1509.7153791247765" fill="#647d88"/>
+<text x="430" y="1383" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">NPC audio or service error</text>
+<rect x="40" y="1475" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="1507" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D5 Temporary audio memory</text>
+<polyline points="52,1485 398,1485" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,1547 398,1547" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,1516 575,1516 685,1526.5 720,1526.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,1526.5 710.0950818741205,1531.2846208752235 710.0950818741205,1521.7153791247765" fill="#647d88"/>
+<text x="430" y="1491" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Local playback audio</text>
+<rect x="1390" y="1043" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1075" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="1080,1460.5 1160,1460.5 1260,1084 1390,1084" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1084 1380.0950818741205,1088.7846208752235 1380.0950818741205,1079.2153791247765" fill="#647d88"/>
+<text x="1180" y="1059" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Scene, playback and coaching</text>
+<rect x="1390" y="1151" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1183" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E4  Gemini</text>
+<polyline points="1080,1472.5 1160,1472.5 1260,1192 1390,1192" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1192 1380.0950818741205,1196.7846208752235 1380.0950818741205,1187.2153791247765" fill="#647d88"/>
+<text x="1180" y="1167" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Transcript and coaching</text>
+<text x="1180" y="1184" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">context</text>
+<rect x="1390" y="1259" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1291" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E5  Speech recognition service</text>
+<polyline points="1080,1484.5 1160,1484.5 1260,1300 1390,1300" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1300 1380.0950818741205,1304.7846208752235 1380.0950818741205,1295.2153791247765" fill="#647d88"/>
+<text x="1180" y="1275" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Speech recognition input</text>
+<rect x="1390" y="1367" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="1399" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E6  Google Cloud TTS</text>
+<polyline points="1080,1496.5 1160,1496.5 1260,1408 1390,1408" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1408 1380.0950818741205,1412.7846208752235 1380.0950818741205,1403.2153791247765" fill="#647d88"/>
+<text x="1180" y="1383" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">NPC text and voice request</text>
+<rect x="1390" y="1475" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="1507" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D2 Firestore sessions</text>
+<polyline points="1402,1485 1748,1485" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,1547 1748,1547" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,1508.5 1160,1508.5 1260,1516 1390,1516" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1516 1380.0950818741205,1520.7846208752235 1380.0950818741205,1511.2153791247765" fill="#647d88"/>
+<text x="1180" y="1491" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">VR stage records</text>
+<rect x="1390" y="1583" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="1615" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D4 Local learner state</text>
+<polyline points="1402,1593 1748,1593" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,1655 1748,1655" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,1520.5 1160,1520.5 1260,1624 1390,1624" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1624 1380.0950818741205,1628.7846208752235 1380.0950818741205,1619.2153791247765" fill="#647d88"/>
+<text x="1180" y="1599" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Scenario completion progress</text>
+<rect x="1390" y="1691" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="1723" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D5 Temporary audio memory</text>
+<polyline points="1402,1701 1748,1701" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,1763 1748,1763" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,1532.5 1160,1532.5 1260,1732 1390,1732" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1732 1380.0950818741205,1736.7846208752235 1380.0950818741205,1727.2153791247765" fill="#647d88"/>
+<text x="1180" y="1707" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Temporary audio blob</text>
+<rect x="1390" y="1799" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="1831" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D6 Firestore tts_logs</text>
+<polyline points="1402,1809 1748,1809" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,1871 1748,1871" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,1544.5 1160,1544.5 1260,1840 1390,1840" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,1840 1380.0950818741205,1844.7846208752235 1380.0950818741205,1835.2153791247765" fill="#647d88"/>
+<text x="1180" y="1815" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">TTS usage metadata</text>
+<polyline points="40,1992 1760,1992" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="2210.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="2242.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">4.0 Usage event persistence</text>
+<rect x="40" y="2022" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="2054" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="410,2063 575,2063 685,2247.5 720,2247.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2247.5 710.0950818741205,2252.2846208752235 710.0950818741205,2242.7153791247765" fill="#647d88"/>
+<text x="430" y="2038" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Browser lifecycle</text>
+<text x="430" y="2055" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">observations</text>
+<rect x="40" y="2130" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="2162" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="410,2171 575,2171 685,2259.5 720,2259.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2259.5 710.0950818741205,2264.2846208752235 710.0950818741205,2254.7153791247765" fill="#647d88"/>
+<text x="430" y="2146" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Admin browser observations</text>
+<rect x="40" y="2238" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="2270" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D7 Local activity queue</text>
+<polyline points="52,2248 398,2248" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,2310 398,2310" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,2279 575,2279 685,2271.5 720,2271.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2271.5 710.0950818741205,2276.2846208752235 710.0950818741205,2266.7153791247765" fill="#647d88"/>
+<text x="430" y="2254" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Pending same-user events</text>
+<rect x="40" y="2346" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="2378" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D3 Firestore activity_log</text>
+<polyline points="52,2356 398,2356" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,2418 398,2418" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,2387 575,2387 685,2283.5 720,2283.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2283.5 710.0950818741205,2288.2846208752235 710.0950818741205,2278.7153791247765" fill="#647d88"/>
+<text x="430" y="2362" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Existing event for retry</text>
+<text x="430" y="2379" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">check</text>
+<rect x="1390" y="2022" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="2054" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E1  Lecturer</text>
+<polyline points="1080,2247.5 1160,2247.5 1260,2063 1390,2063" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,2063 1380.0950818741205,2067.7846208752235 1380.0950818741205,2058.2153791247765" fill="#647d88"/>
+<text x="1180" y="2038" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Activity delivery status</text>
+<rect x="1390" y="2130" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="2162" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="1080,2259.5 1160,2259.5 1260,2171 1390,2171" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,2171 1380.0950818741205,2175.7846208752235 1380.0950818741205,2166.2153791247765" fill="#647d88"/>
+<text x="1180" y="2146" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Activity delivery status</text>
+<rect x="1390" y="2238" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="2270" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D7 Local activity queue</text>
+<polyline points="1402,2248 1748,2248" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,2310 1748,2310" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,2271.5 1160,2271.5 1260,2279 1390,2279" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,2279 1380.0950818741205,2283.7846208752235 1380.0950818741205,2274.2153791247765" fill="#647d88"/>
+<text x="1180" y="2254" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Queued event envelope</text>
+<rect x="1390" y="2346" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="1575.0" y="2378" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D3 Firestore activity_log</text>
+<polyline points="1402,2356 1748,2356" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1402,2418 1748,2418" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="1080,2283.5 1160,2283.5 1260,2387 1390,2387" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,2387 1380.0950818741205,2391.7846208752235 1380.0950818741205,2382.2153791247765" fill="#647d88"/>
+<text x="1180" y="2362" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Immutable event and server</text>
+<text x="1180" y="2379" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">time</text>
+<polyline points="40,2539 1760,2539" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<rect x="720" y="2757.5" width="360" height="110" rx="12" fill="#eff8f5" stroke="#31816e" stroke-width="2"/>
+<text x="900.0" y="2789.5" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">5.0 Research reporting</text>
+<rect x="40" y="2569" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="225.0" y="2601" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="410,2610 575,2610 685,2794.5 720,2794.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2794.5 710.0950818741205,2799.2846208752235 710.0950818741205,2789.7153791247765" fill="#647d88"/>
+<text x="430" y="2585" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Authorized filters and</text>
+<text x="430" y="2602" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">export request</text>
+<rect x="40" y="2677" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="2709" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D1 Firestore users</text>
+<polyline points="52,2687 398,2687" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,2749 398,2749" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,2718 575,2718 685,2806.5 720,2806.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2806.5 710.0950818741205,2811.2846208752235 710.0950818741205,2801.7153791247765" fill="#647d88"/>
+<text x="430" y="2693" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Participant records</text>
+<rect x="40" y="2785" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="2817" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D2 Firestore sessions</text>
+<polyline points="52,2795 398,2795" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,2857 398,2857" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,2826 575,2826 685,2818.5 720,2818.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2818.5 710.0950818741205,2823.2846208752235 710.0950818741205,2813.7153791247765" fill="#647d88"/>
+<text x="430" y="2801" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">VR session records</text>
+<rect x="40" y="2893" width="370" height="82" rx="12" fill="#fff6e5" stroke="#b78528" stroke-width="2"/>
+<text x="225.0" y="2925" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">D3 Firestore activity_log</text>
+<polyline points="52,2903 398,2903" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="52,2965 398,2965" fill="none" stroke="#b78528" stroke-width="1"/>
+<polyline points="410,2934 575,2934 685,2830.5 720,2830.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="720,2830.5 710.0950818741205,2835.2846208752235 710.0950818741205,2825.7153791247765" fill="#647d88"/>
+<text x="430" y="2909" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Activity and timing records</text>
+<rect x="1390" y="2569" width="370" height="82" rx="12" fill="#eff4fc" stroke="#587cac" stroke-width="2"/>
+<text x="1575.0" y="2601" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="600" fill="#163340" text-anchor="middle">E2  Research administrator</text>
+<polyline points="1080,2812.5 1160,2812.5 1260,2610 1390,2610" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1390,2610 1380.0950818741205,2614.7846208752235 1380.0950818741205,2605.2153791247765" fill="#647d88"/>
+<text x="1180" y="2585" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">Research views and files</text>
+<polyline points="40,3086 1760,3086" fill="none" stroke="#e3e9ed" stroke-width="1"/>
+<polyline points="1080,443.5 1095,443.5 1095,2300.5 1080,2300.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1080,2300.5 1089.9049181258795,2295.7153791247765 1089.9049181258795,2305.2846208752235" fill="#647d88"/>
+<text x="1085" y="470.5" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F1</text>
+<text x="55" y="3151" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F1: 1.0 Identity and setup -&gt; 4.0 Usage event persistence: Identity milestone events</text>
+<polyline points="1080,882.5 1112,882.5 1112,2300.5 1080,2300.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="1080,2300.5 1089.9049181258795,2295.7153791247765 1089.9049181258795,2305.2846208752235" fill="#647d88"/>
+<text x="1085" y="909.5" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F2</text>
+<text x="55" y="3173" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="400" fill="#526875" text-anchor="start">F2: 2.0 Learning and assessments -&gt; 4.0 Usage event persistence: Learning and assessment timing</text>
+<polyline points="900,1557.5 900,2210.5" fill="none" stroke="#647d88" stroke-width="2"/>
+<polygon points="900,2210.5 895.2153791247765,2200.5950818741208 904.7846208752235,2200.5950818741208" fill="#647d88"/>
+<text x="920" y="1593.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="400" fill="#526875" text-anchor="start">VR step and scenario events</text>
+<text x="55" y="3261" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="400" fill="#526875" text-anchor="start">Blue: external entity. Green: process. Amber with double lines: data store. No entity-to-store or store-to-store shortcuts.</text>
+<text x="55" y="3298" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="400" fill="#526875" text-anchor="start">FeedbackLab  |  Source-based model  |  17 September 2026</text>
+</svg>

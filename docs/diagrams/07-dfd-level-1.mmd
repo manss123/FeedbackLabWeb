@@ -1,0 +1,60 @@
+flowchart TB
+  E1["Lecturer"]
+  P1(["1.0 Identity and setup"])
+  E2["Research administrator"]
+  E3["Firebase Auth / Google"]
+  D1[("D1 Firestore users")]
+  P4(["4.0 Usage event persistence"])
+  P2(["2.0 Learning and assessments"])
+  D4[("D4 Local learner state")]
+  P3(["3.0 VR practice and coaching"])
+  E4["Gemini"]
+  E5["Speech recognition service"]
+  E6["Google Cloud TTS"]
+  D2[("D2 Firestore sessions")]
+  D5[("D5 Temporary audio memory")]
+  D6[("D6 Firestore tts_logs")]
+  D7[("D7 Local activity queue")]
+  D3[("D3 Firestore activity_log")]
+  P5(["5.0 Research reporting"])
+  E1 -->|"Sign-in and setup input"| P1
+  E2 -->|"Admin sign-in request"| P1
+  P1 -->|"Setup and route status"| E1
+  P1 -->|"Identity status"| E2
+  P1 -->|"Authentication request"| E3
+  E3 -->|"Authenticated identity"| P1
+  P1 -->|"Profile and consent"| D1
+  D1 -->|"Stored setup status"| P1
+  P1 -->|"Identity milestone events"| P4
+  E1 -->|"Answers and module actions"| P2
+  P2 -->|"Learning content and results"| E1
+  D4 -->|"Local progress and answers"| P2
+  P2 -->|"Results and progress"| D4
+  P2 -->|"Learning and assessment timing"| P4
+  E1 -->|"Speech, text and reflection"| P3
+  P3 -->|"Scene, playback and coaching"| E1
+  P3 -->|"Transcript and coaching context"| E4
+  E4 -->|"AI response or failure"| P3
+  P3 -->|"Speech recognition input"| E5
+  E5 -->|"Transcript or recognition error"| P3
+  P3 -->|"NPC text and voice request"| E6
+  E6 -->|"NPC audio or service error"| P3
+  P3 -->|"VR stage records"| D2
+  P3 -->|"Scenario completion progress"| D4
+  P3 -->|"Temporary audio blob"| D5
+  D5 -->|"Local playback audio"| P3
+  P3 -->|"TTS usage metadata"| D6
+  P3 -->|"VR step and scenario events"| P4
+  E1 -->|"Browser lifecycle observations"| P4
+  E2 -->|"Admin browser observations"| P4
+  P4 -->|"Activity delivery status"| E1
+  P4 -->|"Activity delivery status"| E2
+  P4 -->|"Queued event envelope"| D7
+  D7 -->|"Pending same-user events"| P4
+  P4 -->|"Immutable event and server time"| D3
+  D3 -->|"Existing event for retry check"| P4
+  E2 -->|"Authorized filters and export request"| P5
+  P5 -->|"Research views and files"| E2
+  D1 -->|"Participant records"| P5
+  D2 -->|"VR session records"| P5
+  D3 -->|"Activity and timing records"| P5

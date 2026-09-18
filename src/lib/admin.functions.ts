@@ -1,3 +1,4 @@
+import type { ActivityMeasurements } from "@/types/activity.types";
 import { httpsCallable } from "firebase/functions";
 import { getFirebaseFunctions } from "@/lib/firebase";
 import type { SessionAiScores, SessionEmotion, UserLearnerProgress } from "@/lib/firestore";
@@ -133,7 +134,16 @@ export async function adminGetUserSessions(userId: string): Promise<AdminSession
 // (the cross-user Activity Log tab, which needs it to join against the
 // learner list) — adminGetUserActivity's rows carry it too since it's just
 // whatever the Firestore doc has, it's simply redundant there.
-export interface AdminActivityRow {
+export interface AdminActivityRow extends ActivityMeasurements {
+  occurredAt?: string;
+  browserId?: string;
+  webSessionId?: string;
+  tabId?: string;
+  authTime?: string | null;
+  browserIdPersistent?: boolean;
+  deviceCategory?: string;
+  browserFamily?: string;
+  schemaVersion?: number;
   id: string;
   userId: string;
   type: ActivityEventType;

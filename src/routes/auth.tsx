@@ -1,7 +1,9 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Glasses, Loader2 } from "lucide-react";
-import { isSignedIn, setAuthFromFirebaseUser } from "@/lib/learner.functions";
+import { loadLearnerAccess } from "@/lib/learner-access";
+import { LearnerAccessError, LearnerAccessPending } from "@/components/learner-access-state";
 import { signInWithGoogle } from "@/lib/firebase-auth";
 import { logActivity } from "@/lib/activity";
 import { toast } from "sonner";
@@ -9,6 +11,13 @@ import { FirebaseError } from "firebase/app";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  beforeLoad: async ({ context }) => {
+    const access = await loadLearnerAccess(context.queryClient);
+    if (access) throw redirect({ to: access.destination, replace: true });
+  },
+  pendingComponent: LearnerAccessPending,
+  pendingMs: 0,
+  errorComponent: LearnerAccessError,
   head: () => ({
     meta: [
       { title: "เข้าสู่ระบบ — My Feedback Lab" },
@@ -47,24 +56,18 @@ function GoogleGlyph({ className }: { className?: string }) {
 
 function AuthPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isSignedIn()) navigate({ to: "/dashboard", replace: true });
-  }, [navigate]);
 
   const handleGoogle = async () => {
     setLoading(true);
     try {
-      const user = await signInWithGoogle();
-      setAuthFromFirebaseUser({
-        id: user.uid,
-        email: user.email ?? "",
-        name: user.displayName,
-      });
+      await signInWithGoogle();
+      const access = await loadLearnerAccess(queryClient);
+      if (!access) throw new Error("ไม่พบการเข้าสู่ระบบ กรุณาลองอีกครั้ง");
       void logActivity({ type: "signed_in" });
       toast.success("เข้าสู่ระบบสำเร็จ");
-      navigate({ to: "/dashboard", replace: true });
+      await navigate({ to: access.destination, replace: true });
     } catch (e) {
       if (e instanceof FirebaseError && e.code === "auth/popup-closed-by-user") {
         setLoading(false);

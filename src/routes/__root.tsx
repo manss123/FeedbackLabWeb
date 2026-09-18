@@ -1,3 +1,4 @@
+import { UsageTracker } from "@/components/usage-tracker";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -134,6 +135,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-center" richColors />
+      <UsageTracker />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

@@ -1,0 +1,27 @@
+flowchart TB
+  entry["Participant setup<br/>Google sign-in / consent / profile"]
+  pre["Baseline assessment<br/>Current result store: localStorage"]
+  modules["5E learning modules<br/>Engage / Explore / Explain<br/>Elaborate / Evaluate"]
+  ce["1  Concrete experience<br/>Observe scenario<br/>Speak / transcribe / type feedback"]
+  ro["2  Reflective observation<br/>Replay temporary audio<br/>Self-rate and reflect"]
+  ac["3  Abstract conceptualization<br/>Real AI coaching if available<br/>Choose improvement goals"]
+  ae["4  Active experimentation<br/>Try again / compare available results"]
+  post["Post-assessment and survey<br/>Current result store: localStorage"]
+  summary["Progress / score summary<br/>Certificate issuance is planned"]
+  observe["Research observation across the learning journey<br/>VR stages + immutable activity + timed steps + web-session intervals"]
+  entry --> pre
+  pre --> modules
+  modules --> ce
+  ce --> ro
+  ro --> ac
+  ac --> ae
+  ae --> post
+  post --> summary
+  ae -->|"next scenario / practice"| ce
+  post -.->|"timing events"| observe
+  classDef current fill:#eff8f5,stroke:#31816e,color:#163340
+  class entry,modules,ce,ro,ac,ae,summary,observe current
+  classDef local fill:#fff6e5,stroke:#b78528,color:#163340
+  class pre,post local
+  classDef external fill:#eff4fc,stroke:#587cac,color:#163340
+  classDef planned fill:#faf1f7,stroke:#9c6184,color:#163340,stroke-dasharray:7 5
