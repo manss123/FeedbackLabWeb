@@ -62,6 +62,7 @@ interface GenericActivityPayload {
 // What a caller passes to logActivity() — userId/createdAt are filled in
 // there, not by the call site.
 export interface ActivityMeasurements {
+  heartbeatIntervalSeconds?: number;
   videoId?: string;
   videoVisitId?: string;
   videoIsTest?: boolean;

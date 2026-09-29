@@ -19,9 +19,9 @@ The learner's existing individual history page remains accessible from a VR sess
 
 ## Sources and authorization
 
-The dashboard reuses `adminExportData` (users + sessions) and `adminListActivity` (milestones and telemetry), after Firebase Auth restoration. Both existing callables enforce `requireAdmin`. Both reads must succeed; a failed source shows an error/retry state rather than an empty activity dataset. Source requests are parallel, not an atomic Firestore snapshot; `snapshot_loaded_at_utc` records when the combined client load completed.
+The dashboard uses the authorized `adminResearchPage` callable after Firebase Auth restoration. Server-side createdAt date bounds apply to events and sessions, with cursor pagination of at most 200 returned records per collection per call (201 queried for lookahead). Profiles are also paginated, without a signup-date filter. See [RESEARCH_PAGINATION.md](RESEARCH_PAGINATION.md).
 
-No new Cloud Function or database schema is required for this change. The table paginates 25 rows at a time in the browser; the existing callables still read all records. This is not server pagination and may need replacement when the study grows. Automatic refetch on window focus is disabled; researchers can explicitly refresh.
+The initial range is the latest seven Bangkok calendar days. More pages load only on request; exports are disabled until every page in the selected range succeeds. UI tables still display 25 loaded rows at a time. Five-minute client caching and disabled focus/reconnect refetch avoid unnecessary repeat reads. Manual refresh starts again at page one. Legacy all-record callables remain for older clients but are not used by this dashboard.
 
 ## Filtering and time semantics
 
@@ -47,13 +47,13 @@ Self-ratings remain eight separate variables (1–5), tied to each scenario's qu
 
 ## Export protocol
 
-The current export schema is 2.1, adding nullable YouTube fields to Activity Log. See [YOUTUBE_TRACKING.md](YOUTUBE_TRACKING.md). The temporary m1 video is marked `video_is_test=true`; it is not actual lesson content. Video durations overlap web/step durations and must not be added to them.
+The current export schema is 2.2, adding nullable YouTube fields to Activity Log. See [YOUTUBE_TRACKING.md](YOUTUBE_TRACKING.md). The temporary m1 video is marked `video_is_test=true`; it is not actual lesson content. Video durations overlap web/step durations and must not be added to them.
 
 Admin duration cells display seconds with two decimal places, or `<0.01` for smaller positive values. CSV/JSON preserve numeric data rather than these display strings. Step rows include client start and end timestamps with seconds and a review hint for extremely short cleanup-ended visits. Historical values are not corrected automatically; see [timing precision and lifecycle correction](USAGE_TRACKING.md#timing-precision-and-development-lifecycle-correction).
 
 Each table exports all filtered rows, not only the visible page. CSV uses fixed English variable names and UTF-8 BOM for Thai text; an empty dataset still exports column headers. Spreadsheet formula-like strings are escaped; the optional JSON text export preserves original text.
 
-`feedbacklab_research.json` schema 2.0 contains six filtered datasets (participants, VR, module aggregates, activity, web sessions and learning steps) plus export/load times, filter settings, matched participant codes, interpretation notes, and the full codebook. The codebook can also be exported as `research_codebook.csv`; `research_metadata.json` records filters and methods separately for CSV users.
+`feedbacklab_research.json` schema 2.2 contains six filtered datasets (participants, VR, module aggregates, activity, web sessions and learning steps) plus export/load times, filter settings, matched participant codes, interpretation notes, and the full codebook. The codebook can also be exported as `research_codebook.csv`; `research_metadata.json` records filters and methods separately for CSV users.
 
 Participant codes are stable truncated SHA-256 values of a fixed namespace and Firebase UID. Names, emails and raw UIDs are not included in analytic files or metadata. This is pseudonymous linkage, not a guarantee of anonymity: demographics, times and optional qualitative text can still identify someone. Names remain visible within the authorized admin UI.
 

@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SwissRouteImport } from './routes/swiss'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,21 +18,16 @@ import { Route as AdminUserIdRouteImport } from './routes/admin/$userId'
 import { Route as AuthenticatedVrSimulationRouteImport } from './routes/_authenticated/vr-simulation'
 import { Route as AuthenticatedSurveyRouteImport } from './routes/_authenticated/survey'
 import { Route as AuthenticatedPosttestRouteImport } from './routes/_authenticated/posttest'
+import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedModulesRouteImport } from './routes/_authenticated/modules'
 import { Route as AuthenticatedDiagnosticRouteImport } from './routes/_authenticated/diagnostic'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsentRouteImport } from './routes/_authenticated/consent'
-import { Route as AuthenticatedCertificateRouteImport } from './routes/_authenticated/certificate'
 
 const SwissRoute = SwissRouteImport.update({
   id: '/swiss',
   path: '/swiss',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -76,6 +70,11 @@ const AuthenticatedPosttestRoute = AuthenticatedPosttestRouteImport.update({
   path: '/posttest',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOverviewRoute = AuthenticatedOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -101,24 +100,17 @@ const AuthenticatedConsentRoute = AuthenticatedConsentRouteImport.update({
   path: '/consent',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCertificateRoute =
-  AuthenticatedCertificateRouteImport.update({
-    id: '/certificate',
-    path: '/certificate',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
-  '/auth': typeof AuthRoute
   '/swiss': typeof SwissRoute
-  '/certificate': typeof AuthenticatedCertificateRoute
   '/consent': typeof AuthenticatedConsentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/modules': typeof AuthenticatedModulesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/overview': typeof AuthenticatedOverviewRoute
   '/posttest': typeof AuthenticatedPosttestRoute
   '/survey': typeof AuthenticatedSurveyRoute
   '/vr-simulation': typeof AuthenticatedVrSimulationRoute
@@ -127,14 +119,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/swiss': typeof SwissRoute
-  '/certificate': typeof AuthenticatedCertificateRoute
   '/consent': typeof AuthenticatedConsentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/modules': typeof AuthenticatedModulesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/overview': typeof AuthenticatedOverviewRoute
   '/posttest': typeof AuthenticatedPosttestRoute
   '/survey': typeof AuthenticatedSurveyRoute
   '/vr-simulation': typeof AuthenticatedVrSimulationRoute
@@ -146,14 +137,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
-  '/auth': typeof AuthRoute
   '/swiss': typeof SwissRoute
-  '/_authenticated/certificate': typeof AuthenticatedCertificateRoute
   '/_authenticated/consent': typeof AuthenticatedConsentRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/_authenticated/modules': typeof AuthenticatedModulesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/overview': typeof AuthenticatedOverviewRoute
   '/_authenticated/posttest': typeof AuthenticatedPosttestRoute
   '/_authenticated/survey': typeof AuthenticatedSurveyRoute
   '/_authenticated/vr-simulation': typeof AuthenticatedVrSimulationRoute
@@ -165,14 +155,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/auth'
     | '/swiss'
-    | '/certificate'
     | '/consent'
     | '/dashboard'
     | '/diagnostic'
     | '/modules'
     | '/onboarding'
+    | '/overview'
     | '/posttest'
     | '/survey'
     | '/vr-simulation'
@@ -181,14 +170,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/swiss'
-    | '/certificate'
     | '/consent'
     | '/dashboard'
     | '/diagnostic'
     | '/modules'
     | '/onboarding'
+    | '/overview'
     | '/posttest'
     | '/survey'
     | '/vr-simulation'
@@ -199,14 +187,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/admin'
-    | '/auth'
     | '/swiss'
-    | '/_authenticated/certificate'
     | '/_authenticated/consent'
     | '/_authenticated/dashboard'
     | '/_authenticated/diagnostic'
     | '/_authenticated/modules'
     | '/_authenticated/onboarding'
+    | '/_authenticated/overview'
     | '/_authenticated/posttest'
     | '/_authenticated/survey'
     | '/_authenticated/vr-simulation'
@@ -218,7 +205,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
   SwissRoute: typeof SwissRoute
 }
 
@@ -229,13 +215,6 @@ declare module '@tanstack/react-router' {
       path: '/swiss'
       fullPath: '/swiss'
       preLoaderRoute: typeof SwissRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -294,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPosttestRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/overview': {
+      id: '/_authenticated/overview'
+      path: '/overview'
+      fullPath: '/overview'
+      preLoaderRoute: typeof AuthenticatedOverviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -329,35 +315,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConsentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/certificate': {
-      id: '/_authenticated/certificate'
-      path: '/certificate'
-      fullPath: '/certificate'
-      preLoaderRoute: typeof AuthenticatedCertificateRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedCertificateRoute: typeof AuthenticatedCertificateRoute
   AuthenticatedConsentRoute: typeof AuthenticatedConsentRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiagnosticRoute: typeof AuthenticatedDiagnosticRoute
   AuthenticatedModulesRoute: typeof AuthenticatedModulesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
   AuthenticatedPosttestRoute: typeof AuthenticatedPosttestRoute
   AuthenticatedSurveyRoute: typeof AuthenticatedSurveyRoute
   AuthenticatedVrSimulationRoute: typeof AuthenticatedVrSimulationRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedCertificateRoute: AuthenticatedCertificateRoute,
   AuthenticatedConsentRoute: AuthenticatedConsentRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiagnosticRoute: AuthenticatedDiagnosticRoute,
   AuthenticatedModulesRoute: AuthenticatedModulesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
   AuthenticatedPosttestRoute: AuthenticatedPosttestRoute,
   AuthenticatedSurveyRoute: AuthenticatedSurveyRoute,
   AuthenticatedVrSimulationRoute: AuthenticatedVrSimulationRoute,
@@ -384,7 +363,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
   SwissRoute: SwissRoute,
 }
 export const routeTree = rootRouteImport

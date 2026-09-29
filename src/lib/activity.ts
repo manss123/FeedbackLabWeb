@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDocFromServer, setDoc, serverTimestamp } from "firebase/firestore";
 import { getDb, getFirebaseAuth } from "@/lib/firebase";
 import { getUsageContext } from "@/lib/usage-context";
 import type { ActivityPayload } from "@/types/activity.types";
@@ -14,6 +14,21 @@ const memory = new Map<string, QueuedEvent>();
 let flushing = false;
 let storageFailed = false;
 let writeFailed = false;
+let errorCode: string | null = null;
+let failureUid: string | null = null;
+let retryAt = 0;
+let failures = 0;
+let scheduled: ReturnType<typeof setTimeout> | undefined;
+const listeners = new Set<() => void>();
+export function subscribeActivitySync(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+function notify() {
+  for (const listener of listeners) listener();
+}
 function queued(uid: string) {
   try {
     for (let i = 0; i < localStorage.length; i++) {
@@ -33,15 +48,31 @@ function queued(uid: string) {
 }
 export function activitySyncStatus() {
   const uid = getFirebaseAuth().currentUser?.uid;
-  return { pending: uid ? queued(uid).length : 0, storageFailed, writeFailed };
+  const items = uid ? queued(uid) : [];
+  const oldest = Math.min(
+    ...items.map((item) => Date.parse(String(item.data.occurredAt))).filter(Number.isFinite),
+  );
+  return {
+    pending: items.length,
+    storageFailed,
+    writeFailed: uid === failureUid && writeFailed,
+    errorCode: uid === failureUid ? errorCode : null,
+    oldestPendingMs: Number.isFinite(oldest) ? Math.max(0, Date.now() - oldest) : 0,
+  };
 }
-export async function flushActivity(): Promise<void> {
+export async function flushActivity(force = false): Promise<void> {
   if (flushing || !navigator.onLine) return;
   const uid = getFirebaseAuth().currentUser?.uid;
   if (!uid) return;
+  if (!force && failureUid === uid && Date.now() < retryAt) return;
+  clearTimeout(scheduled);
+  scheduled = undefined;
   flushing = true;
   try {
-    for (const item of queued(uid)) {
+    // Drain events added while a previous write was in flight too.
+    while (getFirebaseAuth().currentUser?.uid === uid) {
+      const item = queued(uid)[0];
+      if (!item) break;
       if (getFirebaseAuth().currentUser?.uid !== uid) break;
       const ref = doc(getDb(), "activity_log", item.id);
       try {
@@ -49,25 +80,46 @@ export async function flushActivity(): Promise<void> {
           await setDoc(ref, { ...item.data, userId: uid, createdAt: serverTimestamp() });
         } catch (error) {
           // Immutable rules reject retries after an acknowledged/lost response.
-          const saved = await getDoc(ref);
-          if (!saved.exists() || saved.data().userId !== uid || saved.data().eventId !== item.id)
-            throw error;
+          let acknowledged = false;
+          try {
+            const saved = await getDocFromServer(ref);
+            acknowledged =
+              saved.exists() && saved.data().userId === uid && saved.data().eventId === item.id;
+          } catch {
+            /* Keep the original write failure, not the fallback read error. */
+          }
+          if (!acknowledged) throw error;
         }
+        let removed = true;
         try {
           localStorage.removeItem(PREFIX + item.id);
         } catch {
           storageFailed = true;
+          removed = false;
         }
         memory.delete(item.id);
         writeFailed = false;
+        failureUid = null;
+        errorCode = null;
+        failures = 0;
+        retryAt = 0;
+        notify();
+        if (!removed) break; // Avoid re-reading and resending an undeletable storage key forever.
       } catch (error) {
         writeFailed = true;
+        failureUid = uid;
+        errorCode =
+          typeof (error as { code?: unknown })?.code === "string"
+            ? (error as { code: string }).code
+            : "unknown";
+        retryAt = Date.now() + Math.min(60_000, 5000 * 2 ** Math.min(failures++, 4));
         console.warn("[activity] event retained for retry", item.id, error);
         break;
       }
     }
   } finally {
     flushing = false;
+    notify();
   }
 }
 export async function logActivity(payload: ActivityPayload): Promise<void> {
@@ -93,5 +145,11 @@ export async function logActivity(payload: ActivityPayload): Promise<void> {
   } catch {
     storageFailed = true;
   }
-  void flushActivity();
+  // Coalesce rapid route/lifecycle bursts, retaining each immutable event locally.
+  notify();
+  if (!scheduled)
+    scheduled = setTimeout(() => {
+      scheduled = undefined;
+      void flushActivity();
+    }, 1000);
 }

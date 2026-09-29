@@ -14,5 +14,10 @@ if (!existsSync(SRC)) {
 }
 
 await rm("functions/ssr", { recursive: true, force: true });
-await cp(SRC, DEST, { recursive: true });
+// dereference: true — Nitro's node_modules trace includes symlinks (e.g.
+// node_modules/.nf3/...), and creating a NEW symlink at DEST needs elevated
+// privileges on Windows without Developer Mode. Copying real file content
+// instead avoids that, and is what we want anyway for a self-contained
+// deploy artifact.
+await cp(SRC, DEST, { recursive: true, dereference: true });
 console.log(`copy-ssr-to-functions: copied ${SRC} -> ${DEST}`);

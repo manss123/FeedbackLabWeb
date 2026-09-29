@@ -1,6 +1,10 @@
 import { RESEARCH_COLUMNS, TEXT_COLUMNS, type ResearchRow } from "@/lib/research-log";
+import { ASSESSMENT_COLUMNS } from "./assessment-research";
 
 export const RESEARCH_NOTES = [
+  "ชุดข้อมูลจำกัดตาม server_range และ server_as_of_utc: event/session กรอง createdAt ที่ server; รายชื่อผู้เรียนไม่กรองวันที่สมัคร; ไม่ใช่ประวัติทั้งหมดหรือ snapshot แบบ atomic",
+  "attempt/sequence/การเปิดซ้ำ/ช่วงใช้งานซ้อนคำนวณเฉพาะช่วงข้อมูลที่โหลด; session_missing อาจเป็น session นอกช่วงวันที่; ไม่มี start/end ในช่วงไม่ยืนยันว่าเหตุการณ์ไม่เคยเกิดขึ้น",
+  "ส่งออกได้เมื่อโหลดครบทุกหน้าในช่วงที่เลือกเท่านั้น; เอกสาร event/session ที่ไม่มี createdAt ชนิด Timestamp ไม่อยู่ใน query ตามวันที่",
   "Video: เวลาเล่นและเวลาเล่นขณะมองเห็นเป็นช่วงย่อยแยกจาก Active ห้ามบวกทับกับเวลาเว็บ/ขั้นเรียน; เล่นถึงท้ายไม่ยืนยันว่าดูครบทุกช่วง; video_is_test=true คือวิดีโอทดสอบ",
   "Web/Steps กรองด้วยเวลาที่ server รับ event (createdAt); ช่วงเวลาภายใน event อาจข้ามขอบเขตวันที่ ไม่มีการตัดสัดส่วนเวลา",
   "Session ซ้อนอิง heartbeat ที่สังเกตและนาฬิกา client; ไม่ใช้ login ที่ไม่มี logout เป็นหลักฐานเปิดค้าง และไม่ยืนยันว่าเป็นคนละอุปกรณ์จริง",
@@ -22,11 +26,13 @@ export const RESEARCH_NOTES = [
   "รหัสผู้เข้าร่วมเป็นรหัสคงที่จาก UID สำหรับเชื่อมชุดข้อมูล ไม่ใช่การรับรองว่าไม่สามารถระบุตัวบุคคลได้; ข้อความสะท้อนคิดอาจมีชื่อบุคคล",
   "ค่าตำแหน่ง attempt/sequence อิงข้อมูลทั้งหมดที่โหลดก่อนกรอง; เวลาเท่ากันเรียงด้วย ID ไม่ได้ยืนยันลำดับจริงระหว่างแท็บ",
   "schema v2 เพิ่ม page, heartbeat, idle และเวลารายขั้นตั้งแต่ติดตั้งเวอร์ชันนี้เท่านั้น; ข้อมูลเก่าไม่มีเวลาย้อนหลังหรือประวัติคำตอบทุกครั้ง",
-  "ข้อมูลก่อน-หลังเรียนและ survey ยังอยู่ใน localStorage เป็นหลัก จึงไม่ใช้เป็นตัวชี้วัดผลลัพธ์ในรายงานพฤติกรรมนี้",
+  "แบบทดสอบ CFCT ก่อน–หลังเรียนเก็บใน Firestore: assessment_responses หนึ่งแถวต่อข้อ คะแนนเต็ม 240; คะแนนรวมซ้ำใน 20 แถว ห้ามบวกซ้ำ; survey ยังเป็น localStorage",
   "CSV ใช้ UTF-8 BOM และป้องกันสูตร spreadsheet ในข้อความด้วยอัญประกาศเดี่ยว; JSON เก็บข้อความเดิมเมื่อเลือกส่งออกข้อความ",
 ];
 
 const descriptions: Record<string, string> = {
+  heartbeat_interval_seconds:
+    "รอบบันทึก heartbeat ที่ตั้งไว้: 60 วินาทีสำหรับรุ่นลดความถี่; null คือข้อมูลรุ่นเดิม เก็บตัวอย่างเวลาภายในทุก 15 วินาที",
   video_id: "YouTube video ID",
   video_visit_id: "รหัสการเปิดตัวเล่นหนึ่งครั้ง รวมหลายช่วงเล่น/หยุด",
   video_is_test: "true = เนื้อหาทดสอบ ไม่ควรใช้เป็นผลการเรียนเนื้อหาจริง",
@@ -86,6 +92,7 @@ const descriptions: Record<string, string> = {
   profile_record_present: "มีแผนที่ profile ใน users ไม่ได้ยืนยันว่ากรอกครบ",
   research_consent_recorded:
     "ค่า researchConsent ที่เก็บไว้; null เมื่อไม่มีค่า (ไม่ได้กรองผู้ให้ความยินยอมโดยอัตโนมัติ)",
+  university: "มหาวิทยาลัยจาก profile ล่าสุด ณ เวลาโหลด ไม่ใช่ประวัติ ณ เวลา event",
   faculty: "คณะจาก profile ล่าสุด ณ เวลาโหลด ไม่ใช่ประวัติ ณ เวลา event",
   department: "ภาควิชาจาก profile ล่าสุด อาจระบุกลุ่มขนาดเล็กได้; null เมื่อไม่มีข้อมูล",
   teaching_experience_years: "ประสบการณ์สอนเป็นปีจาก profile ล่าสุด; 0 เป็นค่าที่ถูกต้อง",
@@ -143,13 +150,32 @@ const descriptions: Record<string, string> = {
 };
 
 export function researchCodebook(includeText: boolean): ResearchRow[] {
-  return Object.entries(RESEARCH_COLUMNS).flatMap(([dataset, fields]) => {
+  const assessmentDefinitions: Record<string, string> = {
+    participant_code: "รหัสผู้เข้าร่วมแบบนามแฝง เชื่อมกับชุดข้อมูลอื่น",
+    assessment_phase: "pretest | posttest",
+    instrument_version: "รุ่นของแบบทดสอบและเฉลย ต้องตรงกันก่อนเปรียบเทียบ",
+    submitted_at_utc: "เวลายืนยันส่งจากเซิร์ฟเวอร์ ISO 8601 UTC; กรองวันตาม Asia/Bangkok",
+    total_score: "คะแนนรวมทั้ง 20 ข้อ /240 ซ้ำในแต่ละแถว ห้ามรวมซ้ำ 20 ครั้ง",
+    max_score: "คะแนนเต็มรวม 240",
+    percentage: "total_score / 240 × 100 ปัดทศนิยมสองตำแหน่ง ไม่ใช่เกณฑ์ผ่าน",
+    item_id: "หมายเลขสถานการณ์ 1–20 ในแบบทดสอบแต่ละชุด",
+    item_score: "คะแนนรวมตัวเลือก A–D ของข้อนี้ เต็ม 12",
+  };
+  return [
+    ...Object.entries(RESEARCH_COLUMNS),
+    ["assessment_responses", ASSESSMENT_COLUMNS] as const,
+  ].flatMap(([dataset, fields]) => {
     const columns = dataset === "vr" && includeText ? [...fields, ...TEXT_COLUMNS] : fields;
     return columns.map((field) => ({
       dataset,
       field,
       definition:
-        descriptions[field] ??
+        (dataset === "assessment_responses"
+          ? (assessmentDefinitions[field] ??
+            (field.startsWith("rank_")
+              ? "อันดับที่ผู้เข้าร่วมตอบ 1–4; 1 = เหมาะสมที่สุด; ไม่ซ้ำในข้อเดียวกัน"
+              : "คะแนนตัวเลือก 3 - |อันดับเฉลย - อันดับที่ตอบ| ช่วง 0–3"))
+          : descriptions[field]) ??
         (field.endsWith("_at_utc")
           ? "Timestamp ที่เก็บไว้ แปลงเป็น ISO 8601 UTC; null เมื่อขาด/ผิดรูปแบบ"
           : field.startsWith("self_rating_")

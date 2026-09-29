@@ -4,6 +4,193 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Shared typography: rem-based controls and spacing grow with the reading scale. */
+@theme {
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+}
+
+@layer base {
+  html {
+    font-size: 100%;
+  }
+  @media (min-width: 1024px) {
+    html {
+      font-size: 112.5%;
+    }
+  }
+  @media (min-width: 1920px) {
+    html {
+      font-size: 125%;
+    }
+  }
+}
+
+/* Legacy fixed-pixel captions follow the same global scale during migration. */
+.text-\[10px\],
+.text-\[11px\],
+.text-\[13px\] {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+}
+
+/* Recharts ticks set inline pixel sizes; keep chart labels on the shared scale. */
+.recharts-cartesian-axis-tick-value,
+.recharts-polar-angle-axis-tick-value {
+  font-size: var(--text-xs) !important;
+}
+
+/* Fade the decorative banner into the page background without moving content. */
+.overview-banner-art {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 5%,
+    black 94%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 94%, transparent 100%);
+}
+@media (min-width: 640px) {
+  .overview-banner-frame {
+    /* Extend behind the badges without changing the section or panel positions. */
+    height: calc(100% + 80px);
+    overflow: hidden;
+  }
+  .overview-banner-art {
+    /* Fit the larger frame from the page top instead of clipping an oversized image. */
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: auto;
+    max-width: none;
+    -webkit-mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        transparent 25%,
+        black 55%,
+        black 96%,
+        transparent 100%
+      ),
+      linear-gradient(to bottom, black 0%, black 94%, transparent 100%);
+    mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        transparent 25%,
+        black 55%,
+        black 96%,
+        transparent 100%
+      ),
+      linear-gradient(to bottom, black 0%, black 94%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+}
+
+/* Assessment accents stay on controls, typography and borders; surfaces remain neutral. */
+/* Scoped overrides take precedence over the shared components' utility classes. */
+@layer assessment;
+@layer assessment {
+  .assessment-form {
+    --form-accent: var(--monitor-teal);
+  }
+  .assessment-accent,
+  .assessment-kicker {
+    color: var(--form-accent);
+  }
+  .assessment-panel {
+    border-top: 3px solid var(--form-accent);
+  }
+  .assessment-form [role="progressbar"] > div {
+    background: var(--form-accent);
+  }
+  .assessment-form [data-scale="1"] {
+    --choice-color: var(--monitor-violet);
+  }
+  .assessment-form [data-scale="2"] {
+    --choice-color: var(--monitor-amber);
+  }
+  .assessment-form [data-scale="3"] {
+    --choice-color: var(--monitor-blue);
+  }
+  .assessment-form [data-scale="4"],
+  .assessment-form [data-scale="5"] {
+    --choice-color: var(--monitor-teal);
+  }
+  .assessment-scale-label[data-scale] {
+    color: var(--choice-color);
+  }
+  .assessment-choice {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid color-mix(in oklch, var(--choice-color) 65%, var(--border));
+    border-radius: 0.5rem;
+    color: var(--choice-color);
+    background: var(--background);
+    font-weight: 600;
+    transition:
+      border-color 150ms,
+      color 150ms;
+  }
+  .assessment-choice:hover {
+    border-color: var(--choice-color);
+    color: var(--choice-color);
+  }
+  /* Keep narrow mobile controls readable; scale icons remain in the legend. */
+  @media (width < 640px) {
+    .assessment-choice > .assessment-scale-icon {
+      display: none;
+    }
+  }
+  .assessment-form input:checked + .assessment-choice {
+    border-color: var(--choice-color);
+    color: var(--choice-color);
+    box-shadow: inset 0 0 0 1px var(--choice-color);
+  }
+  .assessment-form input:focus-visible + .assessment-choice {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+  .assessment-radio {
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+  }
+  .assessment-radio > span {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .assessment-form .assessment-primary {
+    background: var(--form-accent);
+    color: var(--primary-foreground);
+    border: 2px solid var(--form-accent);
+  }
+  .assessment-form .assessment-primary:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--form-accent) 90%, var(--foreground));
+  }
+  .assessment-form fieldset:disabled .assessment-choice {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 /*
  * Design system definition.
  *
@@ -60,19 +247,46 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-mint-primary: var(--mint-primary);
+  --color-monitor-canvas: var(--monitor-canvas);
+  --color-monitor-teal: var(--monitor-teal);
+  --color-monitor-blue: var(--monitor-blue);
+  --color-monitor-violet: var(--monitor-violet);
+  --color-monitor-amber: var(--monitor-amber);
+  --color-monitor-teal-soft: var(--monitor-teal-soft);
+  --color-monitor-blue-soft: var(--monitor-blue-soft);
+  --color-monitor-violet-soft: var(--monitor-violet-soft);
+  --color-monitor-amber-soft: var(--monitor-amber-soft);
   --color-mint-light: var(--mint-light);
   --color-slate-deep: var(--slate-deep);
   --color-slate-text: var(--slate-text);
+  --color-control-border: var(--control-border);
+  --color-control-selected: var(--control-selected);
+  --color-focus-ring: var(--focus-ring);
   --font-prompt: "Prompt", "Noto Sans Thai", ui-sans-serif, system-ui, sans-serif;
   --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
+  --monitor-canvas: oklch(0.975 0 0);
+  --monitor-teal: oklch(0.52 0.1 175);
+  --monitor-blue: oklch(0.52 0.16 255);
+  --monitor-violet: oklch(0.52 0.16 300);
+  --monitor-amber: oklch(0.55 0.13 65);
+  --monitor-teal-soft: oklch(0.94 0.04 175);
+  --monitor-blue-soft: oklch(0.95 0.025 255);
+  --monitor-violet-soft: oklch(0.95 0.025 300);
+  --monitor-amber-soft: oklch(0.96 0.04 85);
   --radius: 0.625rem;
   --mint-primary: oklch(0.696 0.17 162.48);
   --mint-light: oklch(0.97 0.03 162.48);
   --slate-deep: oklch(0.208 0.042 265.755);
   --slate-text: oklch(0.446 0.03 256);
+  /* Interaction tokens (DESIGN_SYSTEM.md §3) — stronger than passive
+     `border`, used on form controls and secondary-button borders so a
+     control reads as interactive even before hover. */
+  --control-border: var(--slate-text);
+  --control-selected: var(--primary);
+  --focus-ring: var(--primary);
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -108,6 +322,19 @@
 }
 
 .dark {
+  --monitor-canvas: oklch(0.16 0 0);
+  --monitor-teal: oklch(0.78 0.12 175);
+  --monitor-blue: oklch(0.78 0.11 255);
+  --monitor-violet: oklch(0.78 0.11 300);
+  --monitor-amber: oklch(0.8 0.13 85);
+  --monitor-teal-soft: oklch(0.27 0.04 175);
+  --monitor-blue-soft: oklch(0.27 0.04 255);
+  --monitor-violet-soft: oklch(0.27 0.04 300);
+  --monitor-amber-soft: oklch(0.27 0.04 85);
+  /* --slate-text (light-mode source for --control-border) isn't redefined
+     here, so it would stay a light-mode value with poor contrast on a dark
+     surface — give control-border its own visible dark-mode value instead. */
+  --control-border: oklch(0.704 0.04 256.788);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);

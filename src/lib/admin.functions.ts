@@ -1,4 +1,5 @@
 import type { ActivityMeasurements } from "@/types/activity.types";
+import type { AssessmentPhase, AssessmentResult } from "./assessment";
 import { httpsCallable } from "firebase/functions";
 import { getFirebaseFunctions } from "@/lib/firebase";
 import type { SessionAiScores, SessionEmotion, UserLearnerProgress } from "@/lib/firestore";
@@ -10,11 +11,13 @@ import type { ActivityEventType } from "@/types/activity.types";
 // sending, since Timestamp instances don't survive the callable JSON encoding.
 
 export interface AdminUserRow {
+  assessmentResults?: Partial<Record<AssessmentPhase, AssessmentResult>>;
   uid: string;
   profile: {
     displayName: string | null;
     email: string;
     avatarUrl: string | null;
+    university: string | null;
     faculty: string | null;
     department: string | null;
     teachingExperienceYears: number | null;
@@ -56,14 +59,11 @@ export interface AdminUserRow {
     passed: boolean;
     createdAt: string;
   } | null;
-  survey: {
-    satisfaction: number;
-    usability: number;
-    perceivedLearning: number;
-    recommendation: number;
-    comments: string | null;
-    createdAt: string;
-  } | null;
+  // Completion mirror only — see UserSurvey in src/lib/firestore.ts. The
+  // actual questionnaire answers/scores live in each user's
+  // questionnaire_responses subcollection, not yet surfaced to the admin
+  // dashboard (a separate follow-up once the instrument set is finalized).
+  survey: { completed: Partial<Record<string, true>> } | null;
   certificate: { issuedAt: string; certificateId: string } | null;
   progress: UserLearnerProgress;
 }
@@ -153,6 +153,25 @@ export interface AdminActivityRow extends ActivityMeasurements {
   sessionId?: string;
 }
 
+export interface AdminResearchPage {
+  users: AdminUserRow[];
+  sessions: AdminSessionRow[];
+  events: AdminActivityRow[];
+  asOf: string;
+  nextCursor: string | null;
+}
+export async function adminResearchPage(input: {
+  from: string;
+  to: string;
+  cursor?: string | null;
+}): Promise<AdminResearchPage> {
+  const fn = httpsCallable<typeof input, AdminResearchPage>(
+    getFirebaseFunctions(),
+    "adminResearchPage",
+  );
+  return (await fn(input)).data;
+}
+
 export async function adminGetUserActivity(userId: string): Promise<AdminActivityRow[]> {
   const fn = httpsCallable<{ userId: string }, AdminActivityRow[]>(
     getFirebaseFunctions(),
@@ -180,4 +199,25 @@ export async function adminExportData(): Promise<{
   );
   const result = await fn();
   return result.data;
+}
+
+// QA tool — fast-forward or reset a demo/test account's progress. The
+// target uid must itself be an admin/test account (enforced server-side in
+// functions/src/index.ts) — never usable on a real study participant.
+export type AdminSeedUpTo = "posttest" | "survey" | "certificate";
+
+export async function adminSeedTestProgress(uid: string, upTo: AdminSeedUpTo): Promise<void> {
+  const fn = httpsCallable<{ uid: string; upTo: AdminSeedUpTo }, { ok: true }>(
+    getFirebaseFunctions(),
+    "adminSeedTestProgress",
+  );
+  await fn({ uid, upTo });
+}
+
+export async function adminResetTestProgress(uid: string): Promise<void> {
+  const fn = httpsCallable<{ uid: string }, { ok: true }>(
+    getFirebaseFunctions(),
+    "adminResetTestProgress",
+  );
+  await fn({ uid });
 }

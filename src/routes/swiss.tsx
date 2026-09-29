@@ -11,7 +11,7 @@ import {
   ArrowUpRight,
   ArrowRight,
 } from "lucide-react";
-import heroImage from "@/assets/hero-web-vr-lecturer.jpg";
+import heroImage from "@/assets/hero-web-vr-lecturer.webp";
 
 export const Route = createFileRoute("/swiss")({
   component: SwissHome,
@@ -86,7 +86,9 @@ function SwissHome() {
             </div>
             <div className="leading-tight">
               <div className="text-sm font-black uppercase tracking-widest">FeedbackLab</div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">VR / Swiss Ed.</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">
+                VR / Swiss Ed.
+              </div>
             </div>
           </div>
           <div className="col-span-6 hidden justify-center gap-8 text-[13px] font-medium uppercase tracking-widest md:flex">
@@ -117,13 +119,16 @@ function SwissHome() {
             <div className="mt-1 text-3xl font-black">№ 01</div>
             <div className="mt-8 space-y-3 text-[11px] uppercase tracking-[0.2em] text-neutral-600">
               <div className="flex justify-between border-b border-black pb-1">
-                <span>Field</span><span className="text-black">Edu VR</span>
+                <span>Field</span>
+                <span className="text-black">Edu VR</span>
               </div>
               <div className="flex justify-between border-b border-black pb-1">
-                <span>Audience</span><span className="text-black">Faculty</span>
+                <span>Audience</span>
+                <span className="text-black">Faculty</span>
               </div>
               <div className="flex justify-between border-b border-black pb-1">
-                <span>Method</span><span className="text-black">NLP + VR</span>
+                <span>Method</span>
+                <span className="text-black">NLP + VR</span>
               </div>
             </div>
           </aside>
@@ -142,8 +147,8 @@ function SwissHome() {
               in VR<span className="text-[#e63946]">_</span>
             </h1>
             <p className="mt-8 max-w-xl text-base leading-relaxed text-neutral-700">
-              พัฒนาทักษะการให้ข้อมูลย้อนกลับเชิงสร้างสรรค์ของอาจารย์มหาวิทยาลัย ผ่านห้องเรียนเสมือนจริง
-              ที่วัดผลด้วยการวิเคราะห์เสียง ภาษา และการแสดงออก แบบเรียลไทม์
+              พัฒนาทักษะการให้ข้อมูลย้อนกลับเชิงสร้างสรรค์ของอาจารย์มหาวิทยาลัย
+              ผ่านห้องเรียนเสมือนจริง ที่วัดผลด้วยการวิเคราะห์เสียง ภาษา และการแสดงออก แบบเรียลไทม์
             </p>
             <div className="mt-10 flex flex-wrap gap-0">
               <button className="group inline-flex items-center gap-3 bg-black px-7 py-4 text-sm font-bold uppercase tracking-widest text-white">
@@ -164,7 +169,10 @@ function SwissHome() {
                 alt="อาจารย์กำลังใช้งานระบบ VR-web based บนแล็ปท็อป พร้อมอินเทอร์เฟซวิเคราะห์การให้ข้อมูลย้อนกลับแบบเสมือนจริง"
                 className="h-full w-full object-cover grayscale"
               />
-              <div className="absolute inset-0 mix-blend-multiply" style={{ background: "linear-gradient(180deg,transparent 60%,#e63946 100%)" }} />
+              <div
+                className="absolute inset-0 mix-blend-multiply"
+                style={{ background: "linear-gradient(180deg,transparent 60%,#e63946 100%)" }}
+              />
               <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
                 <div className="text-[10px] uppercase tracking-[0.3em]">Plate 01 / VR-Web</div>
                 <div className="text-2xl font-black">98.4%</div>
@@ -205,12 +213,14 @@ function SwissHome() {
                 Section A
               </div>
               <h2 className="mt-3 text-4xl font-black uppercase leading-none">
-                The<br />Program
+                The
+                <br />
+                Program
               </h2>
             </div>
             <p className="col-span-12 max-w-2xl self-end text-base leading-relaxed text-neutral-700 md:col-span-8">
-              โครงสร้างหลักสูตรออกแบบตามหลักจิตวิทยาการเรียนรู้และการวัดผลเชิงพฤติกรรม
-              แบ่งเป็น 4 ส่วนที่เชื่อมโยงกันแบบวงจร ตั้งแต่การวินิจฉัยจนถึงการรับรอง
+              โครงสร้างหลักสูตรออกแบบตามหลักจิตวิทยาการเรียนรู้และการวัดผลเชิงพฤติกรรม แบ่งเป็น 4
+              ส่วนที่เชื่อมโยงกันแบบวงจร ตั้งแต่การวินิจฉัยจนถึงการรับรอง
             </p>
           </div>
 
@@ -249,7 +259,11 @@ function SwissHome() {
               Section B
             </div>
             <h2 className="mt-3 text-4xl font-black uppercase leading-none">
-              Four<br />Dimensions<br />of Feedback
+              Four
+              <br />
+              Dimensions
+              <br />
+              of Feedback
             </h2>
             <p className="mt-8 max-w-md text-base leading-relaxed text-neutral-700">
               ระบบวิเคราะห์คำพูดของอาจารย์ผ่านโมเดล NLP และประเมินผลการให้ Feedback
@@ -279,9 +293,14 @@ function SwissHome() {
                   <h3 className="mt-6 text-lg font-black uppercase">{title}</h3>
                   <div className="text-xs text-neutral-500">{thai}</div>
                   <div className="mt-6 flex items-end justify-between">
-                    <div className="text-4xl font-black tracking-tight">{pct}<span className="text-[#e63946]">%</span></div>
+                    <div className="text-4xl font-black tracking-tight">
+                      {pct}
+                      <span className="text-[#e63946]">%</span>
+                    </div>
                     <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-                      Median<br />Score
+                      Median
+                      <br />
+                      Score
                     </div>
                   </div>
                   <div className="mt-4 h-1 w-full bg-neutral-100">
@@ -301,7 +320,11 @@ function SwissHome() {
             <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#e63946]">
               Section C
             </div>
-            <h2 className="mt-3 text-4xl font-black uppercase leading-none">Grounded<br />in Research</h2>
+            <h2 className="mt-3 text-4xl font-black uppercase leading-none">
+              Grounded
+              <br />
+              in Research
+            </h2>
           </div>
           <div className="col-span-12 mt-8 grid grid-cols-1 gap-0 border-t border-black md:col-span-8 md:mt-0 md:grid-cols-3 md:border-t-0">
             {[
@@ -330,11 +353,13 @@ function SwissHome() {
               Enroll
             </div>
             <h2 className="mt-3 text-[clamp(2.5rem,5vw,4.5rem)] font-black uppercase leading-[0.95]">
-              Ready to teach<br />
+              Ready to teach
+              <br />
               with <span className="text-[#e63946]">precision</span>?
             </h2>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70">
-              เข้าร่วมโครงการวิจัยพัฒนาทักษะ Constructive Feedback ร่วมกับอาจารย์จากมหาวิทยาลัยชั้นนำทั่วประเทศ
+              เข้าร่วมโครงการวิจัยพัฒนาทักษะ Constructive Feedback
+              ร่วมกับอาจารย์จากมหาวิทยาลัยชั้นนำทั่วประเทศ
             </p>
           </div>
           <div className="col-span-12 md:col-span-4">

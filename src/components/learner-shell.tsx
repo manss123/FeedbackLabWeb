@@ -13,19 +13,20 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import bgImage from "@/assets/BG2.webp";
 import { resetMockData } from "@/lib/learner.functions";
 import { signOutOfFirebase, waitForFirebaseUser } from "@/lib/firebase-auth";
 import { adminCheckAccess } from "@/lib/admin.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const navItems = [
-  { to: "/dashboard", label: "ภาพรวม", icon: LayoutDashboard },
-  { to: "/diagnostic", label: "แบบทดสอบวินิจฉัย", icon: ClipboardCheck },
+  { to: "/overview", label: "ภาพรวม", icon: LayoutDashboard },
+  { to: "/diagnostic", label: "แบบทดสอบก่อนเรียน", icon: ClipboardCheck },
   { to: "/modules", label: "บทเรียน", icon: BookOpenText },
   { to: "/vr-simulation", label: "VR Simulation", icon: Headset },
   { to: "/posttest", label: "แบบทดสอบหลังเรียน", icon: ClipboardList },
   { to: "/survey", label: "แบบสำรวจ", icon: MessageSquare },
-  { to: "/certificate", label: "สรุปคะแนน & ใบรับรอง", icon: Award },
+  { to: "/dashboard", label: "แดชบอร์ด", icon: Award },
 ] as const;
 
 interface Props {
@@ -39,9 +40,19 @@ interface Props {
    * grows with content; a tall-content child must handle its own internal
    * scrolling (see vr-simulation.tsx's OverlayPanel). */
   fullBleed?: boolean;
+  /** Wider, scrollable layout for visual overview pages. */
+  wide?: boolean;
+  backgroundImage?: string;
 }
 
-export function LearnerShell({ children, displayName, avatarUrl, fullBleed = false }: Props) {
+export function LearnerShell({
+  children,
+  displayName,
+  avatarUrl,
+  fullBleed = false,
+  wide = false,
+  backgroundImage = bgImage,
+}: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -63,13 +74,16 @@ export function LearnerShell({ children, displayName, avatarUrl, fullBleed = fal
     queryClient.clear();
     resetMockData();
     await signOutOfFirebase().catch(() => {});
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/", replace: true });
   };
 
   return (
-    <div className="min-h-screen bg-secondary font-prompt text-slate-deep">
+    <div
+      className="min-h-screen bg-secondary bg-cover bg-center bg-fixed bg-no-repeat font-prompt text-slate-deep"
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+    >
       <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-background p-6 lg:flex">
-        <Link to="/dashboard" className="mb-8 flex items-center gap-2.5">
+        <Link to="/overview" className="mb-8 flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-mint-primary">
             <Glasses className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
@@ -131,7 +145,7 @@ export function LearnerShell({ children, displayName, avatarUrl, fullBleed = fal
 
       {/* Mobile top bar */}
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background px-6 py-4 lg:hidden">
-        <Link to="/dashboard" className="flex items-center gap-2">
+        <Link to="/overview" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint-primary">
             <Glasses className="h-4 w-4 text-white" strokeWidth={2.5} />
           </div>
@@ -147,7 +161,9 @@ export function LearnerShell({ children, displayName, avatarUrl, fullBleed = fal
           className={
             fullBleed
               ? "flex h-dvh flex-col overflow-hidden px-4 py-4 lg:px-6 lg:py-6"
-              : "mx-auto max-w-6xl px-6 py-8 lg:px-12 lg:py-12"
+              : wide
+                ? "w-full pb-8"
+                : "mx-auto max-w-6xl px-6 py-8 lg:px-12 lg:py-12"
           }
         >
           {children}

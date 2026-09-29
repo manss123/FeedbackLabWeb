@@ -1,6 +1,6 @@
 # Usage and learning timing instrumentation
 
-Implemented 2026-09-17. Event schema v2; research export schema 2.0. New code must be released before real users generate these fields. No historical backfill is performed.
+Implemented 2026-09-17. Event schema v2; research export schema 2.2. New code must be released before real users generate these fields. No historical backfill is performed.
 
 ## Stored events and identity
 
@@ -21,7 +21,7 @@ Login, explicit logout, authenticated document start, observed pagehide, BFCache
 
 YouTube m1 playback now has separate measured intervals via the Player API. See [YOUTUBE_TRACKING.md](YOUTUBE_TRACKING.md) for visible playback, test-content flags and limitations. This does not change the Active proxy definition.
 
-The root tracker samples every 30 seconds and at lifecycle boundaries. It records each heartbeat interval once. Page exits and learning-step exits carry their own measurements; these overlap with heartbeat time and must not be added to it.
+The root tracker samples locally every 15 seconds and at lifecycle/input boundaries, but persists a heartbeat only every 60 seconds and at route, hidden-tab, signout or pagehide boundaries. Focus/blur and idle transitions update the measurement state without separate durable events. New heartbeats carry `heartbeatIntervalSeconds: 60`; earlier records used 30-second persistence. It records each heartbeat interval once. Page exits and learning-step exits carry their own measurements; these overlap with heartbeat time and must not be added to it.
 
 - `elapsedSeconds`: monotonic `performance.now()` difference, including breaks during that document segment.
 - `visibleSeconds`: measured time while `document.visibilityState` is visible.
@@ -44,7 +44,7 @@ Historical records are retained without rescaling, merging or deleting them. The
 
 ## Simultaneous usage analysis
 
-The Web Sessions table groups filtered events by UID + webSessionId. For the same participant, overlapping sessions require a positive intersection between client-reported heartbeat intervals. Only intervals up to 45 seconds with zero unobserved gap and wall/monotonic duration agreement within 2 seconds qualify. A login without logout never establishes indefinite overlap. Sessions from other participants are never compared.
+The Web Sessions table groups filtered events by UID + webSessionId. For the same participant, overlapping sessions require a positive intersection between client-reported heartbeat intervals. Only intervals up to 45 seconds (legacy) or 75 seconds (explicit 60-second heartbeat cadence) with zero unobserved gap and wall/monotonic duration agreement within 2 seconds qualify. A login without logout never establishes indefinite overlap. Sessions from other participants are never compared.
 
 `overlapping_web_session_count` counts other document sessions; `overlapping_other_browser_count` counts distinct different browser IDs among those peers. Same browser with different sessions may mean multiple tabs. Different browser IDs may mean another device, browser or profile; this is not confirmed hardware identity. Cross-device clock skew can create or hide overlaps, even when each device's monotonic timer is valid. This is a descriptive signal requiring interpretation, not enforcement or a security alert.
 
@@ -52,13 +52,17 @@ Web and step datasets inherit the server `createdAt` date filter. Measurements m
 
 ## Delivery and failure behavior
 
-Events are synchronously queued under individual localStorage keys before asynchronous sending. One key per event prevents cross-tab queue overwrites. Retry triggers include new events, authenticated startup, the 30-second timer and reconnect. Each queued event retains its original UID, IDs and occurredAt; a different logged-in account never sends it. Returning to the original account can resume delivery.
+Delivery correction (2026-09-18): route/lifecycle bursts wait one second before starting delivery; every event is queued durably immediately. An in-flight drain also handles newly added events. UI status subscribers update as writes finish, so ordinary short queues are not shown as failures. The banner appears for storage errors, actual write failures, or pending items older than 60 seconds. Permission errors have a distinct message. Automatic failure retries back off from 5 to 60 seconds (checked on the 15-second maintenance tick); manual retry/reconnect bypass the delay. Retry acknowledgement reads use `getDocFromServer`, never a potentially optimistic cache entry. Production rules were inspected and already allow authenticated owner creates; no permissive rule changes were made.
+
+For overlap analysis, new explicitly marked 60-second heartbeat intervals allow up to 75 seconds of scheduling tolerance, with zero unobserved time and the same wall/monotonic agreement checks. Unmarked legacy intervals retain the 45-second limit. Sampling still excludes gaps over 45 seconds, independently of the persistence cadence. No historical records are deleted.
+
+Events are synchronously queued under individual localStorage keys before asynchronous sending. One key per event prevents cross-tab queue overwrites. Retry triggers include new events, authenticated startup, the 15-second maintenance timer and reconnect. Each queued event retains its original UID, IDs and occurredAt; a different logged-in account never sends it. Returning to the original account can resume delivery.
 
 Firestore documents remain immutable. A repeated write rejected by the create-only rules is considered delivered only after reading the existing document and verifying the same eventId and owner. This handles a lost acknowledgement and two tabs draining the same queue without duplicate rows. Server createdAt is preserved on retries. A failed write stays queued. A visible status reports pending/failed delivery and storage failure, with manual retry. If browser storage is denied or full, records remain in memory only and cannot survive a closed document.
 
 No browser can guarantee an unload callback during a crash/force-close. The final interval or end event may be missing; durable queued events can resume later, but clearing site data removes the local queue. Explicit logout queues the ending observations before signing out; undelivered records may wait until that same account signs in again. Remote auth changes may have no writable end event for the old identity. Session document writes are separate from this activity queue and can still fail independently.
 
-Heartbeat volume is approximately 120 events/hour/document plus boundaries and learning events. Current admin endpoints fetch all records and paginate only in the UI. A larger research rollout should move date filtering/pagination to the server and set retention/export policy before scaling this collection.
+Heartbeat volume is approximately 60 events/hour/document plus boundaries and learning events (previously 120). The dashboard now uses server date filtering and bounded cursor pages; see RESEARCH_PAGINATION.md. A full export still reads all selected records, so retention and export policy remain important.
 
 ## Verification
 

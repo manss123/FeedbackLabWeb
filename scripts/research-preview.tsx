@@ -114,11 +114,20 @@ const events = users.flatMap((user, i) => [
 const client = new QueryClient({
   defaultOptions: { queries: { staleTime: Infinity, retry: false } },
 });
-client.setQueryData(["admin-research-data"], {
-  users,
-  sessions,
-  events,
-  codes: await makeParticipantCodes(users.map((user) => user.uid)),
+const today = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+const from = new Date(Date.parse(today) - 6 * 86400000).toISOString().slice(0, 10);
+client.setQueryData(["admin-research-pages", from, today], {
+  pageParams: [null],
+  pages: [
+    {
+      users,
+      sessions,
+      events,
+      codes: await makeParticipantCodes(users.map((user) => user.uid)),
+      asOf: new Date().toISOString(),
+      nextCursor: null,
+    },
+  ],
 });
 const route = createRootRoute({
   component: () => (

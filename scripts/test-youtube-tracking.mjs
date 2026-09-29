@@ -332,7 +332,9 @@ test("unchanged visibility/state and paused heartbeats do not spam durable logs"
     h.viewport(true);
     h.advance(1000);
   }
-  assert.equal(h.events.length, 3); // Ready + play + one 30-second checkpoint.
+  assert.equal(h.events.length, 2); // No checkpoint at 30 seconds.
+  for (let i = 0; i < 30; i++) h.advance(1000);
+  assert.equal(h.events.length, 3); // Ready + play + one 60-second checkpoint.
   h.state(2);
   const count = h.events.length;
   for (let i = 0; i < 60; i++) h.advance(1000);
@@ -340,6 +342,6 @@ test("unchanged visibility/state and paused heartbeats do not spam durable logs"
   h.cleanup();
   assert.equal(
     h.events.reduce((n, e) => n + e.videoVisiblePlaybackSeconds, 0),
-    30,
+    60,
   );
 });

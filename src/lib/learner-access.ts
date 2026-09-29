@@ -23,6 +23,7 @@ export function getLearnerEntryRoute(doc: UserDoc | null) {
   const profile = doc?.profile;
   if (
     !profile?.displayName?.trim() ||
+    !profile.university?.trim() ||
     !profile.faculty?.trim() ||
     typeof profile.teachingExperienceYears !== "number" ||
     !Number.isFinite(profile.teachingExperienceYears) ||
@@ -30,7 +31,7 @@ export function getLearnerEntryRoute(doc: UserDoc | null) {
   ) {
     return "/onboarding" as const;
   }
-  return "/dashboard" as const;
+  return "/overview" as const;
 }
 
 // Called before route components mount, both at login and on direct visits.
@@ -60,7 +61,7 @@ export async function loadLearnerAccess(queryClient: QueryClient) {
   }
   setAuthFromFirebaseUser({ id: user.uid, email: user.email ?? "", name: user.displayName });
   const destination = getLearnerEntryRoute(userDoc);
-  const overview = syncLearnerSetup(userDoc, destination);
+  const overview = await syncLearnerSetup(userDoc, destination);
   queryClient.setQueryData(["learner-overview"], overview);
   return { user, destination };
 }

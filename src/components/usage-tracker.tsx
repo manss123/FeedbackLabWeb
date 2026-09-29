@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { onFirebaseAuthChanged } from "@/lib/firebase-auth";
-import { activitySyncStatus, flushActivity, logActivity } from "@/lib/activity";
+import {
+  activitySyncStatus,
+  flushActivity,
+  logActivity,
+  subscribeActivitySync,
+} from "@/lib/activity";
 import {
   clearUsageContext,
   getUsageContext,
@@ -16,7 +21,14 @@ import {
 export function UsageTracker() {
   const path = useRouterState({ select: (state) => state.location.pathname });
   const [uid, setUid] = useState<string | null>(null);
-  const [status, setStatus] = useState({ pending: 0, storageFailed: false, writeFailed: false });
+  const [status, setStatus] = useState<ReturnType<typeof activitySyncStatus>>({
+    pending: 0,
+    storageFailed: false,
+    writeFailed: false,
+    errorCode: null,
+    oldestPendingMs: 0,
+  });
+  useEffect(() => subscribeActivitySync(() => setStatus(activitySyncStatus())), []);
   useEffect(
     () =>
       onFirebaseAuthChanged((user) => {
@@ -44,14 +56,18 @@ export function UsageTracker() {
         getUsageContext(uid);
         let snapshot = sampleUsage();
         let intervalStart = new Date().toISOString();
-        let lastIdle = usageState().idle;
         let ended = false;
         let intervalPath = window.location.pathname;
         const heartbeat = () => {
           if (getFirebaseAuth().currentUser?.uid !== uid) return;
           const now = sampleUsage();
+          if (now.mono - snapshot.mono < 1) {
+            intervalPath = window.location.pathname;
+            return;
+          }
           void logActivity({
             type: "web_heartbeat",
+            heartbeatIntervalSeconds: 60,
             path: intervalPath,
             intervalStartClient: intervalStart,
             elapsedSeconds: measuredSeconds(now.mono - snapshot.mono),
@@ -66,20 +82,16 @@ export function UsageTracker() {
         };
         const input = () => {
           updateUsageState(true);
-          if (lastIdle) {
-            lastIdle = false;
-            void logActivity({ type: "idle_changed", idle: false });
-          }
         };
         const visibility = () => {
-          heartbeat();
           updateUsageState();
-          void logActivity({ type: "visibility_changed", ...usageState() });
+          if (document.visibilityState === "hidden") {
+            heartbeat();
+            void flushActivity();
+          }
         };
         const focus = () => {
-          heartbeat();
           updateUsageState();
-          void logActivity({ type: "focus_changed", ...usageState() });
         };
         const end = () => {
           if (ended) return;
@@ -96,19 +108,16 @@ export function UsageTracker() {
           void logActivity({ type: "web_session_started", reason: "bfcache_resume" });
         };
         void logActivity({ type: "web_session_started", reason: "authenticated_document" });
+        let ticks = 0;
         const timer = window.setInterval(() => {
           if (!ended) {
-            heartbeat();
-            const idle = usageState().idle;
-            if (idle !== lastIdle) {
-              lastIdle = idle;
-              void logActivity({ type: "idle_changed", idle });
-            }
+            sampleUsage();
+            if (++ticks % 4 === 0) heartbeat();
           }
           void flushActivity();
           setStatus(activitySyncStatus());
-        }, 30_000);
-        const online = () => void flushActivity();
+        }, 15_000);
+        const online = () => void flushActivity(true);
         for (const event of ["pointerdown", "keydown", "scroll", "touchstart"])
           window.addEventListener(event, input, { passive: true });
         document.addEventListener("visibilitychange", visibility);
@@ -186,18 +195,27 @@ export function UsageTracker() {
       }),
     [path, uid],
   );
-  if (!uid || (!status.storageFailed && !status.writeFailed && status.pending < 3)) return null;
+  if (
+    !uid ||
+    (!status.storageFailed &&
+      (!status.pending || (!status.writeFailed && status.oldestPendingMs < 60_000)))
+  )
+    return null;
   return (
     <div
       role="status"
       className="fixed bottom-2 left-2 z-50 max-w-sm rounded-xl border bg-background p-3 text-xs shadow"
     >
-      ประวัติการใช้งานรอส่ง {status.pending} รายการ ระบบจะลองส่งใหม่เมื่อเชื่อมต่อได้
+      {status.errorCode?.includes("permission-denied")
+        ? `บันทึกประวัติการใช้งานไม่ได้เนื่องจากสิทธิ์เข้าถึง มี ${status.pending} รายการรอส่ง`
+        : status.writeFailed
+          ? `ส่งประวัติการใช้งานไม่สำเร็จ มี ${status.pending} รายการรอส่ง ระบบจะลองใหม่อัตโนมัติ`
+          : `ประวัติการใช้งานรอส่ง ${status.pending} รายการนานกว่าปกติ ระบบจะลองส่งใหม่อัตโนมัติ`}
       {status.storageFailed && " · เก็บข้อมูลรอส่งในเครื่องไม่ได้ กรุณาอย่าเพิ่งปิดหน้า"}
       <button
         className="ml-2 underline"
         onClick={() => {
-          void flushActivity().then(() => setStatus(activitySyncStatus()));
+          void flushActivity(true).then(() => setStatus(activitySyncStatus()));
         }}
       >
         ลองส่งอีกครั้ง

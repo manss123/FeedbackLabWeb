@@ -1,6 +1,6 @@
 ﻿# FeedbackLabsVR — Project Context
 
-Updated: 2026-09-16. This document records the inspected source code and agreed architecture. **Current** means implemented in this checkout, not verified against a deployed service. **Target** means an agreed direction with implementation still pending. Use [SYSTEM_DIAGRAMS.md](SYSTEM_DIAGRAMS.md) for the corresponding diagrams.
+Updated: 2026-09-27 (assessment implementation). This document records the inspected source code and agreed architecture. **Current** means implemented in this checkout, not verified against a deployed service. **Target** means an agreed direction with implementation still pending. Use [SYSTEM_DIAGRAMS.md](SYSTEM_DIAGRAMS.md) for the corresponding diagrams and [ASSESSMENTS.md](ASSESSMENTS.md) for the new pre/post instrument, which supersedes legacy assessment details in older diagrams.
 
 ## 1. Purpose and learning framework
 
@@ -12,7 +12,7 @@ Intended journey: Google sign-in → research consent → profile/onboarding →
 - **Kolb VR cycle:** Concrete Experience (watch and speak), Reflective Observation (listen to oneself, eight self-ratings and reflection), Abstract Conceptualization (AI coaching and goals), Active Experimentation (speak again and compare).
 - Stage 2 must not display AI scores or judgments. AI is requested when entering Stage 3.
 - Points, levels, and module badges support progression. Current progression is primarily local; UI navigation gates are not server authorization.
-- The current posttest pass threshold is 80%. Certificate PDF generation/verification is not implemented.
+- The new ranking pre/post instrument has no specified pass threshold or certificate criterion. The former 80% mock rule no longer applies. Certificate PDF generation/verification is not implemented.
 
 ## 2. Current technology
 
@@ -22,7 +22,7 @@ Intended journey: Google sign-in → research consent → profile/onboarding →
 | Routing and requests | TanStack Router/Start; TanStack Query for client data/mutations                                                                 |
 | Hosting/server       | Firebase Hosting serves static files; unmatched requests go to the `ssr` Cloud Function running Nitro's `node_middleware` build |
 | Identity             | Firebase Auth with Google sign-in; optional local emulators                                                                     |
-| Persistence          | Firestore for profile, consent, VR sessions, activity and TTS logs; localStorage still holds learner progress and assessments   |
+| Persistence          | Firestore for profile, consent, VR sessions, activity, TTS logs and final ranking assessments; localStorage holds drafts and remaining legacy learning progress/survey |
 | Visuals              | Unity WebGL in an iframe; React–Unity JavaScript bridge                                                                         |
 | Learner audio        | Browser MediaRecorder and Web Audio; Web Speech API in Thai for transcription; manual text entry available                      |
 | AI                   | Server-side Gemini API, configured as `gemini-flash-latest`, for coaching reports                                               |
@@ -57,15 +57,15 @@ Current UI shows a loading card while a request is pending, then “-” for una
 - Add a clear Thai “AI analysis unavailable” state and an explicit retry action; distinguish pending, unavailable and successful results. Do not report a successful analysis for a null result.
 - There is no fetch deadline/overall timeout in the current retry loop. The retry count alone does not bound request duration.
 
-### 3.3 Firestore is the target for pre/post assessments
+### 3.3 Firestore pre/post ranking assessments
 
-Diagnostic and posttest currently calculate results from fixed-choice answers in `learner.functions.ts` and save them to localStorage. They are **not LLM-scored assessments**.
+Pre-test and post-test each present 20 scenarios from the supplied `B Pretest VS Posttest.pdf`. Each response ranks four options 1–4 without duplicates. These are **not LLM-scored assessments**. The old local fixed-choice questions are removed.
 
-Both must move to Firestore. Use the existing `users/{uid}.diagnostic` and `users/{uid}.posttest` fields for the latest result/overview; do not claim this migration is already complete. The current schema stores aggregate results, not raw answers or a history of every attempt. Versioned answers/attempt history require a deliberate schema extension before research that depends on them.
+`submitRankingAssessment` validates and scores on the server using the PDF key: each option earns `3 - abs(correctRank - participantRank)`. Total maximum is 240. A transaction writes `users/{uid}/assessment_attempts/{version}_{phase}` and `users/{uid}.assessmentResults.{phase}`, including raw ranks, option/item scores, totals, version and server submission time. Retry/concurrent submissions return the first final response for the version/phase without overwriting it.
 
-For final submission, choose an authenticated callable Cloud Function that validates question IDs and selected answers, calculates scores using a server-owned scoring key, and writes results and related completion fields. Do not accept client-calculated scores or `passed` as authoritative. The browser reads its own saved result through the client SDK. This keeps certificate eligibility based on server-derived results.
+The browser reads its own saved result through the client SDK and derives assessment completion from the saved record. No client-supplied score or pass flag is accepted. Rules protect both the snapshot and immutable submission. Drafts remain local and UID/version scoped. Legacy diagnostic/posttest fields remain historical only and are not converted into new instrument results.
 
-The existing question arrays may remain available to render the forms. Submission-function names and an answer/version schema have not yet been implemented.
+The instrument defines no competency dimension mapping, passing score or certificate criteria. See `ASSESSMENTS.md` for UI flow, export details and release requirements.
 
 ## 4. Backend access decision
 
@@ -74,9 +74,9 @@ Use Firebase client SDK + Security Rules as the default for ordinary per-user da
 | Operation                                                         | Chosen path                                                | Current / target                                                   |
 | ----------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ |
 | Google login and identity restoration                             | Firebase Auth client SDK                                   | Current; route checks Firebase Auth and Firestore before rendering |
-| Read own profile, consent, sessions, assessment results           | Firestore client SDK, ownership rules                      | Helpers exist; overview/result pages still need migration          |
+| Read own profile, consent, sessions, assessment results           | Firestore client SDK, ownership rules                      | Current; ranking overview/results read Firestore |
 | Write own profile, consent, reflection, transcript, survey        | Firestore client SDK, ownership and field validation rules | Profile/consent/session writes exist; survey still local           |
-| Final diagnostic/posttest submission and authoritative completion | Authenticated callable + Admin SDK; browser sends answers  | Target; current scoring/progress are local                         |
+| Final diagnostic/posttest submission and authoritative completion | Authenticated callable + Admin SDK; browser sends ranks  | Current; server validation/scoring, immutable Firestore result |
 | AI coaching                                                       | TanStack server function; API key only on server           | Current; verified caller authentication must still be added        |
 | NPC TTS                                                           | Callable Cloud Function with service-account credentials   | Current; caller auth check is commented out and must be restored   |
 | Cross-user research dashboard/export                              | Callable Cloud Functions + Admin SDK + admin authorization | Current                                                            |
@@ -91,14 +91,14 @@ TanStack server functions do not automatically receive a Firebase identity from 
 
 Current `src/start.ts` has CSRF middleware, not Firebase authentication middleware. Both learner and admin route layouts disable SSR. No authenticated SSR cookie/session data-fetching layer exists or is required for the current client-rendered private pages. Revisit server session cookies only if private SSR becomes a concrete requirement.
 
-**Migration rules:** Firebase Auth is now the route identity source. Move remaining learner state out of localStorage, keeping it only for optional user-scoped drafts/cache; await durable final submission before reporting success, and protect server-owned score/certificate/completion fields from direct client writes. Current `users` rules allow an owner to write the whole document; current `sessions` rules do not enforce immutable ownership or trusted AI scores on update. Rule hardening must accompany authoritative-result migration.
+**Migration rules:** Firebase Auth is the route identity source. Ranking assessments are server-owned: `users.assessmentResults` and `assessment_attempts` cannot be modified by client writes, and clients cannot delete the user document to reset submitted results. Other `users` fields still allow owner writes; `sessions` rules still need ownership/AI-result hardening. Remaining module/VR/survey progress migration is separate from the completed assessment migration.
 
 ## 5. Current persistence and data model
 
 | Record                                             | Current storage/write path                       | Direction                                                                                                    |
 | -------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | Profile and consent                                | Firestore write awaited before local completion  | Keep direct client access                                                                                    |
-| Diagnostic and posttest                            | localStorage; Firestore types only               | Move final submission to callable, persist in Firestore                                                      |
+| Diagnostic and posttest                            | Firestore ranking responses and server-scored results | Implemented; local drafts only; see ASSESSMENTS.md |
 | Module completion, points, level, overall progress | localStorage                                     | Move durable overview to Firestore; protect authoritative fields                                             |
 | Survey                                             | localStorage, separate Firestore milestone event | Move own survey data to Firestore                                                                            |
 | VR session stages                                  | Firestore client create/update during scenario   | Keep transcript/reflection records; distinguish verified AI output if used as authoritative research results |
@@ -157,7 +157,7 @@ Sources: `src/lib/firestore.ts`, `src/lib/learner.functions.ts`, `src/lib/activi
 
 | Assessment          | Dimensions                                                           | Method                                                                |
 | ------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Diagnostic/posttest | empathy, clarity, motivation, actionability                          | Fixed-choice scoring; each dimension normalized to 25, total 100      |
+| Pre-test/post-test | No dimension mapping specified in supplied PDF | 20 ranking items, 12 points each; maximum 240; percentage total/240 × 100 |
 | VR feedback         | speechClarity, linguisticAppropriateness, balance, intentConsistency | Gemini analyzes transcript and scenario context; each dimension 0–100 |
 
 Do not merge the rubrics or call `overall` a fifth VR competency. `RubricScores`, `SessionAiScores` and `COMPETENCIES` must agree. AI emotion is a simulated student reaction, not a measurement of the participant's psychological state.

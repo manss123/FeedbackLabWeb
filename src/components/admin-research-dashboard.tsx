@@ -1,37 +1,54 @@
+import { AdminMonitoring } from "./admin-monitoring";
+import { ResearchDataLoader, type ResearchLoadProps } from "@/components/research-data-loader";
 import { formatResearchSeconds } from "@/lib/research-format";
+import { ASSESSMENT_COLUMNS, assessmentResearchRows } from "@/lib/assessment-research";
 import { researchRowKey } from "@/lib/research-row-key";
 import { summarizeVideoVisits, VIDEO_SUMMARY_COLUMNS } from "@/lib/video-summary";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
 import {
+  Award,
   Download,
-  RefreshCw,
   Loader2,
+  MessageSquare,
+  RefreshCw,
+  RotateCcw,
   Search,
-  BookOpenText,
-  ListOrdered,
-  Users,
+  TriangleAlert,
+  Unlock,
 } from "lucide-react";
-import { adminExportData, adminListActivity } from "@/lib/admin.functions";
-import { waitForFirebaseUser } from "@/lib/firebase-auth";
+import { toast } from "sonner";
 import { ACTIVITY_EVENT_LABELS } from "@/types/activity.types";
+import {
+  adminResetTestProgress,
+  adminSeedTestProgress,
+  type AdminSeedUpTo,
+  type AdminUserRow,
+} from "@/lib/admin.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   buildResearchLogs,
   EMPTY_RESEARCH_FILTERS,
-  makeParticipantCodes,
   participantIds,
   RESEARCH_COLUMNS,
   RESEARCH_TIMEZONE,
   researchCsv,
   TEXT_COLUMNS,
   timestamp,
-  type ResearchData,
   type ResearchRow,
   type ResearchValue,
 } from "@/lib/research-log";
 import { researchCodebook, RESEARCH_NOTES } from "@/lib/research-codebook";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -80,68 +97,166 @@ function exportCsv(name: string, rows: ResearchRow[], columns: readonly string[]
   download(name, researchCsv(rows, columns), "text/csv;charset=utf-8;");
 }
 
-export function AdminResearchDashboard() {
-  const query = useQuery({
-    queryKey: ["admin-research-data"],
-    queryFn: async (): Promise<ResearchData> => {
-      await waitForFirebaseUser();
-      // Reuse authorized read endpoints. Both sources must succeed so missing
-      // activity is never silently interpreted as zero learner engagement.
-      const [records, events] = await Promise.all([adminExportData(), adminListActivity()]);
-      const data = { ...records, events };
-      return { ...data, codes: await makeParticipantCodes(participantIds(data)) };
+// Fast-forward or reset a demo/test account's progress, so a researcher can
+// showcase or re-run the flow without clicking through every stage. Safe
+// because the target account is re-checked server-side against the same
+// admin allowlist that gates every other admin function in this app — this
+// UI restriction is a convenience, not the actual security boundary.
+function QaToolsSection({ users }: { users: AdminUserRow[] }) {
+  const [uid, setUid] = useState("");
+  const [pending, setPending] = useState<string | null>(null);
+
+  const run = async (label: string, action: () => Promise<void>) => {
+    setPending(label);
+    try {
+      await action();
+      toast.success(`${label}: สำเร็จ`);
+    } catch (e) {
+      toast.error(`${label}: ไม่สำเร็จ`, {
+        description: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const seedActions: {
+    key: AdminSeedUpTo;
+    label: string;
+    description: string;
+    icon: typeof Unlock;
+    tone: string;
+  }[] = [
+    {
+      key: "posttest",
+      label: "ปลดล็อกถึง Posttest",
+      description: "สร้างผล Pretest จำลอง",
+      icon: Unlock,
+      tone: "border-monitor-blue/60 text-monitor-blue",
     },
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-  if (query.isPending)
-    return (
-      <div
-        className="flex min-h-[40vh] items-center justify-center gap-3 text-slate-text"
-        role="status"
-      >
-        <Loader2 className="h-6 w-6 animate-spin" />
-        กำลังโหลดข้อมูลการเรียนรู้...
-      </div>
-    );
-  if (query.isError) {
-    const denied =
-      "code" in query.error &&
-      ["functions/permission-denied", "functions/unauthenticated"].includes(
-        String(query.error.code),
-      );
-    return (
-      <div
-        className="space-y-4 rounded-2xl border border-border bg-background p-10 text-center"
-        role="alert"
-      >
-        <h1 className="text-xl font-bold">
-          {denied ? "บัญชีนี้ไม่มีสิทธิ์เข้าถึงข้อมูลวิจัย" : "โหลดข้อมูลวิจัยไม่สำเร็จ"}
-        </h1>
-        <p className="text-sm text-slate-text">
-          {denied
-            ? "กรุณาเข้าสู่ระบบด้วยบัญชีผู้ดูแลที่ได้รับสิทธิ์"
-            : "ยังไม่สามารถรวมข้อมูลจากทุกแหล่งได้ กรุณาลองโหลดอีกครั้ง"}
-        </p>
-        <Button variant="outline" onClick={() => void query.refetch()}>
-          ลองอีกครั้ง
-        </Button>
-        {denied && (
-          <Link to="/auth" className="ml-4 text-mint-primary">
-            เข้าสู่ระบบ
-          </Link>
-        )}
-      </div>
-    );
-  }
+    {
+      key: "survey",
+      label: "ปลดล็อกถึงแบบสอบถาม",
+      description: "สร้างผล Pretest + Posttest จำลอง",
+      icon: MessageSquare,
+      tone: "border-monitor-violet/60 text-monitor-violet",
+    },
+    {
+      key: "certificate",
+      label: "ปลดล็อกถึงใบรับรอง",
+      description: "สร้างผล Pretest + Posttest จำลอง + แบบสอบถามทั้ง 4 ชุด + บทเรียนและ VR ครบ 5",
+      icon: Award,
+      tone: "border-monitor-teal/60 text-monitor-teal",
+    },
+  ];
+
   return (
-    <ResearchWorkspace
-      data={query.data}
-      loadedAt={query.dataUpdatedAt}
-      refreshing={query.isFetching}
-      refresh={() => void query.refetch()}
-    />
+    <section className="space-y-6" aria-label="เครื่องมือทดสอบ">
+      <div className="flex items-start gap-3 rounded-xl border border-monitor-amber/40 bg-monitor-amber-soft p-4 text-sm text-monitor-amber">
+        <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <p>
+          ใช้ได้เฉพาะบัญชีที่เป็นแอดมิน/บัญชีทดสอบอยู่แล้วเท่านั้น
+          (ระบบตรวจสอบฝั่งเซิร์ฟเวอร์อีกชั้น — ใช้กับบัญชีผู้เข้าร่วมวิจัยจริงไม่ได้)
+          บัญชีเป้าหมายต้องกรอกข้อมูลพื้นฐาน (onboarding) จริงแล้วอย่างน้อยหนึ่งครั้งก่อน
+          จึงจะปลดล็อกถึง Posttest ได้
+        </p>
+      </div>
+
+      <label className="flex max-w-md flex-col gap-1.5 text-sm font-medium">
+        บัญชีเป้าหมาย
+        <select value={uid} onChange={(e) => setUid(e.target.value)} className={controlClass}>
+          <option value="">เลือกบัญชี…</option>
+          {users.map((u) => (
+            <option key={u.uid} value={u.uid}>
+              {u.profile?.displayName ?? u.profile?.email ?? u.uid}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {seedActions.map((action) => (
+          <div
+            key={action.key}
+            className={`flex flex-col gap-3 rounded-2xl border border-t-4 bg-card p-5 ${action.tone}`}
+          >
+            <action.icon className="size-6 shrink-0" aria-hidden="true" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground">{action.label}</h3>
+              <p className="mt-1 text-sm text-slate-text">{action.description}</p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" disabled={!uid || pending !== null}>
+                  {pending === action.label && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  ใช้งาน
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{action.label}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {action.description} สำหรับบัญชีที่เลือก — เขียนข้อมูลจริงลง Firestore
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() =>
+                      void run(action.label, () => adminSeedTestProgress(uid, action.key))
+                    }
+                  >
+                    ยืนยัน
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ))}
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-t-4 border-destructive/60 bg-card p-5 text-destructive">
+          <RotateCcw className="size-6 shrink-0" aria-hidden="true" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground">รีเซ็ตบัญชีทดสอบ</h3>
+            <p className="mt-1 text-sm text-slate-text">
+              ลบผลก่อน/หลังเรียน แบบสอบถาม บทเรียน และ VR session ทั้งหมด เพื่อเริ่มใหม่ตั้งแต่ต้น
+            </p>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={!uid || pending !== null}>
+                {pending === "รีเซ็ตบัญชีทดสอบ" && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                รีเซ็ต
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>รีเซ็ตบัญชีทดสอบ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  ลบผลก่อน/หลังเรียน แบบสอบถาม บทเรียน และ VR session ทั้งหมดของบัญชีนี้
+                  เพื่อเริ่มทำแบบทดสอบใหม่ตั้งแต่ต้น การกระทำนี้ย้อนกลับไม่ได้
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => void run("รีเซ็ตบัญชีทดสอบ", () => adminResetTestProgress(uid))}
+                >
+                  ยืนยันรีเซ็ต
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </section>
   );
+}
+
+export function AdminResearchDashboard() {
+  return <ResearchDataLoader>{(props) => <ResearchWorkspace {...props} />}</ResearchDataLoader>;
 }
 
 function ResearchWorkspace({
@@ -149,14 +264,18 @@ function ResearchWorkspace({
   loadedAt,
   refreshing,
   refresh,
-}: {
-  data: ResearchData;
-  loadedAt: number;
-  refreshing: boolean;
-  refresh: () => void;
-}) {
-  const [filters, setFilters] = useState(EMPTY_RESEARCH_FILTERS);
+  range,
+  complete,
+  asOf,
+}: ResearchLoadProps) {
+  const [filters, setFilters] = useState({ ...EMPTY_RESEARCH_FILTERS, ...range });
   const [tab, setTab] = useState("participants");
+  const [view, setView] = useState("overview");
+  const openDetails = (next: string) => {
+    setTab(next);
+    if (next === "learning") setLearningKind("vr");
+    setView("details");
+  };
   const [search, setSearch] = useState("");
   const [eventType, setEventType] = useState("");
   const [showVideoDetails, setShowVideoDetails] = useState(false);
@@ -181,9 +300,13 @@ function ResearchWorkspace({
       new Set(
         participants.filter((uid) => {
           const profile = userMap.get(uid)?.profile;
-          return [data.codes[uid], profile?.displayName, profile?.email, profile?.faculty].some(
-            (v) => v?.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-          );
+          return [
+            data.codes[uid],
+            profile?.displayName,
+            profile?.email,
+            profile?.university,
+            profile?.faculty,
+          ].some((v) => v?.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
         }),
       ),
     [participants, userMap, data.codes, search],
@@ -191,6 +314,7 @@ function ResearchWorkspace({
   const matches = (row: ResearchRow) =>
     !invalidRange && matchingIds.has(codeToUid.get(String(row.participant_code)) ?? "");
   const participantRows = logs.participants.filter(matches);
+  const assessmentRows = assessmentResearchRows(data.users, data.codes, filters).filter(matches);
   const vrRows = logs.vr.filter(
     (row) => matches(row) && (!scenario || row.scenario_id === scenario),
   );
@@ -206,15 +330,11 @@ function ResearchWorkspace({
     ? activityRows
     : activityRows.filter((row) => row.event_type !== "video_observation");
   const stepRows = logs.steps.filter(matches);
-  const paired = vrRows.filter((row) => row.delta_overall !== null);
-  const deltaMean = paired.length
-    ? paired.reduce((sum, row) => sum + Number(row.delta_overall), 0) / paired.length
-    : null;
   const currentSession = data.sessions.find((s) => s.id === selectedSession);
   const currentSessionRow = logs.vr.find((row) => row.session_id === selectedSession);
   const vrColumns = includeText ? [...RESEARCH_COLUMNS.vr, ...TEXT_COLUMNS] : RESEARCH_COLUMNS.vr;
   const resetFilters = () => {
-    setFilters(EMPTY_RESEARCH_FILTERS);
+    setFilters({ ...EMPTY_RESEARCH_FILTERS, ...range });
     setSearch("");
     setEventType("");
     setScenario("");
@@ -230,7 +350,10 @@ function ResearchWorkspace({
     data.sessions.filter((s) => timestamp(s.createdAt) === null).length;
 
   const metadata = () => ({
-    schema_version: "feedbacklab-research-2.1",
+    schema_version: "feedbacklab-research-2.3",
+    server_range: range,
+    server_as_of_utc: asOf,
+    dataset_complete_for_server_range: complete,
     exported_at_utc: new Date().toISOString(),
     snapshot_loaded_at_utc: new Date(loadedAt).toISOString(),
     timezone: RESEARCH_TIMEZONE,
@@ -255,6 +378,7 @@ function ResearchWorkspace({
         {
           metadata: metadata(),
           participants: participantRows,
+          assessment_responses: assessmentRows,
           vr_sessions: vrRows,
           module_logs: moduleRows,
           activity_events: activityRows,
@@ -285,23 +409,31 @@ function ResearchWorkspace({
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-mint-primary">
-            ข้อมูลการเรียนรู้เพื่อการวิจัย
+            สำหรับอาจารย์และผู้วิจัย
           </p>
-          <h1 className="text-2xl font-bold text-slate-deep">พฤติกรรมการเรียนและการใช้งาน</h1>
+          <h1 className="text-2xl font-bold text-slate-deep">ติดตามการเรียนรู้</h1>
           <p className="mt-2 text-sm text-slate-text">
-            ติดตามรายผู้เรียน ตรวจสอบแต่ละการฝึก และเชื่อมกลับไปยังเหตุการณ์ต้นทาง
+            ดูภาพรวมการเข้าใช้งาน การเรียน และผลการฝึกในช่วงที่เลือก
           </p>
         </div>
-        <Button variant="outline" onClick={refresh} disabled={refreshing}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-          อัปเดตข้อมูล
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-xs text-slate-text">
+            อัปเดต {timeFormat.format(new Date(loadedAt))}
+          </span>
+          <Button variant="outline" onClick={refresh} disabled={refreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            อัปเดตข้อมูล
+          </Button>
+        </div>
       </header>
 
-      <section
-        className="space-y-4 rounded-2xl border border-border bg-background p-5"
-        aria-label="ตัวกรองข้อมูลวิจัย"
-      >
+      <details className="space-y-4 border-y border-border py-4" aria-label="ตัวกรองข้อมูลวิจัย">
+        <summary className="cursor-pointer text-sm font-medium underline underline-offset-4">
+          กรองผู้เรียนเพิ่มเติม
+          {search || filters.participant || filters.from !== range.from || filters.to !== range.to
+            ? " · มีตัวกรองที่ใช้งาน"
+            : ""}
+        </summary>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Field label="ค้นหาผู้เรียน">
             <div className="relative">
@@ -333,6 +465,8 @@ function ResearchWorkspace({
             <input
               type="date"
               className={controlClass}
+              min={range.from}
+              max={range.to}
               value={filters.from}
               onChange={(e) => setFilters({ ...filters, from: e.target.value })}
             />
@@ -341,6 +475,8 @@ function ResearchWorkspace({
             <input
               type="date"
               className={controlClass}
+              min={range.from}
+              max={range.to}
               value={filters.to}
               onChange={(e) => setFilters({ ...filters, to: e.target.value })}
             />
@@ -361,246 +497,399 @@ function ResearchWorkspace({
           วันที่เลือกใช้กับเวลา event ของบทเรียน/กิจกรรม และเวลาเริ่มของ VR ส่วนรายละเอียด VR
           แสดงข้อมูลล่าสุดทั้งการฝึก ตัวกรองสถานการณ์ บทเรียน และชนิด event ใช้เฉพาะตารางนั้น
         </p>
-      </section>
+      </details>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Metric
-          icon={<Users className="h-5 w-5" />}
-          label="ผู้เข้าร่วมในชุดที่เลือก"
-          value={participantRows.length}
-          detail="รวมผู้มี log แม้ยังไม่มี profile"
+      <nav
+        className="flex gap-4 overflow-x-auto border-b border-border"
+        aria-label="มุมมองระบบอาจารย์"
+      >
+        {[
+          { id: "overview", label: "ภาพรวม" },
+          { id: "details", label: "ติดตามผู้เรียน" },
+          { id: "export", label: "ส่งออกข้อมูลวิจัย" },
+          { id: "qa", label: "เครื่องมือทดสอบ" },
+        ].map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-current={view === item.id ? "page" : undefined}
+            className={`min-h-12 shrink-0 border-b-2 px-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-primary ${view === item.id ? "border-primary text-foreground" : "border-transparent text-slate-text hover:text-foreground"}`}
+            onClick={() => setView(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      {view === "overview" && (
+        <AdminMonitoring
+          events={logs.activity.filter(matches)}
+          modules={logs.modules.filter(matches)}
+          vr={logs.vr.filter(matches)}
+          participants={participantRows}
+          assessments={assessmentRows}
+          complete={complete}
+          name={(code) => userMap.get(codeToUid.get(code) ?? "")?.profile?.displayName ?? code}
+          openDetails={openDetails}
         />
-        <Metric
-          icon={<BookOpenText className="h-5 w-5" />}
-          label="รายการฝึก VR"
-          value={vrRows.length}
-          detail="หนึ่งรายการ = หนึ่ง session"
-        />
-        <Metric
-          icon={<ListOrdered className="h-5 w-5" />}
-          label="มีคะแนนรวมสองรอบ"
-          value={`${paired.length} / ${vrRows.length}`}
-          detail={
-            deltaMean === null
-              ? "ยังไม่มีคู่คะแนนสำหรับเปรียบเทียบ"
-              : `ผลต่างเฉลี่ย ${deltaMean >= 0 ? "+" : ""}${deltaMean.toFixed(1)} คะแนน · n = ${paired.length} sessions`
-          }
-        />
-      </div>
-
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-auto flex-wrap justify-start gap-1">
-          <TabsTrigger value="web">Web Sessions</TabsTrigger>
-          <TabsTrigger value="steps">เวลารายขั้น / แบบประเมิน</TabsTrigger>
-          <TabsTrigger value="participants">พฤติกรรมรายผู้เรียน</TabsTrigger>
-          <TabsTrigger value="learning">บันทึกการเรียนรู้ (Learning Log)</TabsTrigger>
-          <TabsTrigger value="activity">ลำดับกิจกรรม (Activity Log)</TabsTrigger>
-        </TabsList>
-        <TabsContent value="participants" className="space-y-4">
-          <SectionHeader
-            title="เปรียบเทียบพฤติกรรมรายผู้เรียน"
-            description="หนึ่งแถวต่อผู้เข้าร่วม · จำนวนที่แสดงคือสิ่งที่พบในข้อมูล ไม่ใช้แต้มและ Level แทนพฤติกรรมการเรียน"
-            onExport={() =>
-              exportCsv("participants.csv", participantRows, RESEARCH_COLUMNS.participants)
-            }
-            disabled={invalidRange}
-          />
-          <ResearchTable
-            rows={participantRows}
-            columns={[
-              { key: "participant_code", label: "ผู้เข้าร่วม", render: participantCell },
-              { key: "observed_event_days", label: "วันที่พบกิจกรรม" },
-              { key: "observed_event_count", label: "จำนวน event" },
-              { key: "modules_with_start_event", label: "บทเรียนที่เปิด" },
-              { key: "modules_with_completion_event", label: "บทเรียนที่พบ event จบ" },
-              { key: "vr_session_count", label: "VR sessions" },
-              { key: "vr_paired_overall_count", label: "คู่คะแนน VR" },
-              { key: "observed_retry_event_count", label: "event ฝึกซ้ำ" },
-              {
-                key: "last_event_at_utc",
-                label: "กิจกรรมล่าสุด",
-                render: (r) => timeText(r.last_event_at_utc),
-              },
-              {
-                key: "actions",
-                label: "ดูรายละเอียด",
-                render: (r) => (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFilters({
-                        ...filters,
-                        participant: codeToUid.get(String(r.participant_code)) ?? "",
-                      });
-                      setTab("learning");
-                    }}
-                  >
-                    ดูการเรียนรู้
-                  </Button>
-                ),
-              },
-            ]}
-          />
-        </TabsContent>
-        <TabsContent value="learning" className="space-y-4">
-          <div className="flex flex-wrap gap-3">
-            <Field label="หน่วยข้อมูล">
-              <select
-                className={controlClass}
-                value={learningKind}
-                onChange={(e) => setLearningKind(e.target.value)}
-              >
-                <option value="vr">การฝึก VR · หนึ่งแถวต่อ session</option>
-                <option value="modules">บทเรียน · หนึ่งแถวต่อผู้เรียนและบทเรียน</option>
+      )}
+      {view === "details" && (
+        <>
+          <div>
+            <label className="mb-5 flex flex-wrap items-center gap-3 text-sm font-medium">
+              ดูรายละเอียด
+              <select value={tab} onChange={(e) => setTab(e.target.value)} className={controlClass}>
+                <option value="participants">ผู้เรียน</option>
+                <option value="learning">การเรียนและฝึก VR</option>
+                <option value="web">การเข้าใช้งานเว็บ</option>
+                <option value="steps">เวลารายขั้น / แบบประเมิน</option>
+                <option value="activity">ประวัติกิจกรรมและวิดีโอ</option>
               </select>
-            </Field>
-            {learningKind === "vr" ? (
-              <Field label="สถานการณ์">
-                <select
-                  className={controlClass}
-                  value={scenario}
-                  onChange={(e) => setScenario(e.target.value)}
-                >
-                  <option value="">ทุกสถานการณ์</option>
-                  {scenarios.map((id) => (
-                    <option key={id}>{id}</option>
-                  ))}
-                </select>
-              </Field>
-            ) : (
-              <Field label="บทเรียน">
-                <select
-                  className={controlClass}
-                  value={moduleId}
-                  onChange={(e) => setModuleId(e.target.value)}
-                >
-                  <option value="">ทุกบทเรียน</option>
-                  {moduleIds.map((id) => (
-                    <option key={id}>{id}</option>
-                  ))}
-                </select>
-              </Field>
-            )}
-          </div>
-          {learningKind === "vr" ? (
-            <>
+            </label>
+            <section hidden={tab !== "participants"} className="space-y-4">
               <SectionHeader
-                title="ประวัติการฝึกและการสะท้อนคิด"
-                description="ตรวจขั้นที่มีข้อมูล การฝึกซ้ำที่เชื่อม session ได้ และคะแนนก่อน–หลังฝึกของแต่ละรายการ"
-                onExport={() => exportCsv("vr_sessions.csv", vrRows, vrColumns)}
-                disabled={invalidRange}
+                title="เปรียบเทียบพฤติกรรมรายผู้เรียน"
+                description="หนึ่งแถวต่อผู้เข้าร่วม · จำนวนที่แสดงคือสิ่งที่พบในข้อมูล ไม่ใช้แต้มและ Level แทนพฤติกรรมการเรียน"
+                onExport={() =>
+                  exportCsv("participants.csv", participantRows, RESEARCH_COLUMNS.participants)
+                }
+                disabled={invalidRange || !complete}
               />
               <ResearchTable
-                rows={vrRows}
+                rows={participantRows}
                 columns={[
                   { key: "participant_code", label: "ผู้เข้าร่วม", render: participantCell },
-                  { key: "scenario_id", label: "สถานการณ์" },
-                  { key: "attempt_index_in_loaded_history", label: "ลำดับ session" },
+                  { key: "observed_event_days", label: "วันที่พบกิจกรรม" },
+                  { key: "observed_event_count", label: "จำนวน event" },
+                  { key: "modules_with_start_event", label: "บทเรียนที่เปิด" },
+                  { key: "modules_with_completion_event", label: "บทเรียนที่พบ event จบ" },
+                  { key: "vr_session_count", label: "VR sessions" },
+                  { key: "vr_paired_overall_count", label: "คู่คะแนน VR" },
+                  { key: "observed_retry_event_count", label: "event ฝึกซ้ำ" },
                   {
-                    key: "started_at_utc",
-                    label: "เริ่มเมื่อ",
-                    render: (r) => timeText(r.started_at_utc),
+                    key: "last_event_at_utc",
+                    label: "กิจกรรมล่าสุด",
+                    render: (r) => timeText(r.last_event_at_utc),
                   },
-                  { key: "recorded_stage_count", label: "ขั้นที่มีข้อมูล / 4" },
-                  { key: "linked_retry_event_count", label: "event ฝึกซ้ำที่เชื่อมได้" },
-                  { key: "round1_overall", label: "คะแนนรอบ 1" },
-                  { key: "round2_overall", label: "คะแนนรอบ 2" },
-                  { key: "delta_overall", label: "ผลต่าง" },
                   {
-                    key: "detail",
-                    label: "หลักฐานการเรียนรู้",
+                    key: "actions",
+                    label: "ดูรายละเอียด",
                     render: (r) => (
                       <Button
-                        size="sm"
                         variant="outline"
-                        onClick={() => setSelectedSession(String(r.session_id))}
+                        size="sm"
+                        onClick={() => {
+                          setFilters({
+                            ...filters,
+                            participant: codeToUid.get(String(r.participant_code)) ?? "",
+                          });
+                          setTab("learning");
+                        }}
                       >
-                        ดูรายละเอียด
+                        ดูการเรียนรู้
                       </Button>
                     ),
                   },
                 ]}
               />
-            </>
-          ) : (
-            <>
+            </section>
+            <section hidden={tab !== "learning"} className="space-y-4">
+              <div className="flex flex-wrap gap-3">
+                <Field label="หน่วยข้อมูล">
+                  <select
+                    className={controlClass}
+                    value={learningKind}
+                    onChange={(e) => setLearningKind(e.target.value)}
+                  >
+                    <option value="vr">การฝึก VR · หนึ่งแถวต่อ session</option>
+                    <option value="modules">บทเรียน · หนึ่งแถวต่อผู้เรียนและบทเรียน</option>
+                  </select>
+                </Field>
+                {learningKind === "vr" ? (
+                  <Field label="สถานการณ์">
+                    <select
+                      className={controlClass}
+                      value={scenario}
+                      onChange={(e) => setScenario(e.target.value)}
+                    >
+                      <option value="">ทุกสถานการณ์</option>
+                      {scenarios.map((id) => (
+                        <option key={id}>{id}</option>
+                      ))}
+                    </select>
+                  </Field>
+                ) : (
+                  <Field label="บทเรียน">
+                    <select
+                      className={controlClass}
+                      value={moduleId}
+                      onChange={(e) => setModuleId(e.target.value)}
+                    >
+                      <option value="">ทุกบทเรียน</option>
+                      {moduleIds.map((id) => (
+                        <option key={id}>{id}</option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+              </div>
+              {learningKind === "vr" ? (
+                <>
+                  <SectionHeader
+                    title="ประวัติการฝึกและการสะท้อนคิด"
+                    description="ตรวจขั้นที่มีข้อมูล การฝึกซ้ำที่เชื่อม session ได้ และคะแนนก่อน–หลังฝึกของแต่ละรายการ"
+                    onExport={() => exportCsv("vr_sessions.csv", vrRows, vrColumns)}
+                    disabled={invalidRange || !complete}
+                  />
+                  <ResearchTable
+                    rows={vrRows}
+                    columns={[
+                      { key: "participant_code", label: "ผู้เข้าร่วม", render: participantCell },
+                      { key: "scenario_id", label: "สถานการณ์" },
+                      { key: "attempt_index_in_loaded_history", label: "ลำดับ session" },
+                      {
+                        key: "started_at_utc",
+                        label: "เริ่มเมื่อ",
+                        render: (r) => timeText(r.started_at_utc),
+                      },
+                      { key: "recorded_stage_count", label: "ขั้นที่มีข้อมูล / 4" },
+                      { key: "linked_retry_event_count", label: "event ฝึกซ้ำที่เชื่อมได้" },
+                      { key: "round1_overall", label: "คะแนนรอบ 1" },
+                      { key: "round2_overall", label: "คะแนนรอบ 2" },
+                      { key: "delta_overall", label: "ผลต่าง" },
+                      {
+                        key: "detail",
+                        label: "หลักฐานการเรียนรู้",
+                        render: (r) => (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedSession(String(r.session_id))}
+                          >
+                            ดูรายละเอียด
+                          </Button>
+                        ),
+                      },
+                    ]}
+                  />
+                </>
+              ) : (
+                <>
+                  <SectionHeader
+                    title="การเปิดบทเรียนและการกลับมาเรียน"
+                    description="ไม่จับคู่เริ่ม–จบเป็น attempt เพราะ event เดิมไม่มี run ID · เวลาเรียนจริงยังไม่ได้เก็บ"
+                    onExport={() =>
+                      exportCsv("module_logs.csv", moduleRows, RESEARCH_COLUMNS.modules)
+                    }
+                    disabled={invalidRange || !complete}
+                  />
+                  <ResearchTable
+                    rows={moduleRows}
+                    columns={[
+                      { key: "participant_code", label: "ผู้เข้าร่วม", render: participantCell },
+                      { key: "module_id", label: "บทเรียน" },
+                      { key: "observed_start_count", label: "event เปิดบทเรียน" },
+                      { key: "observed_completion_count", label: "event จบบทเรียน" },
+                      {
+                        key: "observed_reopen_after_completion_count",
+                        label: "เปิดหลังพบ event จบ",
+                      },
+                      {
+                        key: "first_start_at_utc",
+                        label: "เริ่มครั้งแรกในช่วง",
+                        render: (r) => timeText(r.first_start_at_utc),
+                      },
+                      {
+                        key: "last_completion_at_utc",
+                        label: "event จบล่าสุดในช่วง",
+                        render: (r) => timeText(r.last_completion_at_utc),
+                      },
+                    ]}
+                  />
+                </>
+              )}
+            </section>
+            <section hidden={tab !== "activity"} className="space-y-4">
               <SectionHeader
-                title="การเปิดบทเรียนและการกลับมาเรียน"
-                description="ไม่จับคู่เริ่ม–จบเป็น attempt เพราะ event เดิมไม่มี run ID · เวลาเรียนจริงยังไม่ได้เก็บ"
-                onExport={() => exportCsv("module_logs.csv", moduleRows, RESEARCH_COLUMNS.modules)}
-                disabled={invalidRange}
+                title="ลำดับเหตุการณ์ที่บันทึกได้"
+                description="เรียงจากเก่าไปใหม่ · ลำดับและระยะห่างอิงเฉพาะช่วงข้อมูลที่โหลด ไม่ใช่ประวัติทั้งหมดหรือเวลาเรียน"
+                onExport={() =>
+                  exportCsv("activity_events.csv", activityRows, RESEARCH_COLUMNS.activity)
+                }
+                disabled={invalidRange || !complete}
+              />
+              <Field label="ชนิดกิจกรรม">
+                <select
+                  className={`${controlClass} max-w-md`}
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value)}
+                >
+                  <option value="">ทุกกิจกรรม</option>
+                  {eventTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {ACTIVITY_EVENT_LABELS[type] ?? type}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              {(!eventType || eventType === "video_observation") && (
+                <>
+                  <SectionHeader
+                    title="สรุปการเปิดวิดีโอ"
+                    description="หนึ่งแถวต่อการเปิดตัวเล่นหนึ่งครั้ง รวมช่วงเล่น–หยุดในรอบเดียวกัน เฉพาะข้อมูลในตัวกรอง ไม่ใช่จำนวนครั้งที่ดูครบ"
+                    onExport={() => exportCsv("video_visits.csv", videoRows, VIDEO_SUMMARY_COLUMNS)}
+                    disabled={invalidRange || !complete}
+                  />
+                  <ResearchTable
+                    rows={videoRows}
+                    columns={[
+                      { key: "participant_code", label: "ผู้เรียน", render: participantCell },
+                      { key: "module_id", label: "บทเรียน" },
+                      { key: "video_id", label: "วิดีโอ" },
+                      {
+                        key: "video_is_test",
+                        label: "เนื้อหาทดสอบ",
+                        render: (r) =>
+                          r.video_is_test === true
+                            ? "ทดสอบ"
+                            : r.video_is_test === false
+                              ? "เนื้อหาจริง"
+                              : "—",
+                      },
+                      {
+                        key: "first_observed_at_utc",
+                        label: "พบครั้งแรก",
+                        render: (r) => timeText(r.first_observed_at_utc),
+                      },
+                      {
+                        key: "last_observed_at_utc",
+                        label: "ข้อมูลล่าสุด",
+                        render: (r) => timeText(r.last_observed_at_utc),
+                      },
+                      { key: "video_playback_seconds", label: "เวลาเล่นรวม (วินาที)" },
+                      { key: "video_visible_playback_seconds", label: "เล่นขณะมองเห็น (วินาที)" },
+                      {
+                        key: "reached_end",
+                        label: "ถึงท้ายคลิป",
+                        render: (r) => (r.reached_end ? "พบเหตุการณ์ถึงท้าย" : "ยังไม่พบ"),
+                      },
+                      {
+                        key: "exit_observed",
+                        label: "ออกจากตัวเล่น",
+                        render: (r) => (r.exit_observed ? "พบเหตุการณ์ออก" : "ยังไม่พบ"),
+                      },
+                      { key: "error_count", label: "ข้อผิดพลาด" },
+                    ]}
+                  />
+                  <p className="text-xs text-slate-text">
+                    เวลาเป็นผลรวมช่วงที่บันทึกได้ อาจไม่ครบหากปิดโปรแกรมทันทีหรือกรองเฉพาะบางวัน
+                    การถึงท้ายคลิปไม่ยืนยันว่าดูครบทุกช่วง CSV ด้านบนสุดและ JSON
+                    ยังเก็บเหตุการณ์ต้นทางทั้งหมด
+                  </p>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={showVideoDetails}
+                      onChange={(e) => setShowVideoDetails(e.target.checked)}
+                    />
+                    แสดงรายละเอียดวิดีโอทุกเหตุการณ์ (สำหรับตรวจสอบ)
+                  </label>
+                </>
+              )}
+              {(eventType !== "video_observation" || showVideoDetails) && (
+                <ResearchTable
+                  rows={displayedActivityRows}
+                  columns={[
+                    { key: "participant_code", label: "ผู้เข้าร่วม", render: participantCell },
+                    { key: "sequence_in_loaded_history", label: "ลำดับของผู้เรียน" },
+                    {
+                      key: "recorded_at_utc",
+                      label: "เวลาที่ server รับ (ไทย)",
+                      render: (r) => timeText(r.recorded_at_utc),
+                    },
+                    {
+                      key: "occurred_at_utc",
+                      label: "เวลาเกิดที่ client (ไทย)",
+                      render: (r) => timeText(r.occurred_at_utc),
+                    },
+                    { key: "web_session_id", label: "Web session" },
+                    { key: "path", label: "หน้าเว็บ" },
+                    { key: "elapsed_seconds", label: "ระยะเวลาช่วง (วินาที)" },
+                    {
+                      key: "event_type",
+                      label: "กิจกรรม",
+                      render: (r) => (
+                        <div>
+                          {ACTIVITY_EVENT_LABELS[
+                            r.event_type as keyof typeof ACTIVITY_EVENT_LABELS
+                          ] ?? r.event_type}
+                          <div className="mt-1 font-mono text-xs text-slate-text">{r.event_id}</div>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: "content",
+                      label: "บทเรียน / สถานการณ์",
+                      render: (r) => valueText(r.module_id ?? r.scenario_id),
+                    },
+                    {
+                      key: "gap_from_previous_event_seconds",
+                      label: "ห่างจาก event ก่อนหน้า (วินาที)",
+                    },
+                    { key: "video_id", label: "YouTube Video ID" },
+                    { key: "video_is_test", label: "วิดีโอทดสอบ" },
+                    { key: "reason", label: "เหตุการณ์ย่อย" },
+                    {
+                      key: "video_player_state",
+                      label: "สถานะวิดีโอ",
+                      render: (r) =>
+                        r.video_player_state == null
+                          ? "—"
+                          : ({
+                              "-1": "ยังไม่เริ่ม / ผิดพลาด",
+                              "0": "สิ้นสุด",
+                              "1": "กำลังเล่น",
+                              "2": "หยุดพัก",
+                              "3": "กำลังโหลด",
+                              "5": "พร้อมเล่น",
+                            }[String(r.video_player_state)] ?? String(r.video_player_state)),
+                    },
+                    { key: "video_playback_seconds", label: "เล่นในช่วงนี้ (วินาที)" },
+                    { key: "video_visible_playback_seconds", label: "เล่นขณะมองเห็น (วินาที)" },
+                    { key: "video_position_seconds", label: "ตำแหน่งในวิดีโอ (วินาที)" },
+                    {
+                      key: "session_link_status",
+                      label: "การเชื่อมกับ VR",
+                      render: (r) => (
+                        <div>
+                          {statusLabels[String(r.session_link_status)]}
+                          <div
+                            className="mt-1 max-w-44 truncate font-mono text-xs text-slate-text"
+                            title={String(r.session_id ?? "")}
+                          >
+                            {r.session_id}
+                          </div>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
+              )}
+            </section>
+            <section hidden={tab !== "web"} className="space-y-4">
+              <SectionHeader
+                title="การใช้งานเว็บแยก session"
+                description="หนึ่งแถวต่อ session ของเอกสารหรือแท็บ · เทียบช่วง heartbeat ตามนาฬิกาเครื่อง ไม่ยืนยันจำนวนอุปกรณ์จริง"
+                onExport={() => exportCsv("web_sessions.csv", webRows, RESEARCH_COLUMNS.web)}
+                disabled={invalidRange || !complete}
               />
               <ResearchTable
-                rows={moduleRows}
-                columns={[
-                  { key: "participant_code", label: "ผู้เข้าร่วม", render: participantCell },
-                  { key: "module_id", label: "บทเรียน" },
-                  { key: "observed_start_count", label: "event เปิดบทเรียน" },
-                  { key: "observed_completion_count", label: "event จบบทเรียน" },
-                  { key: "observed_reopen_after_completion_count", label: "เปิดหลังพบ event จบ" },
-                  {
-                    key: "first_start_at_utc",
-                    label: "เริ่มครั้งแรกในช่วง",
-                    render: (r) => timeText(r.first_start_at_utc),
-                  },
-                  {
-                    key: "last_completion_at_utc",
-                    label: "event จบล่าสุดในช่วง",
-                    render: (r) => timeText(r.last_completion_at_utc),
-                  },
-                ]}
-              />
-            </>
-          )}
-        </TabsContent>
-        <TabsContent value="activity" className="space-y-4">
-          <SectionHeader
-            title="ลำดับเหตุการณ์ที่บันทึกได้"
-            description="เรียงตามเวลาจากเก่าไปใหม่ · ลำดับและระยะห่างคำนวณจากประวัติของผู้เรียนก่อนกรอง ไม่ใช่เวลาเรียน"
-            onExport={() =>
-              exportCsv("activity_events.csv", activityRows, RESEARCH_COLUMNS.activity)
-            }
-            disabled={invalidRange}
-          />
-          <Field label="ชนิดกิจกรรม">
-            <select
-              className={`${controlClass} max-w-md`}
-              value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
-            >
-              <option value="">ทุกกิจกรรม</option>
-              {eventTypes.map((type) => (
-                <option key={type} value={type}>
-                  {ACTIVITY_EVENT_LABELS[type] ?? type}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {(!eventType || eventType === "video_observation") && (
-            <>
-              <SectionHeader
-                title="สรุปการเปิดวิดีโอ"
-                description="หนึ่งแถวต่อการเปิดตัวเล่นหนึ่งครั้ง รวมช่วงเล่น–หยุดในรอบเดียวกัน เฉพาะข้อมูลในตัวกรอง ไม่ใช่จำนวนครั้งที่ดูครบ"
-                onExport={() => exportCsv("video_visits.csv", videoRows, VIDEO_SUMMARY_COLUMNS)}
-                disabled={invalidRange}
-              />
-              <ResearchTable
-                rows={videoRows}
+                rows={webRows}
                 columns={[
                   { key: "participant_code", label: "ผู้เรียน", render: participantCell },
-                  { key: "module_id", label: "บทเรียน" },
-                  { key: "video_id", label: "วิดีโอ" },
-                  {
-                    key: "video_is_test",
-                    label: "เนื้อหาทดสอบ",
-                    render: (r) =>
-                      r.video_is_test === true
-                        ? "ทดสอบ"
-                        : r.video_is_test === false
-                          ? "เนื้อหาจริง"
-                          : "—",
-                  },
+                  { key: "web_session_id", label: "Web session" },
+                  { key: "browser_id", label: "รหัสเบราว์เซอร์" },
+                  { key: "device_category", label: "ประเภทอุปกรณ์ (ประมาณ)" },
+                  { key: "browser_family", label: "เบราว์เซอร์" },
                   {
                     key: "first_observed_at_utc",
                     label: "พบครั้งแรก",
@@ -608,296 +897,180 @@ function ResearchWorkspace({
                   },
                   {
                     key: "last_observed_at_utc",
-                    label: "ข้อมูลล่าสุด",
+                    label: "พบล่าสุด",
                     render: (r) => timeText(r.last_observed_at_utc),
                   },
-                  { key: "video_playback_seconds", label: "เวลาเล่นรวม (วินาที)" },
-                  { key: "video_visible_playback_seconds", label: "เล่นขณะมองเห็น (วินาที)" },
+                  { key: "visible_seconds", label: "แท็บมองเห็น (วินาที)" },
+                  { key: "active_proxy_seconds", label: "ปฏิสัมพันธ์ล่าสุด (วินาที)" },
+                  { key: "overlapping_web_session_count", label: "Session ที่มีช่วงซ้อน" },
+                  { key: "overlapping_other_browser_count", label: "เบราว์เซอร์อื่นที่มีช่วงซ้อน" },
+                  { key: "end_event_present", label: "พบ event สิ้นสุด" },
+                ]}
+              />
+            </section>
+            <section hidden={tab !== "steps"} className="space-y-4">
+              <SectionHeader
+                title="เวลาแต่ละครั้งที่เข้าขั้นการเรียน"
+                description="แยก run และการเข้าขั้นแต่ละครั้ง รวมแบบประเมิน · ไม่มี event จบจะแสดงเวลาว่าง ไม่ประมาณเติม"
+                onExport={() => exportCsv("learning_steps.csv", stepRows, RESEARCH_COLUMNS.steps)}
+                disabled={invalidRange || !complete}
+              />
+              <ResearchTable
+                rows={stepRows}
+                columns={[
+                  { key: "participant_code", label: "ผู้เรียน", render: participantCell },
                   {
-                    key: "reached_end",
-                    label: "ถึงท้ายคลิป",
-                    render: (r) => (r.reached_end ? "พบเหตุการณ์ถึงท้าย" : "ยังไม่พบ"),
+                    key: "run_id",
+                    label: "Run / Attempt",
+                    render: (r) => (
+                      <span
+                        className="whitespace-nowrap font-mono text-xs"
+                        title={String(r.run_id ?? "")}
+                      >
+                        {typeof r.run_id === "string" ? `${r.run_id.slice(0, 8)}…` : "—"}
+                      </span>
+                    ),
+                  },
+                  { key: "step_id", label: "ขั้น" },
+                  { key: "module_id", label: "บทเรียน" },
+                  { key: "scenario_id", label: "Scenario" },
+                  { key: "assessment_id", label: "แบบประเมิน" },
+                  {
+                    key: "started_at_client_utc",
+                    label: "เริ่ม",
+                    render: (r) => (
+                      <span className="whitespace-nowrap">{timeText(r.started_at_client_utc)}</span>
+                    ),
                   },
                   {
-                    key: "exit_observed",
-                    label: "ออกจากตัวเล่น",
-                    render: (r) => (r.exit_observed ? "พบเหตุการณ์ออก" : "ยังไม่พบ"),
+                    key: "ended_at_client_utc",
+                    label: "สิ้นสุด",
+                    render: (r) => (
+                      <span className="whitespace-nowrap">{timeText(r.ended_at_client_utc)}</span>
+                    ),
                   },
-                  { key: "error_count", label: "ข้อผิดพลาด" },
+                  { key: "elapsed_seconds", label: "เวลารวม (วินาที)" },
+                  { key: "visible_seconds", label: "แท็บมองเห็น (วินาที)" },
+                  { key: "active_proxy_seconds", label: "ปฏิสัมพันธ์ล่าสุด (วินาที)" },
+                  {
+                    key: "end_reason",
+                    label: "สาเหตุสิ้นสุดช่วง",
+                    render: (r) => (
+                      <div>
+                        {valueText(r.end_reason)}
+                        {typeof r.elapsed_seconds === "number" &&
+                          r.elapsed_seconds < 0.01 &&
+                          r.end_reason === "step_changed_or_unmounted" && (
+                            <p className="mt-1 text-xs text-amber-700">
+                              ช่วงสั้นมาก อาจเป็นข้อมูลจากการทดสอบหน้าเดิม ควรตรวจสอบ
+                            </p>
+                          )}
+                      </div>
+                    ),
+                  },
                 ]}
               />
               <p className="text-xs text-slate-text">
-                เวลาเป็นผลรวมช่วงที่บันทึกได้ อาจไม่ครบหากปิดโปรแกรมทันทีหรือกรองเฉพาะบางวัน
-                การถึงท้ายคลิปไม่ยืนยันว่าดูครบทุกช่วง CSV ด้านบนสุดและ JSON
-                ยังเก็บเหตุการณ์ต้นทางทั้งหมด
+                แสดงวินาทีทศนิยม 2 ตำแหน่ง · ค่าบวกต่ำกว่า 0.01 แสดง &lt;0.01 ·
+                แต่ละแถวคือการเข้าขั้นหนึ่งครั้ง ไม่ใช่เวลารวมทั้งบทเรียน
+                ข้อมูลเก่าไม่ถูกลบหรือปรับระยะเวลาย้อนหลัง
               </p>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showVideoDetails}
-                  onChange={(e) => setShowVideoDetails(e.target.checked)}
-                />
-                แสดงรายละเอียดวิดีโอทุกเหตุการณ์ (สำหรับตรวจสอบ)
-              </label>
-            </>
-          )}
-          {(eventType !== "video_observation" || showVideoDetails) && (
-            <ResearchTable
-              rows={displayedActivityRows}
-              columns={[
-                { key: "participant_code", label: "ผู้เข้าร่วม", render: participantCell },
-                { key: "sequence_in_loaded_history", label: "ลำดับของผู้เรียน" },
-                {
-                  key: "recorded_at_utc",
-                  label: "เวลาที่ server รับ (ไทย)",
-                  render: (r) => timeText(r.recorded_at_utc),
-                },
-                {
-                  key: "occurred_at_utc",
-                  label: "เวลาเกิดที่ client (ไทย)",
-                  render: (r) => timeText(r.occurred_at_utc),
-                },
-                { key: "web_session_id", label: "Web session" },
-                { key: "path", label: "หน้าเว็บ" },
-                { key: "elapsed_seconds", label: "ระยะเวลาช่วง (วินาที)" },
-                {
-                  key: "event_type",
-                  label: "กิจกรรม",
-                  render: (r) => (
-                    <div>
-                      {ACTIVITY_EVENT_LABELS[r.event_type as keyof typeof ACTIVITY_EVENT_LABELS] ??
-                        r.event_type}
-                      <div className="mt-1 font-mono text-xs text-slate-text">{r.event_id}</div>
-                    </div>
-                  ),
-                },
-                {
-                  key: "content",
-                  label: "บทเรียน / สถานการณ์",
-                  render: (r) => valueText(r.module_id ?? r.scenario_id),
-                },
-                {
-                  key: "gap_from_previous_event_seconds",
-                  label: "ห่างจาก event ก่อนหน้า (วินาที)",
-                },
-                { key: "video_id", label: "YouTube Video ID" },
-                { key: "video_is_test", label: "วิดีโอทดสอบ" },
-                { key: "reason", label: "เหตุการณ์ย่อย" },
-                {
-                  key: "video_player_state",
-                  label: "สถานะวิดีโอ",
-                  render: (r) =>
-                    r.video_player_state == null
-                      ? "—"
-                      : ({
-                          "-1": "ยังไม่เริ่ม / ผิดพลาด",
-                          "0": "สิ้นสุด",
-                          "1": "กำลังเล่น",
-                          "2": "หยุดพัก",
-                          "3": "กำลังโหลด",
-                          "5": "พร้อมเล่น",
-                        }[String(r.video_player_state)] ?? String(r.video_player_state)),
-                },
-                { key: "video_playback_seconds", label: "เล่นในช่วงนี้ (วินาที)" },
-                { key: "video_visible_playback_seconds", label: "เล่นขณะมองเห็น (วินาที)" },
-                { key: "video_position_seconds", label: "ตำแหน่งในวิดีโอ (วินาที)" },
-                {
-                  key: "session_link_status",
-                  label: "การเชื่อมกับ VR",
-                  render: (r) => (
-                    <div>
-                      {statusLabels[String(r.session_link_status)]}
-                      <div
-                        className="mt-1 max-w-44 truncate font-mono text-xs text-slate-text"
-                        title={String(r.session_id ?? "")}
-                      >
-                        {r.session_id}
-                      </div>
-                    </div>
-                  ),
-                },
-              ]}
+            </section>
+          </div>
+        </>
+      )}
+
+      {view === "export" && (
+        <section className="space-y-4 bg-background py-5">
+          <div>
+            <h2 className="font-bold text-slate-deep">ส่งออกชุดข้อมูลสำหรับวิเคราะห์</h2>
+            <p className="mt-1 text-sm text-slate-text">
+              ทุกไฟล์ใช้รหัสผู้เข้าร่วมเดียวกัน ไม่ใส่ชื่อ อีเมล หรือ UID · CSV
+              ส่งออกทุกแถวที่ผ่านตัวกรอง รวมหน้าที่ไม่ได้เปิดอยู่
+            </p>
+          </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={includeText}
+              onChange={(e) => setIncludeText(e.target.checked)}
+              className="mt-1"
             />
-          )}
-        </TabsContent>
-        <TabsContent value="web" className="space-y-4">
-          <SectionHeader
-            title="การใช้งานเว็บแยก session"
-            description="หนึ่งแถวต่อ session ของเอกสารหรือแท็บ · เทียบช่วง heartbeat ตามนาฬิกาเครื่อง ไม่ยืนยันจำนวนอุปกรณ์จริง"
-            onExport={() => exportCsv("web_sessions.csv", webRows, RESEARCH_COLUMNS.web)}
-            disabled={invalidRange}
-          />
-          <ResearchTable
-            rows={webRows}
-            columns={[
-              { key: "participant_code", label: "ผู้เรียน", render: participantCell },
-              { key: "web_session_id", label: "Web session" },
-              { key: "browser_id", label: "รหัสเบราว์เซอร์" },
-              { key: "device_category", label: "ประเภทอุปกรณ์ (ประมาณ)" },
-              { key: "browser_family", label: "เบราว์เซอร์" },
-              {
-                key: "first_observed_at_utc",
-                label: "พบครั้งแรก",
-                render: (r) => timeText(r.first_observed_at_utc),
-              },
-              {
-                key: "last_observed_at_utc",
-                label: "พบล่าสุด",
-                render: (r) => timeText(r.last_observed_at_utc),
-              },
-              { key: "visible_seconds", label: "แท็บมองเห็น (วินาที)" },
-              { key: "active_proxy_seconds", label: "ปฏิสัมพันธ์ล่าสุด (วินาที)" },
-              { key: "overlapping_web_session_count", label: "Session ที่มีช่วงซ้อน" },
-              { key: "overlapping_other_browser_count", label: "เบราว์เซอร์อื่นที่มีช่วงซ้อน" },
-              { key: "end_event_present", label: "พบ event สิ้นสุด" },
-            ]}
-          />
-        </TabsContent>
-        <TabsContent value="steps" className="space-y-4">
-          <SectionHeader
-            title="เวลาแต่ละครั้งที่เข้าขั้นการเรียน"
-            description="แยก run และการเข้าขั้นแต่ละครั้ง รวมแบบประเมิน · ไม่มี event จบจะแสดงเวลาว่าง ไม่ประมาณเติม"
-            onExport={() => exportCsv("learning_steps.csv", stepRows, RESEARCH_COLUMNS.steps)}
-            disabled={invalidRange}
-          />
-          <ResearchTable
-            rows={stepRows}
-            columns={[
-              { key: "participant_code", label: "ผู้เรียน", render: participantCell },
-              {
-                key: "run_id",
-                label: "Run / Attempt",
-                render: (r) => (
-                  <span
-                    className="whitespace-nowrap font-mono text-xs"
-                    title={String(r.run_id ?? "")}
-                  >
-                    {typeof r.run_id === "string" ? `${r.run_id.slice(0, 8)}…` : "—"}
-                  </span>
-                ),
-              },
-              { key: "step_id", label: "ขั้น" },
-              { key: "module_id", label: "บทเรียน" },
-              { key: "scenario_id", label: "Scenario" },
-              { key: "assessment_id", label: "แบบประเมิน" },
-              {
-                key: "started_at_client_utc",
-                label: "เริ่ม",
-                render: (r) => (
-                  <span className="whitespace-nowrap">{timeText(r.started_at_client_utc)}</span>
-                ),
-              },
-              {
-                key: "ended_at_client_utc",
-                label: "สิ้นสุด",
-                render: (r) => (
-                  <span className="whitespace-nowrap">{timeText(r.ended_at_client_utc)}</span>
-                ),
-              },
-              { key: "elapsed_seconds", label: "เวลารวม (วินาที)" },
-              { key: "visible_seconds", label: "แท็บมองเห็น (วินาที)" },
-              { key: "active_proxy_seconds", label: "ปฏิสัมพันธ์ล่าสุด (วินาที)" },
-              {
-                key: "end_reason",
-                label: "สาเหตุสิ้นสุดช่วง",
-                render: (r) => (
-                  <div>
-                    {valueText(r.end_reason)}
-                    {typeof r.elapsed_seconds === "number" &&
-                      r.elapsed_seconds < 0.01 &&
-                      r.end_reason === "step_changed_or_unmounted" && (
-                        <p className="mt-1 text-xs text-amber-700">
-                          ช่วงสั้นมาก อาจเป็นข้อมูลจากการทดสอบหน้าเดิม ควรตรวจสอบ
-                        </p>
-                      )}
-                  </div>
-                ),
-              },
-            ]}
-          />
-          <p className="text-xs text-slate-text">
-            แสดงวินาทีทศนิยม 2 ตำแหน่ง · ค่าบวกต่ำกว่า 0.01 แสดง &lt;0.01 ·
-            แต่ละแถวคือการเข้าขั้นหนึ่งครั้ง ไม่ใช่เวลารวมทั้งบทเรียน
-            ข้อมูลเก่าไม่ถูกลบหรือปรับระยะเวลาย้อนหลัง
-          </p>
-        </TabsContent>
-      </Tabs>
-
-      <section className="space-y-4 rounded-2xl border border-border bg-background p-5">
-        <div>
-          <h2 className="font-bold text-slate-deep">ส่งออกชุดข้อมูลสำหรับวิเคราะห์</h2>
-          <p className="mt-1 text-sm text-slate-text">
-            ทุกไฟล์ใช้รหัสผู้เข้าร่วมเดียวกัน ไม่ใส่ชื่อ อีเมล หรือ UID · CSV
-            ส่งออกทุกแถวที่ผ่านตัวกรอง รวมหน้าที่ไม่ได้เปิดอยู่
-          </p>
-        </div>
-        <label className="flex items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={includeText}
-            onChange={(e) => setIncludeText(e.target.checked)}
-            className="mt-1"
-          />
-          <span>
-            รวม transcript และข้อความสะท้อนคิดในไฟล์ VR/JSON{" "}
-            <span className="block text-xs text-slate-text">
-              สำหรับวิเคราะห์เชิงคุณภาพ ข้อความอาจมีข้อมูลระบุตัวบุคคล
+            <span>
+              รวม transcript และข้อความสะท้อนคิดในไฟล์ VR/JSON{" "}
+              <span className="block text-xs text-slate-text">
+                สำหรับวิเคราะห์เชิงคุณภาพ ข้อความอาจมีข้อมูลระบุตัวบุคคล
+              </span>
             </span>
-          </span>
-        </label>
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={exportBundle} disabled={invalidRange}>
-            <Download className="mr-2 h-4 w-4" />
-            ชุดข้อมูลพร้อมคำอธิบาย (JSON)
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() =>
-              exportCsv("research_codebook.csv", researchCodebook(includeText), [
-                "dataset",
-                "field",
-                "definition",
-                "missing_value",
-              ])
-            }
-          >
-            คำอธิบายตัวแปร (CSV)
-          </Button>
-          <Button
-            variant="outline"
-            disabled={invalidRange}
-            onClick={() =>
-              download(
-                "research_metadata.json",
-                JSON.stringify(metadata(), null, 2),
-                "application/json;charset=utf-8;",
-              )
-            }
-          >
-            เงื่อนไขและวิธีคำนวณ (JSON)
-          </Button>
-        </div>
-        <p className="text-xs text-slate-text">
-          ช่องว่างใน CSV / null ใน JSON = ไม่มีข้อมูล · ค่า 0 = พบเป็นศูนย์ตามนิยามตัวแปร · คะแนน VR
-          และคะแนนก่อน–หลังเรียนเป็นคนละเกณฑ์
-        </p>
-      </section>
+          </label>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={exportBundle} disabled={invalidRange || !complete}>
+              <Download className="mr-2 h-4 w-4" />
+              ชุดข้อมูลพร้อมคำอธิบาย (JSON)
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                exportCsv("research_codebook.csv", researchCodebook(includeText), [
+                  "dataset",
+                  "field",
+                  "definition",
+                  "missing_value",
+                ])
+              }
+            >
+              คำอธิบายตัวแปร (CSV)
+            </Button>
+            <Button
+              variant="outline"
+              disabled={invalidRange || !complete}
+              onClick={() =>
+                exportCsv("assessment_responses.csv", assessmentRows, ASSESSMENT_COLUMNS)
+              }
+            >
+              คำตอบก่อน–หลังเรียน (CSV)
+            </Button>
+            <Button
+              variant="outline"
+              disabled={invalidRange || !complete}
+              onClick={() =>
+                download(
+                  "research_metadata.json",
+                  JSON.stringify(metadata(), null, 2),
+                  "application/json;charset=utf-8;",
+                )
+              }
+            >
+              เงื่อนไขและวิธีคำนวณ (JSON)
+            </Button>
+          </div>
+          <p className="text-xs text-slate-text">
+            ช่องว่างใน CSV / null ใน JSON = ไม่มีข้อมูล · ค่า 0 = พบเป็นศูนย์ตามนิยามตัวแปร · คะแนน
+            VR และคะแนนก่อน–หลังเรียนเป็นคนละเกณฑ์
+          </p>
+        </section>
+      )}
 
-      <details className="rounded-2xl border border-border bg-background p-5">
-        <summary className="cursor-pointer font-semibold text-slate-deep">
-          ความครบถ้วนของข้อมูลและข้อจำกัดในการตีความ
-        </summary>
-        <p className="mt-4 text-sm text-slate-text">
-          ข้อมูลทั้งหมดที่โหลด: {data.users.length} users · {data.sessions.length} sessions ·{" "}
-          {data.events.length} events · พบเวลาที่อ่านไม่ได้ {missingTimes} รายการ
-          (ไม่รวมในช่วงวันที่เมื่อใช้ตัวกรอง)
-        </p>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-text">
-          {RESEARCH_NOTES.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-        </ul>
-      </details>
+      {view === "export" && (
+        <section
+          className="space-y-3 border-t border-border pt-5 text-sm text-slate-text"
+          aria-label="ข้อควรรู้ก่อนใช้ข้อมูล"
+        >
+          <h2 className="font-semibold text-foreground">ข้อควรรู้ก่อนใช้ข้อมูล</h2>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>สรุปผลเมื่อโหลดข้อมูลครบในช่วงวันที่ที่เลือก</li>
+            <li>เวลาเปิดเว็บไม่ใช่เวลาเรียนทั้งหมด และคะแนนที่ไม่มีข้อมูลจะไม่แทนด้วยศูนย์</li>
+            <li>นิยามตัวแปรและข้อจำกัดฉบับเต็มอยู่ในไฟล์คำอธิบายและเงื่อนไขที่ดาวน์โหลดด้านบน</li>
+          </ul>
+          {missingTimes > 0 && (
+            <p role="status">
+              พบ {missingTimes} รายการที่อ่านเวลาไม่ได้ จึงไม่รวมรายการเหล่านี้เมื่อกรองวันที่
+            </p>
+          )}
+        </section>
+      )}
+
+      {view === "qa" && <QaToolsSection users={data.users} />}
 
       <Dialog
         open={Boolean(currentSession)}
@@ -1013,28 +1186,6 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       <span>{label}</span>
       {children}
     </label>
-  );
-}
-function Metric({
-  icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: number | string;
-  detail: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-background p-5">
-      <div className="mb-3 flex items-center gap-2 text-sm text-slate-text">
-        <span className="text-mint-primary">{icon}</span>
-        {label}
-      </div>
-      <div className="text-3xl font-semibold text-slate-deep">{value}</div>
-      <p className="mt-2 text-xs text-slate-text">{detail}</p>
-    </div>
   );
 }
 function SectionHeader({

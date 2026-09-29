@@ -43,12 +43,19 @@ const consent = {
 };
 const profile = {
   displayName: "Returning lecturer",
+  university: "Mahidol University",
   faculty: "Education",
   department: null,
   teachingExperienceYears: 0,
   avatarUrl: null,
 };
 const complete = { consent, profile };
+
+// A pathname guaranteed to never equal a real getLearnerEntryRoute() result
+// ("/consent" | "/onboarding" | "/overview") — stands in for "just arrived,
+// no specific page in mind" so _authenticated/route.tsx's pathname-mismatch
+// branch always fires and redirects to the learner's real destination.
+const ARRIVAL = "/__test_entry__";
 
 function fixture() {
   const values = {};
@@ -64,7 +71,23 @@ function fixture() {
     },
   });
   const window = { localStorage: storage };
-  const store = loadSource("src/lib/learner.functions.ts", {}, window);
+  const store = loadSource(
+    "src/lib/learner.functions.ts",
+    {
+      "./assessment.functions": { getAssessmentResults: async () => ({}) },
+      "./assessment": { ASSESSMENT_VERSION: "cfct-ranking-2026-09-v1" },
+      "./questionnaires.functions": { getQuestionnaireCompletion: async () => ({}) },
+      "./questionnaires": { isAllQuestionnairesComplete: () => false },
+      // Only required to satisfy this module's top-level imports at load
+      // time — getModuleProgressAndCertificate/getVrRoundScores (the
+      // functions that actually call these) are never exercised by
+      // syncLearnerSetup, the only entry point these tests drive.
+      "@/lib/firebase": { getDb: () => ({}), getFirebaseAuth: () => ({ currentUser: null }) },
+      "@/lib/firebase-auth": { waitForFirebaseUser: async () => null },
+      "@/lib/firestore": { listSessionsForUser: async () => [] },
+    },
+    window,
+  );
   const state = {
     user: { uid: "returning", email: "lecturer@example.test", displayName: "Google name" },
     doc: complete,
@@ -97,10 +120,12 @@ function fixture() {
     "@/lib/firebase-auth": {},
     "@/lib/activity": {},
   };
-  const auth = loadSource("src/routes/auth.tsx", routeMocks, window).Route;
+  // There's no standalone /auth route anymore (login/logout both live on
+  // "/" now) — every visit goes through _authenticated/route.tsx's guard,
+  // the only beforeLoad left that calls loadLearnerAccess.
   const learner = loadSource("src/routes/_authenticated/route.tsx", routeMocks, window).Route;
   const visit = (pathname) =>
-    (pathname === "/auth" ? auth : learner).beforeLoad({
+    learner.beforeLoad({
       context: { queryClient },
       location: { pathname },
     });
@@ -114,38 +139,47 @@ async function expectRedirect(promise, to) {
   );
 }
 
-test("returning user with empty localStorage goes directly from auth to dashboard", async () => {
+test("returning user with empty localStorage lands directly on overview", async () => {
   const f = fixture();
-  await expectRedirect(f.visit("/auth"), "/dashboard");
+  // Once fully set up, visiting any page other than /consent or /onboarding
+  // just resolves — _authenticated/route.tsx only redirects a complete
+  // profile away from those two stale forms, it doesn't force every
+  // arrival onto /overview specifically (that was /auth's old job, now
+  // handled by the sign-in button's own navigate() call, not a guard).
+  await f.visit(ARRIVAL);
   const overview = f.queryClient.getQueryData(["learner-overview"]);
   assert.equal(overview.state.consent_completed, true);
   assert.equal(overview.state.onboarding_completed, true);
   assert.equal(overview.profile.display_name, profile.displayName);
   assert.deepEqual(f.state.reads, ["returning"]);
-  await f.visit("/dashboard");
+  await f.visit("/overview");
   assert.equal(f.state.reads.length, 1, "reuse the status read across the login redirect");
 });
 
 test("new user and consent-only user go straight to their missing setup step", async () => {
   const first = fixture();
   first.state.doc = null;
-  await expectRedirect(first.visit("/auth"), "/consent");
+  await expectRedirect(first.visit(ARRIVAL), "/consent");
   await first.visit("/consent");
   const second = fixture();
   second.state.doc = { consent };
-  await expectRedirect(second.visit("/auth"), "/onboarding");
+  await expectRedirect(second.visit(ARRIVAL), "/onboarding");
   await second.visit("/onboarding");
 });
 
 test("direct setup URLs skip completed forms before they mount", async () => {
   const f = fixture();
-  await expectRedirect(f.visit("/consent"), "/dashboard");
-  await expectRedirect(f.visit("/onboarding/"), "/dashboard");
+  await expectRedirect(f.visit("/consent"), "/overview");
+  await expectRedirect(f.visit("/onboarding/"), "/overview");
   await f.visit("/modules");
 });
 
 test("partial profile and false consent are not treated as complete", async () => {
   const f = fixture();
+  assert.equal(
+    f.access.getLearnerEntryRoute({ consent, profile: { ...profile, university: " " } }),
+    "/onboarding",
+  );
   assert.equal(
     f.access.getLearnerEntryRoute({ consent, profile: { ...profile, faculty: " " } }),
     "/onboarding",
@@ -161,7 +195,7 @@ test("partial profile and false consent are not treated as complete", async () =
     f.access.getLearnerEntryRoute({ consent: { ...consent, researchConsent: false }, profile }),
     "/consent",
   );
-  assert.equal(f.access.getLearnerEntryRoute(complete), "/dashboard", "zero years is valid");
+  assert.equal(f.access.getLearnerEntryRoute(complete), "/overview", "zero years is valid");
 });
 
 test("Firebase auth restoration and Firestore read both finish before redirecting", async () => {
@@ -176,11 +210,11 @@ test("Firebase auth restoration and Firestore read both finish before redirectin
       finishRead = resolve;
     });
   let settled = false;
-  const navigation = f.visit("/auth").catch((error) => {
+  const navigation = f.visit(ARRIVAL).catch((error) => {
     settled = true;
     throw error;
   });
-  const result = expectRedirect(navigation, "/dashboard");
+  const result = navigation; // expected to resolve, not redirect — same reasoning as above
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(settled, false);
   assert.equal(f.state.reads.length, 0);
@@ -196,49 +230,49 @@ test("a failed status read is an error, not a redirect to an empty form", async 
   const f = fixture();
   const failure = new Error("Firestore unavailable");
   f.state.read = () => Promise.reject(failure);
-  await assert.rejects(f.visit("/auth"), (error) => error === failure);
+  await assert.rejects(f.visit(ARRIVAL), (error) => error === failure);
   assert.equal(f.store.loadAuth(), null);
   f.state.read = null;
-  await expectRedirect(f.visit("/auth"), "/dashboard");
+  await f.visit(ARRIVAL);
 });
 
 test("stale local completion cannot override Firestore or an expired Firebase login", async () => {
   const f = fixture();
-  await expectRedirect(f.visit("/auth"), "/dashboard");
+  await f.visit(ARRIVAL);
   f.state.doc = null;
   await f.queryClient.invalidateQueries({ queryKey: f.access.learnerAccessKey("returning") });
-  await expectRedirect(f.visit("/dashboard"), "/consent");
+  await expectRedirect(f.visit("/overview"), "/consent");
   f.state.user = null;
-  await expectRedirect(f.visit("/dashboard"), "/auth");
+  await expectRedirect(f.visit("/overview"), "/");
   assert.equal(f.store.loadAuth(), null);
 });
 
 test("successful setup invalidation advances the guard without bouncing to a stale form", async () => {
   const f = fixture();
   f.state.doc = null;
-  await expectRedirect(f.visit("/auth"), "/consent");
+  await expectRedirect(f.visit(ARRIVAL), "/consent");
   f.state.doc = { consent };
   await f.queryClient.invalidateQueries({ queryKey: f.access.learnerAccessKey("returning") });
   await f.visit("/onboarding");
   f.state.doc = complete;
   await f.queryClient.invalidateQueries({ queryKey: f.access.learnerAccessKey("returning") });
-  await f.visit("/dashboard");
+  await f.visit("/overview");
 });
 
 test("switching accounts clears the old learner state and drafts; same account keeps progress", async () => {
   const f = fixture();
-  await expectRedirect(f.visit("/auth"), "/dashboard");
-  const data = JSON.parse(f.storage.getItem("flvr.mock.v1"));
-  data.state.current_stage = "modules";
-  data.state.total_points = 700;
-  f.storage.setItem("flvr.mock.v1", JSON.stringify(data));
+  await f.visit(ARRIVAL);
   f.storage.setItem("flvr.draft.onboarding.form", "old-user-draft");
-  await f.visit("/dashboard");
-  assert.equal(f.queryClient.getQueryData(["learner-overview"]).state.total_points, 700);
-  assert.equal(f.queryClient.getQueryData(["learner-overview"]).state.current_stage, "modules");
+  await f.visit("/overview");
+  // Re-syncing the SAME account must not wipe local drafts/cache — progress
+  // fields themselves (total_points/current_stage) aren't checked here
+  // since computeState now always recomputes them fresh from real
+  // completion flags rather than trusting whatever was last cached.
+  assert.equal(f.storage.getItem("flvr.draft.onboarding.form"), "old-user-draft");
+  assert.equal(f.queryClient.getQueryData(["learner-overview"]).profile.id, "returning");
   f.state.user = { ...f.state.user, uid: "new-user" };
   f.state.doc = null;
-  await expectRedirect(f.visit("/auth"), "/consent");
+  await expectRedirect(f.visit(ARRIVAL), "/consent");
   const next = f.queryClient.getQueryData(["learner-overview"]);
   assert.equal(next.profile.id, "new-user");
   assert.equal(next.state.total_points, 0);

@@ -13,6 +13,8 @@ import {
   type WithFieldValue,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import type { AssessmentPhase, AssessmentResult } from "./assessment";
+import type { QuestionnaireKey } from "./questionnaires";
 
 // Collection names — keep in sync with PROJECT_CONTEXT.md §5. Per-user data
 // only; static content (scenarios, modules, question banks) stays hardcoded
@@ -27,6 +29,7 @@ export interface UserProfile {
   displayName: string | null;
   email: string;
   avatarUrl: string | null;
+  university: string | null;
   faculty: string | null;
   department: string | null;
   teachingExperienceYears: number | null;
@@ -63,13 +66,13 @@ export interface UserPosttest {
   createdAt: Timestamp;
 }
 
+// Completion mirror only — the actual answers/scores live in the
+// questionnaire_responses subcollection (see questionnaires.functions.ts),
+// written directly by the client and immutable once created. This field
+// just lets routing/gating checks avoid reading that subcollection every
+// time, same purpose as UserDoc.assessmentResults mirroring pretest/posttest.
 export interface UserSurvey {
-  satisfaction: number;
-  usability: number;
-  perceivedLearning: number;
-  recommendation: number;
-  comments: string | null;
-  createdAt: Timestamp;
+  completed: Partial<Record<QuestionnaireKey, true>>;
 }
 
 export interface UserCertificate {
@@ -115,6 +118,9 @@ export interface UserLearnerProgress {
 }
 
 export interface UserDoc {
+  assessmentResults?: Partial<
+    Record<AssessmentPhase, Omit<AssessmentResult, "submittedAt"> & { submittedAt: Timestamp }>
+  >;
   profile: UserProfile;
   consent: UserConsent | null;
   diagnostic: UserDiagnostic | null;

@@ -10,7 +10,12 @@ function load(file, globals = {}) {
   const source = readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
   runInNewContext(
     ts.transpileModule(source, {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+      fileName: file,
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+        jsx: ts.JsxEmit.ReactJSX,
+      },
     }).outputText,
     {
       module,
@@ -175,6 +180,7 @@ test("sleep gaps and reversed clocks never become engagement", () => {
 });
 
 function queueHarness(storage = new Map()) {
+  let beforeWrite;
   const auth = { currentUser: { uid: "u1" } };
   const online = { onLine: false };
   const saved = new Map();
@@ -195,6 +201,8 @@ function queueHarness(storage = new Map()) {
     removeItem: (key) => storage.delete(key),
   };
   const api = load("src/lib/activity.ts", {
+    setTimeout: () => 1,
+    clearTimeout() {},
     navigator: online,
     localStorage,
     require: (id) => {
@@ -213,12 +221,17 @@ function queueHarness(storage = new Map()) {
           serverTimestamp: () => "server-time",
           setDoc: async (id, data) => {
             calls++;
+            if (beforeWrite) {
+              const callback = beforeWrite;
+              beforeWrite = undefined;
+              await callback();
+            }
             if (fail) throw Error("offline");
             if (saved.has(id)) throw Error("immutable");
             saved.set(id, data);
             if (lostAck) throw Error("lost ack");
           },
-          getDoc: async (id) => {
+          getDocFromServer: async (id) => {
             if (fail) throw Error("offline");
             return { exists: () => saved.has(id), data: () => saved.get(id) };
           },
@@ -242,6 +255,9 @@ function queueHarness(storage = new Map()) {
       storageError = v;
     },
     calls: () => calls,
+    beforeWrite: (callback) => {
+      beforeWrite = callback;
+    },
   };
 }
 test("offline queue is durable, immutable ID survives reload, timestamps stay distinct", async () => {
@@ -258,6 +274,115 @@ test("offline queue is durable, immutable ID survives reload, timestamps stay di
   assert.equal(second.saved.get(item.id).createdAt, "server-time");
   assert.equal(first.storage.size, 0);
 });
+
+test("delivery drains events added in flight and immediately notifies zero pending", async () => {
+  const h = queueHarness();
+  const statuses = [];
+  const unsubscribe = h.api.subscribeActivitySync(() =>
+    statuses.push(h.api.activitySyncStatus().pending),
+  );
+  await h.api.logActivity({ type: "signed_in" });
+  h.beforeWrite(async () => {
+    await h.api.logActivity({ type: "module_started", moduleId: "m1" });
+  });
+  h.online.onLine = true;
+  await h.api.flushActivity();
+  assert.equal(h.saved.size, 2);
+  assert.equal(h.api.activitySyncStatus().pending, 0);
+  assert.equal(statuses.at(-1), 0);
+  unsubscribe();
+});
+
+test("failed delivery backs off on automatic retries but manual retry can recover", async () => {
+  const h = queueHarness();
+  await h.api.logActivity({ type: "signed_in" });
+  h.online.onLine = true;
+  h.setFail(true);
+  await h.api.flushActivity();
+  const calls = h.calls();
+  await h.api.flushActivity();
+  await h.api.flushActivity();
+  assert.equal(h.calls(), calls);
+  assert.equal(h.api.activitySyncStatus().writeFailed, true);
+  h.auth.currentUser = { uid: "another-user" };
+  assert.equal(h.api.activitySyncStatus().writeFailed, false);
+  h.auth.currentUser = { uid: "u1" };
+  h.setFail(false);
+  await h.api.flushActivity(true);
+  assert.equal(h.api.activitySyncStatus().writeFailed, false);
+  assert.equal(h.api.activitySyncStatus().pending, 0);
+});
+
+test("web tracking samples every 15s but writes one heartbeat per minute; focus creates no rows", async () => {
+  let now = 0,
+    tick,
+    period;
+  const effects = [],
+    events = [],
+    handlers = new Map();
+  const tracker = load("src/components/usage-tracker.tsx", {
+    Date,
+    window: {
+      location: { pathname: "/modules" },
+      setInterval: (fn, ms) => {
+        tick = fn;
+        period = ms;
+        return 1;
+      },
+      clearInterval() {},
+      addEventListener: (key, fn) => handlers.set(key, fn),
+      removeEventListener() {},
+    },
+    document: { visibilityState: "visible", addEventListener() {}, removeEventListener() {} },
+    require: (id) => {
+      if (id === "react")
+        return {
+          useEffect: (fn) => effects.push(fn),
+          useState: (v) => [v === null ? "u1" : v, () => {}],
+        };
+      if (id === "react/jsx-runtime") return { jsx() {}, jsxs() {} };
+      if (id === "@tanstack/react-router") return { useRouterState: () => "/modules" };
+      if (id === "@/lib/deferred-effect") return { deferredEffect };
+      if (id === "@/lib/usage-clock") return { measuredSeconds };
+      if (id === "@/lib/firebase")
+        return { getFirebaseAuth: () => ({ currentUser: { uid: "u1" } }) };
+      if (id === "@/lib/firebase-auth") return {};
+      if (id === "@/lib/activity")
+        return {
+          logActivity: (event) => events.push(event),
+          flushActivity: async () => {},
+          activitySyncStatus: () => ({ pending: 0 }),
+        };
+      if (id === "@/lib/usage-context")
+        return {
+          getUsageContext() {},
+          sampleUsage: () => ({ mono: now, visible: now, active: now, unobserved: 0 }),
+          updateUsageState() {},
+          usageState: () => ({ visible: true, focused: true, idle: false }),
+        };
+      throw Error(id);
+    },
+  });
+  tracker.UsageTracker();
+  effects[2]()(); // Discarded Strict Mode setup.
+  const cleanup = effects[2]();
+  await Promise.resolve();
+  for (let i = 0; i < 20; i++) {
+    handlers.get("focus")();
+    handlers.get("blur")();
+  }
+  assert.equal(events.length, 1);
+  for (let i = 0; i < 4; i++) {
+    now += 15000;
+    tick();
+  }
+  assert.equal(period, 15000);
+  const beats = events.filter((e) => e.type === "web_heartbeat");
+  assert.equal(beats.length, 1);
+  assert.equal(beats[0].elapsedSeconds, 60);
+  assert.equal(beats[0].visibleSeconds, 60);
+  cleanup();
+});
 test("failed writes stay pending then retry; acknowledgement loss does not duplicate", async () => {
   const h = queueHarness();
   await h.api.logActivity({ type: "signed_in" });
@@ -268,7 +393,7 @@ test("failed writes stay pending then retry; acknowledgement loss does not dupli
   assert.equal(h.api.activitySyncStatus().writeFailed, true);
   h.setFail(false);
   h.setLostAck(true);
-  await h.api.flushActivity();
+  await h.api.flushActivity(true);
   assert.equal(h.saved.size, 1);
   assert.equal(h.api.activitySyncStatus().pending, 0);
 });
@@ -339,6 +464,25 @@ test("overlap distinguishes another tab from another browser and excludes other 
   ]).web;
   assert.equal(rows[0].overlapping_web_session_count, 2);
   assert.equal(rows[0].overlapping_other_browser_count, 1);
+  assert.equal(rows[3].overlapping_web_session_count, 0);
+});
+
+test("minute heartbeats retain overlap support without accepting long legacy or sleep gaps", () => {
+  const rows = logs([
+    beat("1", "a", "A", "2026-09-17T00:00:00Z", "2026-09-17T00:01:00Z", {
+      heartbeatIntervalSeconds: 60,
+    }),
+    beat("2", "b", "B", "2026-09-17T00:00:10Z", "2026-09-17T00:01:10Z", {
+      heartbeatIntervalSeconds: 60,
+    }),
+    beat("3", "c", "C", "2026-09-17T00:00:10Z", "2026-09-17T00:01:10Z"),
+    beat("4", "d", "D", "2026-09-17T00:00:10Z", "2026-09-17T00:01:10Z", {
+      heartbeatIntervalSeconds: 60,
+      unobservedSeconds: 50,
+    }),
+  ]).web;
+  assert.equal(rows[0].overlapping_web_session_count, 1);
+  assert.equal(rows[2].overlapping_web_session_count, 0);
   assert.equal(rows[3].overlapping_web_session_count, 0);
 });
 test("unclosed logins, sleep gaps, clock jumps and touching intervals do not prove overlap", () => {

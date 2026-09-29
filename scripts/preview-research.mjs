@@ -24,7 +24,7 @@ const server = await createServer({
           id === "\0fixture:@/lib/admin.functions" ||
           path.endsWith("/src/lib/admin.functions.ts")
         )
-          return 'export async function adminExportData() { throw new Error("Preview: external services disabled"); } export const adminListActivity = adminExportData;';
+          return 'export async function adminResearchPage() { throw new Error("Preview: external services disabled"); }';
       },
     },
     react(),

@@ -3,7 +3,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId
+        && !request.resource.data.keys().hasAny(['assessmentResults', 'certificate']);
+      allow update: if request.auth != null && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['assessmentResults', 'certificate']);
+      allow delete: if false;
+      match /assessment_attempts/{attemptId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false; // Validated and scored by submitRankingAssessment only.
+      }
+      // Post-experiment questionnaire responses — unlike assessment_attempts,
+      // written directly by the client (no scored answer key to protect here),
+      // but still create-only: once submitted, a research response is
+      // immutable, same as activity_log.
+      match /questionnaire_responses/{responseId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
     }
 
     match /scenarios/{scenarioId} {

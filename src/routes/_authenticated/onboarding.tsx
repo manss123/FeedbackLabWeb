@@ -30,11 +30,13 @@ function OnboardingPage() {
 
   const [form, setForm, clearFormDraft] = usePersistedState<{
     display_name: string;
+    university: string;
     faculty: string;
     department: string;
     teaching_experience_years: string | number;
   }>("onboarding.form", {
     display_name: "",
+    university: "",
     faculty: "",
     department: "",
     teaching_experience_years: "",
@@ -46,6 +48,7 @@ function OnboardingPage() {
         ...f,
         // only prefill empty fields — don't clobber the user's draft
         display_name: f.display_name || (data.profile?.display_name ?? ""),
+        university: f.university || (data.profile?.university ?? ""),
         faculty: f.faculty || (data.profile?.faculty ?? ""),
         department: f.department || (data.profile?.department ?? ""),
         teaching_experience_years:
@@ -59,10 +62,12 @@ function OnboardingPage() {
       const user = getFirebaseAuth().currentUser ?? (await waitForFirebaseUser());
       if (!user) throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");
       const displayName = form.display_name.trim();
+      const university = form.university.trim();
       const faculty = form.faculty.trim();
       const teachingExperienceYears = Number(form.teaching_experience_years);
       if (
         !displayName ||
+        !university ||
         !faculty ||
         form.teaching_experience_years === "" ||
         !Number.isFinite(teachingExperienceYears) ||
@@ -75,6 +80,7 @@ function OnboardingPage() {
           displayName,
           email: user.email ?? "",
           avatarUrl: user.photoURL,
+          university,
           faculty,
           department: form.department.trim() || null,
           teachingExperienceYears,
@@ -84,6 +90,7 @@ function OnboardingPage() {
       const result = await submitOnboarding({
         data: {
           display_name: displayName,
+          university,
           faculty,
           department: form.department.trim() || null,
           teaching_experience_years: teachingExperienceYears,
@@ -96,7 +103,7 @@ function OnboardingPage() {
       toast.success("บันทึกข้อมูลเรียบร้อย");
       clearFormDraft();
       queryClient.invalidateQueries({ queryKey: ["learner-overview"] });
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/overview" });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -129,6 +136,16 @@ function OnboardingPage() {
               onChange={(e) => setForm({ ...form, display_name: e.target.value })}
               className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-mint-primary"
               placeholder="เช่น ผศ.ดร. ชื่อ นามสกุล"
+            />
+          </Field>
+
+          <Field label="มหาวิทยาลัย">
+            <input
+              required
+              value={form.university}
+              onChange={(e) => setForm({ ...form, university: e.target.value })}
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-mint-primary"
+              placeholder="เช่น มหาวิทยาลัยเชียงใหม่"
             />
           </Field>
 

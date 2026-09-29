@@ -6,11 +6,11 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ context, location }) => {
     const access = await loadLearnerAccess(context.queryClient);
-    if (!access) throw redirect({ to: "/auth", replace: true });
+    if (!access) throw redirect({ to: "/", replace: true });
     const pathname = location.pathname.replace(/\/$/, "");
     if (
-      (access.destination !== "/dashboard" && pathname !== access.destination) ||
-      (access.destination === "/dashboard" && ["/consent", "/onboarding"].includes(pathname))
+      (access.destination !== "/overview" && pathname !== access.destination) ||
+      (access.destination === "/overview" && ["/consent", "/onboarding"].includes(pathname))
     ) {
       throw redirect({ to: access.destination, replace: true });
     }

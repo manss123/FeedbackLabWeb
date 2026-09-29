@@ -33,6 +33,7 @@ firebase-export-*/
 # *.local above already covers functions/.env.local.
 .env
 .env.production
+/tmp/
 
 # Editor directories and files
 .vscode/*

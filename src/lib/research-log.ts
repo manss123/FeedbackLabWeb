@@ -149,6 +149,7 @@ export function buildResearchLogs(
       elapsed_seconds: numeric(e.elapsedSeconds),
       visible_seconds: numeric(e.visibleSeconds),
       active_proxy_seconds: numeric(e.activeSeconds),
+      heartbeat_interval_seconds: numeric(e.heartbeatIntervalSeconds),
       unobserved_seconds: numeric(e.unobservedSeconds),
       visible: e.visible ?? null,
       focused: e.focused ?? null,
@@ -300,6 +301,7 @@ export function buildResearchLogs(
       profile_record_present: Boolean(user?.profile),
       research_consent_recorded:
         typeof user?.consent?.researchConsent === "boolean" ? user.consent.researchConsent : null,
+      university: user?.profile?.university ?? null,
       faculty: user?.profile?.faculty ?? null,
       department: user?.profile?.department ?? null,
       teaching_experience_years: numeric(user?.profile?.teachingExperienceYears),
@@ -342,7 +344,7 @@ export function buildResearchLogs(
       a === null ||
       b === null ||
       b <= a ||
-      b - a > 45_000 ||
+      b - a > (e.heartbeatIntervalSeconds === 60 ? 75_000 : 45_000) ||
       numeric(e.unobservedSeconds) !== 0 ||
       numeric(e.elapsedSeconds) === null ||
       Math.abs((b - a) / 1000 - e.elapsedSeconds!) > 2
@@ -499,6 +501,7 @@ export const RESEARCH_COLUMNS = {
     "participant_code",
     "profile_record_present",
     "research_consent_recorded",
+    "university",
     "faculty",
     "department",
     "teaching_experience_years",
@@ -587,6 +590,7 @@ export const RESEARCH_COLUMNS = {
     "idle",
     "schema_version",
     "page_visit_id",
+    "heartbeat_interval_seconds",
     "video_id",
     "video_visit_id",
     "video_is_test",

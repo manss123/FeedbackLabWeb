@@ -22,10 +22,21 @@ import {
   Info,
   Timer,
   Home,
+  Target,
+  Users,
+  Heart,
+  BarChart3,
+  NotebookPen,
+  Clock,
+  MessageCircle,
 } from "lucide-react";
 import { LearnerShell } from "@/components/learner-shell";
-import { completeModule, getLearnerOverview } from "@/lib/learner.functions";
+import { getLearnerOverview } from "@/lib/learner.functions";
 import { logActivity } from "@/lib/activity";
+import { getFirebaseAuth } from "@/lib/firebase";
+import { waitForFirebaseUser } from "@/lib/firebase-auth";
+import { upsertUserDoc } from "@/lib/firestore";
+import { serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import badgeM1 from "@/assets/badge-m1.png";
 import badgeM2 from "@/assets/badge-m2.png";
@@ -238,6 +249,251 @@ const MATCH_PAIRS: MatchPair[] = [
   { id: "p5", principle: "Timely", description: "ให้ในจังหวะที่ผู้เรียนยังต่อยอดได้" },
 ];
 
+// Reflection content for the Evaluate stage — one set per module, from the
+// "B Module Reflection" source document. Q1 is a free-text key-understanding
+// question; Q2 is a single-select practice-intention/development-focus
+// question (option count varies 4-6 per module) with a required reason;
+// Module 5 alone adds Q3, a concrete practice-goal prompt for the upcoming
+// VR practice (per the source doc, filed under "Reflection Module 5").
+interface ReflectionOption {
+  id: string;
+  label: string;
+  description: string;
+}
+
+interface ModuleReflection {
+  q1: string;
+  q2Label: string;
+  q2Question: string;
+  q2Options: ReflectionOption[];
+  q2ReasonPrompt: string;
+  q3?: { prompt: string; placeholder: string };
+}
+
+const MODULE_REFLECTIONS: Record<string, ModuleReflection> = {
+  m1: {
+    q1: "หลังจากเรียน Module 1 คุณคิดว่าสิ่งสำคัญที่สุดที่ควรคำนึงถึงเมื่อให้ Constructive Feedback แก่ผู้เรียนคืออะไร?",
+    q2Label: "Personal Practice Intention",
+    q2Question:
+      "เมื่อต้องให้ Feedback ในสถานการณ์ VR ต่อไปนี้ คุณตั้งใจจะให้ความสำคัญกับเรื่องใดมากที่สุด?",
+    q2Options: [
+      { id: "specific", label: "Specific", description: "ให้ Feedback อย่างเฉพาะเจาะจง" },
+      { id: "respectful", label: "Respectful", description: "ใช้ภาษาที่ให้เกียรติผู้เรียน" },
+      { id: "supportive", label: "Supportive", description: "สนับสนุนและรักษากำลังใจ" },
+      {
+        id: "actionable",
+        label: "Actionable",
+        description: "ให้แนวทางที่ผู้เรียนสามารถนำไปใช้ได้",
+      },
+    ],
+    q2ReasonPrompt: "เพราะเหตุใดคุณจึงเลือกข้อนี้?",
+  },
+  m2: {
+    q1: "หลังจากเรียน Module 2 คุณคิดว่าสิ่งสำคัญที่สุดที่ทำให้ Feedback มีประสิทธิผลและช่วยให้ผู้เรียนสามารถนำไปพัฒนาต่อได้คืออะไร?",
+    q2Label: "Personal Practice Intention",
+    q2Question:
+      "เมื่อต้องให้ Feedback ในสถานการณ์ VR ต่อไปนี้ คุณตั้งใจจะให้ความสำคัญกับเรื่องใดมากที่สุด?",
+    q2Options: [
+      { id: "clarify", label: "Clarify", description: "ทำให้เป้าหมายหรือความคาดหวังของงานชัดเจน" },
+      {
+        id: "specificity",
+        label: "Specificity",
+        description: "ระบุพฤติกรรมหรือส่วนของผลงานที่ต้องการกล่าวถึงอย่างเฉพาะเจาะจง",
+      },
+      {
+        id: "relevance",
+        label: "Relevance",
+        description: "ให้ Feedback ที่เชื่อมโยงกับเป้าหมายการเรียนรู้หรือสิ่งที่ผู้เรียนควรพัฒนา",
+      },
+      {
+        id: "timeliness",
+        label: "Timeliness",
+        description: "ให้ Feedback ในเวลาที่ผู้เรียนยังสามารถนำไปใช้ปรับปรุงได้",
+      },
+      {
+        id: "structure",
+        label: "Appropriate Structure",
+        description:
+          "เลือกโครงสร้าง Feedback ที่เหมาะสมกับสถานการณ์ เช่น Pendleton, BOOST หรือ AID",
+      },
+      {
+        id: "constructive_language",
+        label: "Constructive Language",
+        description:
+          "ใช้ภาษาที่มุ่งเน้นผลงานหรือพฤติกรรม ลดการตัดสินตัวบุคคล และช่วยให้ผู้เรียนพร้อมรับ Feedback",
+      },
+    ],
+    q2ReasonPrompt: "เพราะเหตุใดคุณจึงเลือกข้อนี้?",
+  },
+  m3: {
+    q1: "หลังจากเรียน Module 3 คุณคิดว่าสิ่งสำคัญที่สุดที่ผู้สอนควรคำนึงถึงเมื่อผู้เรียนมีอารมณ์หรือมีปฏิกิริยาต่อ Feedback คืออะไร?",
+    q2Label: "Personal Practice Intention",
+    q2Question:
+      "เมื่อต้องให้ Feedback ในสถานการณ์ VR ต่อไปนี้ คุณตั้งใจจะให้ความสำคัญกับเรื่องใดมากที่สุด?",
+    q2Options: [
+      {
+        id: "emotion_awareness",
+        label: "Emotion Awareness",
+        description: "สังเกตและทำความเข้าใจอารมณ์ของผู้เรียนก่อนตอบสนอง",
+      },
+      {
+        id: "empathy",
+        label: "Empathy",
+        description: "รับรู้และตอบสนองต่อความรู้สึกของผู้เรียนอย่างเข้าใจ",
+      },
+      {
+        id: "tone_body",
+        label: "Tone & Body Language",
+        description: "ใช้น้ำเสียง สีหน้า และภาษากายที่เหมาะสมกับข้อความ",
+      },
+      {
+        id: "supportive_language",
+        label: "Supportive Language",
+        description: "ใช้ภาษาที่ให้เกียรติและช่วยให้ผู้เรียนยังพร้อมรับ Feedback",
+      },
+      {
+        id: "self_regulation",
+        label: "Self-Regulation",
+        description: "ตระหนักและควบคุมอารมณ์ของตนเองก่อนตอบสนอง",
+      },
+      {
+        id: "learning_focus",
+        label: "Learning Focus",
+        description: "แม้มีอารมณ์เกิดขึ้น ยังสามารถพาบทสนทนากลับมาสู่การเรียนรู้และการพัฒนาได้",
+      },
+    ],
+    q2ReasonPrompt: "เพราะเหตุใดคุณจึงเลือกข้อนี้?",
+  },
+  m4: {
+    q1: "หลังจากเรียน Module 4 คุณคิดว่าปัจจัยใดสำคัญที่สุดในการตัดสินใจว่าควรให้ Feedback เมื่อใด และในบริบทใด จึงจะช่วยให้ผู้เรียนสามารถรับและนำ Feedback ไปใช้พัฒนาการเรียนรู้ได้อย่างเหมาะสม?",
+    q2Label: "Personal Practice Intention",
+    q2Question:
+      "เมื่อต้องให้ Feedback ในสถานการณ์ VR ต่อไปนี้ คุณตั้งใจจะให้ความสำคัญกับเรื่องใดมากที่สุด?",
+    q2Options: [
+      {
+        id: "timing",
+        label: "Appropriate Timing",
+        description:
+          "เลือกช่วงเวลาที่เหมาะสมในการให้ Feedback โดยไม่จำเป็นต้องให้ทันทีในทุกสถานการณ์",
+      },
+      {
+        id: "opportunity",
+        label: "Opportunity to Improve",
+        description:
+          "ให้ Feedback ในขณะที่ผู้เรียนยังมีโอกาสนำข้อมูลไปใช้ปรับปรุงหรือพัฒนาผลงานต่อได้",
+      },
+      {
+        id: "context",
+        label: "Appropriate Context",
+        description: "พิจารณาสถานการณ์และสภาพแวดล้อมก่อนตัดสินใจว่าจะให้ Feedback อย่างไร",
+      },
+      {
+        id: "privacy",
+        label: "Privacy & Psychological Safety",
+        description:
+          "พิจารณาว่า Feedback ใดสามารถให้ต่อหน้าผู้อื่นได้ และ Feedback ใดควรให้เป็นการส่วนตัว",
+      },
+      {
+        id: "readiness",
+        label: "Learner Readiness",
+        description: "พิจารณาว่าผู้เรียนอยู่ในสภาวะที่พร้อมรับ ฟัง และประมวล Feedback หรือไม่",
+      },
+      {
+        id: "assessment_context",
+        label: "Assessment Context",
+        description:
+          "พิจารณาว่าการให้ Feedback ในขณะนั้นจะช่วยการเรียนรู้หรืออาจรบกวนความถูกต้องและความยุติธรรมของการประเมิน",
+      },
+    ],
+    q2ReasonPrompt: "เพราะเหตุใดคุณจึงเลือกข้อนี้?",
+  },
+  m5: {
+    q1: "หลังจากเรียน Module 5 คุณคิดว่าการสะท้อนผลการให้ Feedback ของตนเองควรพิจารณาอะไรบ้าง เพื่อช่วยให้คุณมองเห็นทั้งสิ่งที่ทำได้ดีและสิ่งที่ควรพัฒนาต่อ?",
+    q2Label: "Personal Development Focus",
+    q2Question:
+      "เมื่อต้องฝึกให้ Feedback ในสถานการณ์ VR ต่อไปนี้ คุณตั้งใจจะพัฒนาด้านใดของการให้ Feedback ของตนเองมากที่สุด?",
+    q2Options: [
+      {
+        id: "specific_actionable",
+        label: "Specific & Actionable Feedback",
+        description: "ให้ Feedback ที่เฉพาะเจาะจงและช่วยให้ผู้เรียนรู้ว่าจะพัฒนาอะไรต่อ",
+      },
+      {
+        id: "structure",
+        label: "Structure",
+        description: "จัดลำดับและโครงสร้าง Feedback ให้ชัดเจนและเหมาะสมกับสถานการณ์",
+      },
+      {
+        id: "empathy_supportive",
+        label: "Empathy & Supportive Communication",
+        description: "ใช้ภาษาและวิธีสื่อสารที่เข้าใจความรู้สึกและสนับสนุนผู้เรียน",
+      },
+      {
+        id: "tone_delivery",
+        label: "Tone & Delivery",
+        description: "ปรับน้ำเสียง จังหวะการพูด และภาษากายให้เหมาะสมกับ Feedback",
+      },
+      {
+        id: "timing_context",
+        label: "Timing & Context",
+        description:
+          "เลือกเวลาและบริบทในการให้ Feedback ให้เหมาะสมกับสถานการณ์และความพร้อมของผู้เรียน",
+      },
+      {
+        id: "reflection_dialogue",
+        label: "Learner Reflection & Dialogue",
+        description: "เปิดโอกาสให้ผู้เรียนได้คิด สะท้อน และมีส่วนร่วมในการสนทนา Feedback",
+      },
+    ],
+    q2ReasonPrompt: "เพราะเหตุใดคุณจึงเลือกด้านนี้เป็นสิ่งที่ต้องการพัฒนามากที่สุด?",
+    q3: {
+      prompt: "ในการฝึกครั้งต่อไป คุณตั้งใจจะทำอะไรให้แตกต่างจากเดิม เพื่อพัฒนาด้านที่คุณเลือก?",
+      placeholder: "ครั้งนี้ฉันจะ...",
+    },
+  },
+};
+
+// Cycled by option index within a module (max 6 options, so every module
+// gets distinct icons/colors) — the source doc has no per-option icon, so
+// this just keeps the established visual language without inventing
+// meaning-specific icons for all ~28 options across 5 modules.
+const OPTION_STYLES: { icon: typeof Target; tone: string }[] = [
+  { icon: Target, tone: "bg-mint-light text-mint-primary" },
+  { icon: Users, tone: "bg-sky-100 text-sky-600" },
+  { icon: Heart, tone: "bg-rose-100 text-rose-500" },
+  { icon: BarChart3, tone: "bg-violet-100 text-violet-600" },
+  { icon: Clock, tone: "bg-amber-100 text-amber-600" },
+  { icon: MessageCircle, tone: "bg-teal-100 text-teal-600" },
+];
+
+const MIN_REFLECTION_CHARS = 20;
+const MAX_REFLECTION_CHARS = 500;
+const MAX_REASON_CHARS = 300;
+const MAX_GOAL_CHARS = 200;
+
+// Merges all reflection answers into the single reflectionText field
+// moduleProgress already has (firestore.ts's ModuleProgress) — kept as one
+// research-readable string rather than widening the schema for a UX-only
+// addition.
+function formatReflectionText(input: {
+  moduleId: string;
+  reflection: string;
+  practiceChoice: string | null;
+  practiceReason: string;
+  practiceGoal: string;
+}): string {
+  const content = MODULE_REFLECTIONS[input.moduleId] ?? MODULE_REFLECTIONS.m1;
+  const choiceLabel = content.q2Options.find((o) => o.id === input.practiceChoice)?.label ?? "-";
+  const parts = [
+    `Q1 (Key Understanding): ${input.reflection}`,
+    `Q2 (${content.q2Label} — เลือก: ${choiceLabel}): ${input.practiceReason}`,
+  ];
+  if (content.q3 && input.practiceGoal) {
+    parts.push(`Q3 (Personal Practice Goal): ${input.practiceGoal}`);
+  }
+  return parts.join("\n\n");
+}
+
 const POSITIVE_KEYWORDS = [
   "support",
   "motivate",
@@ -299,7 +555,7 @@ function ModulesPage() {
 
   return (
     <LearnerShell displayName={data?.profile?.display_name} avatarUrl={data?.profile?.avatar_url}>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-5xl">
         <div className="mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
             <BookOpenText className="h-3 w-3" />
@@ -445,6 +701,9 @@ function ModuleRunner({
   const [selectedPrinciple, setSelectedPrinciple] = useState<string | null>(null);
   const [shuffledDescs] = useState(() => shuffle(MATCH_PAIRS.map((p) => p.id)));
   const [reflection, setReflection] = useState("");
+  const [practiceChoice, setPracticeChoice] = useState<string | null>(null);
+  const [practiceReason, setPracticeReason] = useState("");
+  const [practiceGoal, setPracticeGoal] = useState("");
   const [reflectionSaved, setReflectionSaved] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
 
@@ -463,12 +722,58 @@ function ModuleRunner({
   );
 
   const mutation = useMutation({
-    mutationFn: (id: string) => completeModule({ data: { module_id: id } }),
+    mutationFn: async (id: string) => {
+      const user = getFirebaseAuth().currentUser ?? (await waitForFirebaseUser());
+      if (!user) throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");
+      // Firestore merges map fields recursively under {merge:true}, so this
+      // only ever adds/overwrites this one module's entry — the other
+      // modules' entries in moduleProgress are untouched.
+      await upsertUserDoc(user.uid, {
+        moduleProgress: {
+          [id]: {
+            completed: true,
+            quizScore,
+            matchScore: MATCH_PAIRS.length,
+            reflectionText: reflection
+              ? formatReflectionText({
+                  moduleId: id,
+                  reflection,
+                  practiceChoice,
+                  practiceReason,
+                  practiceGoal,
+                })
+              : null,
+            timeSpentSeconds: null,
+            completedAt: serverTimestamp(),
+          },
+        },
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["learner-overview"] });
       void logActivity({ type: "module_completed", moduleId, runId: timing.runId() });
     },
   });
+
+  // Shared by both the M1 flow and PlaceholderStages' evaluate stage — both
+  // render the same real EvaluateScreen, so both need the same validation.
+  function trySaveReflection() {
+    if (reflection.trim().length < MIN_REFLECTION_CHARS) {
+      toast.error(`ช่วยเขียนสะท้อนความคิดอย่างน้อย ${MIN_REFLECTION_CHARS} ตัวอักษร`);
+      return;
+    }
+    if (!practiceChoice) {
+      toast.error("กรุณาเลือกแนวทางที่คุณให้ความสำคัญที่สุด");
+      return;
+    }
+    const content = MODULE_REFLECTIONS[moduleId] ?? MODULE_REFLECTIONS.m1;
+    if (content.q3 && !practiceGoal.trim()) {
+      toast.error("กรุณาระบุเป้าหมายที่คุณตั้งใจจะทำในการฝึกครั้งต่อไป");
+      return;
+    }
+    setReflectionSaved(true);
+    toast.success("บันทึกคำตอบเรียบร้อย");
+  }
 
   // ----- Derived gating -----
   const engageDone = videoDone;
@@ -562,7 +867,7 @@ function ModuleRunner({
 
   return (
     <LearnerShell displayName={displayName} avatarUrl={avatarUrl}>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-5xl">
         {/* Sticky progress header */}
         <div className="sticky top-0 z-20 -mx-4 mb-6 border-b border-border bg-background/95 px-4 py-4 backdrop-blur">
           <div className="mb-3 flex items-center justify-between gap-4">
@@ -651,17 +956,17 @@ function ModuleRunner({
             )}
             {stage === "evaluate" && (
               <EvaluateScreen
+                meta={meta}
                 reflection={reflection}
                 setReflection={setReflection}
+                practiceChoice={practiceChoice}
+                setPracticeChoice={setPracticeChoice}
+                practiceReason={practiceReason}
+                setPracticeReason={setPracticeReason}
+                practiceGoal={practiceGoal}
+                setPracticeGoal={setPracticeGoal}
                 saved={reflectionSaved}
-                onSave={() => {
-                  if (reflection.trim().length < 20) {
-                    toast.error("ช่วยเขียนสะท้อนความคิดอย่างน้อย 20 ตัวอักษร");
-                    return;
-                  }
-                  setReflectionSaved(true);
-                  toast.success("บันทึกคำตอบเรียบร้อย");
-                }}
+                onSave={trySaveReflection}
                 keywordsFound={reflectionKeywords}
               />
             )}
@@ -707,15 +1012,14 @@ function ModuleRunner({
             }}
             reflection={reflection}
             setReflection={setReflection}
+            practiceChoice={practiceChoice}
+            setPracticeChoice={setPracticeChoice}
+            practiceReason={practiceReason}
+            setPracticeReason={setPracticeReason}
+            practiceGoal={practiceGoal}
+            setPracticeGoal={setPracticeGoal}
             reflectionSaved={reflectionSaved}
-            onSaveReflection={() => {
-              if (reflection.trim().length < 20) {
-                toast.error("ช่วยเขียนสะท้อนความคิดอย่างน้อย 20 ตัวอักษร");
-                return;
-              }
-              setReflectionSaved(true);
-              toast.success("บันทึกคำตอบเรียบร้อย");
-            }}
+            onSaveReflection={trySaveReflection}
             summaryProps={{
               meta,
               quizScore,
@@ -1303,56 +1607,194 @@ function ElaborateScreen({
 }
 
 function EvaluateScreen({
+  meta,
   reflection,
   setReflection,
+  practiceChoice,
+  setPracticeChoice,
+  practiceReason,
+  setPracticeReason,
+  practiceGoal,
+  setPracticeGoal,
   saved,
   onSave,
   keywordsFound,
 }: {
+  meta: ModuleMeta;
   reflection: string;
   setReflection: (v: string) => void;
+  practiceChoice: string | null;
+  setPracticeChoice: (v: string) => void;
+  practiceReason: string;
+  setPracticeReason: (v: string) => void;
+  practiceGoal: string;
+  setPracticeGoal: (v: string) => void;
   saved: boolean;
   onSave: () => void;
   keywordsFound: string[];
 }) {
+  const content = MODULE_REFLECTIONS[meta.id] ?? MODULE_REFLECTIONS.m1;
+
   return (
     <section className="animate-fade-in">
-      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-mint-primary">
-        กิจกรรมที่ 5 · Evaluate & Reflect
+      <div className="mb-2 flex items-start justify-between gap-4">
+        <div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-mint-primary">
+            กิจกรรมที่ 5 · Evaluate &amp; Reflect
+          </div>
+          <h2 className="text-2xl font-bold text-slate-deep sm:text-3xl">Reflection</h2>
+          <p className="mt-1 text-sm text-slate-text">
+            สะท้อนความเข้าใจจาก Module {meta.order} และเตรียมแนวทางการให้ Feedback ในสถานการณ์จริง
+          </p>
+        </div>
+        <div className="hidden shrink-0 rounded-2xl bg-mint-light p-4 sm:block" aria-hidden="true">
+          <NotebookPen className="h-8 w-8 text-mint-primary" />
+        </div>
       </div>
-      <h2 className="mb-1 text-2xl font-bold text-slate-deep">Reflection</h2>
-      <p className="mb-6 text-sm text-slate-text">
-        การเขียนสะท้อนคิดช่วยตกผลึกความรู้ — งานวิจัยชี้ว่าพิมพ์ดีกว่าอัดเสียงในการกระตุ้น deep
-        reflection
-      </p>
 
-      <div className="mb-4 rounded-2xl border border-border bg-background p-5">
-        <label className="mb-2 block text-sm font-semibold text-slate-deep">
-          คุณคิดว่าอาจารย์ที่ดีควรให้ Feedback อย่างไร?
-        </label>
-        <textarea
-          rows={6}
-          value={reflection}
-          onChange={(e) => setReflection(e.target.value)}
-          disabled={saved}
-          placeholder="เขียนอย่างน้อย 20 ตัวอักษร — ลองใช้คำเช่น รับฟัง · เจาะจง · สนับสนุน · พัฒนา..."
-          className="w-full resize-none rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-mint-primary disabled:opacity-60"
-        />
-        <div className="mt-2 flex items-center justify-between text-xs text-slate-text">
-          <span>{reflection.length} ตัวอักษร</span>
-          {keywordsFound.length > 0 && (
-            <span className="inline-flex items-center gap-1 font-semibold text-mint-primary">
-              <Sparkles className="h-3 w-3" /> ตรวจพบคำเชิงบวก:{" "}
-              {keywordsFound.slice(0, 5).join(", ")}
+      <div className="mt-6 space-y-8 rounded-3xl border border-border bg-background p-5 sm:p-8">
+        {/* Question 1 — open reflection */}
+        <div>
+          <div className="mb-3 flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-primary text-sm font-bold text-white">
+              1
             </span>
+            <span className="inline-flex items-center rounded-full bg-mint-light px-3 py-1 text-xs font-bold text-mint-primary">
+              คำถามที่ 1 — Key Understanding
+            </span>
+          </div>
+          <p className="mb-3 font-semibold text-slate-deep">{content.q1}</p>
+          <textarea
+            rows={4}
+            value={reflection}
+            onChange={(e) => setReflection(e.target.value.slice(0, MAX_REFLECTION_CHARS))}
+            disabled={saved}
+            placeholder="พิมพ์คำตอบของคุณที่นี่ โดยอธิบายสิ่งที่คุณคิดว่าสำคัญที่สุด..."
+            className="w-full resize-none rounded-2xl border border-border bg-background p-4 text-sm outline-none focus:border-mint-primary disabled:opacity-60"
+          />
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-text">
+            <span className="flex items-center gap-1">
+              <Info className="h-3.5 w-3.5 shrink-0" /> เขียนอย่างน้อย {MIN_REFLECTION_CHARS}{" "}
+              ตัวอักษร
+            </span>
+            <span>
+              {reflection.length} / {MAX_REFLECTION_CHARS}
+            </span>
+          </div>
+          {keywordsFound.length > 0 && (
+            <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-mint-primary">
+              <Sparkles className="h-3.5 w-3.5 shrink-0" /> ตรวจพบคำเชิงบวก:{" "}
+              {keywordsFound.slice(0, 5).join(", ")}
+            </p>
           )}
         </div>
+
+        {/* Question 2 — practice intention/development focus + reason */}
+        <div>
+          <div className="mb-3 flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-primary text-sm font-bold text-white">
+              2
+            </span>
+            <span className="inline-flex items-center rounded-full bg-mint-light px-3 py-1 text-xs font-bold text-mint-primary">
+              คำถามที่ 2 — {content.q2Label}
+            </span>
+          </div>
+          <p className="mb-1 font-semibold text-slate-deep">{content.q2Question}</p>
+          <p className="mb-4 text-sm text-slate-text">ให้เลือก 1 ข้อ</p>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {content.q2Options.map((opt, i) => {
+              const style = OPTION_STYLES[i % OPTION_STYLES.length];
+              const Icon = style.icon;
+              const selected = practiceChoice === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  disabled={saved}
+                  onClick={() => setPracticeChoice(opt.id)}
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all disabled:cursor-not-allowed ${
+                    selected
+                      ? "border-mint-primary bg-mint-light/40"
+                      : "border-border bg-background hover:border-mint-primary/50"
+                  }`}
+                >
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      selected ? "border-mint-primary bg-mint-primary" : "border-border"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {selected && <span className="h-2 w-2 rounded-full bg-white" />}
+                  </span>
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${style.tone}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold text-slate-deep">{opt.label}</span>
+                    <span className="block text-xs text-slate-text">{opt.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-2 block text-sm font-semibold text-slate-deep">
+              {content.q2ReasonPrompt}
+            </label>
+            <textarea
+              rows={3}
+              value={practiceReason}
+              onChange={(e) => setPracticeReason(e.target.value.slice(0, MAX_REASON_CHARS))}
+              disabled={saved}
+              placeholder="อธิบายสั้น ๆ ถึงเหตุผลของคุณ..."
+              className="w-full resize-none rounded-2xl border border-border bg-background p-4 text-sm outline-none focus:border-mint-primary disabled:opacity-60"
+            />
+            <div className="mt-2 text-right text-xs text-slate-text">
+              {practiceReason.length} / {MAX_REASON_CHARS}
+            </div>
+          </div>
+        </div>
+
+        {/* Question 3 — Module 5 only: a concrete goal for the upcoming VR practice */}
+        {content.q3 && (
+          <div>
+            <div className="mb-3 flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-primary text-sm font-bold text-white">
+                3
+              </span>
+              <span className="inline-flex items-center rounded-full bg-mint-light px-3 py-1 text-xs font-bold text-mint-primary">
+                คำถามที่ 3 — Personal Practice Goal
+              </span>
+            </div>
+            <p className="mb-3 font-semibold text-slate-deep">{content.q3.prompt}</p>
+            <textarea
+              rows={2}
+              value={practiceGoal}
+              onChange={(e) => setPracticeGoal(e.target.value.slice(0, MAX_GOAL_CHARS))}
+              disabled={saved}
+              placeholder={content.q3.placeholder}
+              className="w-full resize-none rounded-2xl border border-border bg-background p-4 text-sm outline-none focus:border-mint-primary disabled:opacity-60"
+            />
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-text">
+              <span>
+                ไม่มีคำตอบถูกหรือผิด — คำตอบนี้จะกลายเป็นเป้าหมายส่วนตัวของคุณสำหรับการฝึก VR
+              </span>
+              <span>
+                {practiceGoal.length} / {MAX_GOAL_CHARS}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <button
         onClick={onSave}
         disabled={saved}
-        className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all ${
+        className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all ${
           saved ? "bg-mint-light text-mint-primary" : "bg-slate-deep text-white hover:opacity-90"
         }`}
       >
@@ -1482,6 +1924,12 @@ function PlaceholderStages({
   onQuickPass,
   reflection,
   setReflection,
+  practiceChoice,
+  setPracticeChoice,
+  practiceReason,
+  setPracticeReason,
+  practiceGoal,
+  setPracticeGoal,
   reflectionSaved,
   onSaveReflection,
   summaryProps,
@@ -1491,6 +1939,12 @@ function PlaceholderStages({
   onQuickPass: () => void;
   reflection: string;
   setReflection: (v: string) => void;
+  practiceChoice: string | null;
+  setPracticeChoice: (v: string) => void;
+  practiceReason: string;
+  setPracticeReason: (v: string) => void;
+  practiceGoal: string;
+  setPracticeGoal: (v: string) => void;
   reflectionSaved: boolean;
   onSaveReflection: () => void;
   summaryProps: {
@@ -1545,8 +1999,15 @@ function PlaceholderStages({
   if (stage === "evaluate") {
     return (
       <EvaluateScreen
+        meta={meta}
         reflection={reflection}
         setReflection={setReflection}
+        practiceChoice={practiceChoice}
+        setPracticeChoice={setPracticeChoice}
+        practiceReason={practiceReason}
+        setPracticeReason={setPracticeReason}
+        practiceGoal={practiceGoal}
+        setPracticeGoal={setPracticeGoal}
         saved={reflectionSaved}
         onSave={onSaveReflection}
         keywordsFound={POSITIVE_KEYWORDS.filter((k) =>

@@ -1,10 +1,29 @@
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
+import { readResearchPage } from "./research-page";
+import { saveAssessment, ASSESSMENT_VERSION } from "./assessment";
+import { issueCertificate as issueCertificateTx } from "./certificate";
+import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { onCall, onRequest, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
 import type { GoogleAuth as GoogleAuthType } from "google-auth-library";
 
 initializeApp();
 const db = getFirestore();
+
+export const submitRankingAssessment = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "กรุณาเข้าสู่ระบบก่อนส่งคำตอบ");
+  return serializeTimestamps(await saveAssessment(db, request.auth.uid, request.data));
+});
+
+// No requireAdmin — any signed-in learner may call this for themselves. It's
+// safe because issueCertificateTx re-verifies every stage server-side from
+// Firestore itself before assigning a number; caller identity isn't what
+// makes this trustworthy, the eligibility check inside it is (same reasoning
+// as submitRankingAssessment above).
+export const issueCertificate = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "กรุณาเข้าสู่ระบบก่อน");
+  return serializeTimestamps(await issueCertificateTx(db, request.auth.uid));
+});
 
 // ============================================================
 // ssr — serves the TanStack Start app itself via Firebase Hosting's
@@ -121,18 +140,15 @@ export const generateTTS = onCall(
     };
 
     const projectId = process.env.GCLOUD_PROJECT;
-    const response = await fetch(
-      "https://texttospeech.googleapis.com/v1/text:synthesize",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "x-goog-user-project": projectId ?? "",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(ttsPayload),
-      }
-    );
+    const response = await fetch("https://texttospeech.googleapis.com/v1/text:synthesize", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "x-goog-user-project": projectId ?? "",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ttsPayload),
+    });
 
     if (!response.ok) {
       const errText = await response.text();
@@ -159,7 +175,7 @@ export const generateTTS = onCall(
       audioContent: result.audioContent, // base64 LINEAR16
       mimeType: "audio/wav",
     };
-  }
+  },
 );
 
 // ============================================================
@@ -190,6 +206,11 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
+export const adminResearchPage = onCall(async (request) => {
+  requireAdmin(request);
+  return serializeTimestamps(await readResearchPage(db, request.data));
+});
+
 function requireAdmin(request: CallableRequest): void {
   const email = request.auth?.token.email?.toLowerCase();
   if (!request.auth || !email || !ADMIN_EMAILS.includes(email)) {
@@ -202,10 +223,7 @@ function serializeTimestamps(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(serializeTimestamps);
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([k, v]) => [
-        k,
-        serializeTimestamps(v),
-      ])
+      Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, serializeTimestamps(v)]),
     );
   }
   return value;
@@ -272,4 +290,175 @@ export const adminExportData = onCall(async (request) => {
     users: usersSnap.docs.map((d) => ({ uid: d.id, ...d.data() })),
     sessions: sessionsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
   });
+});
+
+// ============================================================
+// Admin QA tool — fast-forward or reset a demo/test account's progress, so a
+// researcher/professor can showcase or re-run the flow without clicking
+// through every stage. Both the caller (requireAdmin) and the TARGET uid
+// must be on ADMIN_EMAILS — this is what makes it safe: a real study
+// participant is never an admin, so this can't touch real research data
+// even by mistake. Checked against Firebase Auth directly (not the
+// Firestore profile), so it works even before the target has onboarded.
+// ============================================================
+
+// Keep in sync with src/lib/questionnaires.ts — functions/ is a separate
+// TS project and can't import client-side content directly.
+const QUESTIONNAIRES_VERSION = "post-questionnaires-2026-09-v1";
+const QUESTIONNAIRE_KEYS = ["lme", "sss", "srl", "ux"] as const;
+// Keep in sync with modules.tsx's MODULES / vr-simulation.tsx's SCENARIOS.
+const MODULE_IDS = ["m1", "m2", "m3", "m4", "m5"];
+const SCENARIO_IDS = ["s1", "s2", "s3", "s4", "s5"];
+
+async function requireTestAccount(uid: string): Promise<void> {
+  const authUser = await getAuth()
+    .getUser(uid)
+    .catch(() => null);
+  const email = authUser?.email?.toLowerCase();
+  if (!email || !ADMIN_EMAILS.includes(email)) {
+    throw new HttpsError("permission-denied", "ใช้ได้เฉพาะบัญชีทดสอบ/แอดมินเท่านั้น");
+  }
+}
+
+// Mechanically valid, not meaningful — the point is unblocking gates, not
+// producing a realistic score. Reuses the real scoring/idempotency path
+// (saveAssessment) rather than hand-writing the attempt doc, so a genuine
+// prior result is never clobbered and the written shape can never drift
+// from what the rest of the app expects.
+function syntheticAssessmentAnswers() {
+  return Array.from({ length: 20 }, (_, i) => ({
+    id: String(i + 1),
+    ranks: { A: 1, B: 2, C: 3, D: 4 },
+  }));
+}
+
+async function seedPretest(uid: string) {
+  await saveAssessment(db, uid, {
+    phase: "pretest",
+    version: ASSESSMENT_VERSION,
+    answers: syntheticAssessmentAnswers(),
+  });
+}
+
+async function seedPosttest(uid: string) {
+  await seedPretest(uid); // saveAssessment requires a pretest attempt to already exist
+  await saveAssessment(db, uid, {
+    phase: "posttest",
+    version: ASSESSMENT_VERSION,
+    answers: syntheticAssessmentAnswers(),
+  });
+}
+
+async function seedSurvey(uid: string) {
+  const userRef = db.collection("users").doc(uid);
+  for (const key of QUESTIONNAIRE_KEYS) {
+    const ref = userRef.collection("questionnaire_responses").doc(`${QUESTIONNAIRES_VERSION}_${key}`);
+    const existing = await ref.get();
+    if (existing.exists) continue; // never overwrite a real response
+    await ref.create({
+      userId: uid,
+      key,
+      version: QUESTIONNAIRES_VERSION,
+      dimensionMeans: {},
+      overallMean: 3,
+      answers: {},
+      submittedAt: Timestamp.now(),
+      seeded: true,
+    });
+  }
+  await userRef.update({
+    "survey.completed": Object.fromEntries(QUESTIONNAIRE_KEYS.map((k) => [k, true])),
+  });
+}
+
+async function seedModulesAndVr(uid: string) {
+  const userRef = db.collection("users").doc(uid);
+  const moduleProgress = Object.fromEntries(
+    MODULE_IDS.map((id) => [
+      id,
+      {
+        completed: true,
+        quizScore: null,
+        matchScore: null,
+        reflectionText: null,
+        timeSpentSeconds: null,
+        completedAt: Timestamp.now(),
+      },
+    ]),
+  );
+  await userRef.set({ moduleProgress }, { merge: true });
+
+  const existingSessions = await db.collection("sessions").where("userId", "==", uid).get();
+  const completedScenarioIds = new Set<string>();
+  existingSessions.docs.forEach((d) => {
+    const data = d.data();
+    if (data.stage4?.completedAt) completedScenarioIds.add(data.scenarioId);
+  });
+  const missing = SCENARIO_IDS.filter((id) => !completedScenarioIds.has(id));
+  await Promise.all(
+    missing.map((scenarioId) =>
+      db.collection("sessions").doc().create({
+        userId: uid,
+        scenarioId,
+        createdAt: Timestamp.now(),
+        stage1: null,
+        stage2: null,
+        stage3: null,
+        stage4: {
+          presented: true,
+          transcript: "",
+          durationSeconds: 0,
+          recordingUrl: null,
+          aiScores: null,
+          emotion: null,
+          completedAt: Timestamp.now(),
+        },
+        seeded: true,
+      }),
+    ),
+  );
+}
+
+export const adminSeedTestProgress = onCall(async (request) => {
+  requireAdmin(request);
+  const { uid, upTo } = (request.data ?? {}) as { uid?: string; upTo?: string };
+  if (!uid || !["posttest", "survey", "certificate"].includes(upTo ?? "")) {
+    throw new HttpsError("invalid-argument", "ระบุบัญชีและเป้าหมายให้ถูกต้อง");
+  }
+  await requireTestAccount(uid);
+
+  if (upTo === "posttest") await seedPretest(uid);
+  if (upTo === "survey") await seedPosttest(uid);
+  if (upTo === "certificate") {
+    await seedPosttest(uid);
+    await seedSurvey(uid);
+    await seedModulesAndVr(uid);
+  }
+  return { ok: true };
+});
+
+export const adminResetTestProgress = onCall(async (request) => {
+  requireAdmin(request);
+  const { uid } = (request.data ?? {}) as { uid?: string };
+  if (!uid) throw new HttpsError("invalid-argument", "ระบุบัญชี");
+  await requireTestAccount(uid);
+
+  const userRef = db.collection("users").doc(uid);
+  const [attempts, responses, sessions] = await Promise.all([
+    userRef.collection("assessment_attempts").get(),
+    userRef.collection("questionnaire_responses").get(),
+    db.collection("sessions").where("userId", "==", uid).get(),
+  ]);
+  const batch = db.batch();
+  attempts.docs.forEach((d) => batch.delete(d.ref));
+  responses.docs.forEach((d) => batch.delete(d.ref));
+  sessions.docs.forEach((d) => batch.delete(d.ref));
+  batch.update(userRef, {
+    assessmentResults: FieldValue.delete(),
+    survey: FieldValue.delete(),
+    moduleProgress: FieldValue.delete(),
+    certificate: FieldValue.delete(),
+  });
+  await batch.commit();
+  return { ok: true };
 });

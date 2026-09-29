@@ -32,7 +32,7 @@ import {
 } from "recharts";
 import { LearnerShell } from "@/components/learner-shell";
 import { UnityPlayer } from "@/components/UnityPlayer";
-import { completeVrScenario, getLearnerOverview } from "@/lib/learner.functions";
+import { getLearnerOverview } from "@/lib/learner.functions";
 import {
   generateCoachingReportFn,
   generateFinalSummaryFn,
@@ -240,52 +240,135 @@ const SCENARIOS: Scenario[] = [
     studentLineRetry: "ขอบคุณค่ะอาจารย์... หนูเข้าใจมากขึ้นแล้วค่ะ หนูอยากลองปรับปรุงดูค่ะ",
     behaviors: ["หลีกเลี่ยงการสบตา", "น้ำเสียงสั่นเล็กน้อย", "กอดอก"],
     // Scenario นี้ไม่มี "การนำเสนอ" ให้วิจารณ์เหมือน S1-S3 — presentationScript ที่นี่คือ
-    // คำพูดเชิงอารมณ์ของเมย์ตอนเดินเข้ามาหาอาจารย์หลังทราบคะแนน (Scene 1 NPC Dialogue
+    // คำพูดเชิงอารมณ์ของเมย์ตอนเดินเข้ามาหาอาจารย์หลังทราบคะแนน (Scene 1-2 NPC Dialogue
     // เต็มจากเอกสาร VR Scenario Script) ส่งให้ LLM เพื่อให้รู้บริบทว่าอาจารย์กำลังตอบสนอง
     // ต่ออะไรอยู่ ไม่ใช่เพื่อประเมินเนื้อหาการนำเสนอ
     presentationScript:
       "อาจารย์คะ... หนูเห็นคะแนนแล้วค่ะ หนูได้... 68 คะแนน... (เงียบไปพักหนึ่ง) หนูไม่เข้าใจ... หนูตั้งใจทำโปรเจกต์นี้มาก " +
       "หนูใช้เวลาหลายสัปดาห์เลยค่ะ หนูคิดว่าหนูทำได้ดีกว่านี้ (เสียงสั่นเล็กน้อย มองต่ำ หายใจลึก) " +
       "อาจารย์คิดว่า... หนูทำไม่ได้จริง ๆ เหรอคะ (มองหน้าอาจารย์ รอคำตอบ ตาเริ่มแดง)",
+    // อ้างอิงจาก "8. 2026_Sep_22_Scenario 4_Instructional Design Manual_V2.docx" — เอกสารฉบับนี้
+    // ออกแบบ S4 เป็นบทสนทนา 4 Interaction แยกกัน (Emotional Opening → Defensive Turn →
+    // Constructive Feedback → Rebuilding Confidence) พร้อม NPC ตอบสนองแบบ adaptive ตาม
+    // Path A/B/C ที่ผู้เรียนพูดจริงในแต่ละรอบ ซึ่งเป็นสถาปัตยกรรม multi-turn ที่ต่างจากระบบ
+    // single-recording ที่ใช้อยู่ในเว็บตอนนี้ (ตัดสินใจร่วมกับผู้ใช้แล้วว่ายังไม่ทำ redesign
+    // ส่วนนี้ — อัปเดตเฉพาะ assessmentFocus ให้สะท้อนเกณฑ์จริงจาก Manual โดยตีความว่าคำตอบ
+    // ครั้งเดียวของผู้เรียนต้องครอบคลุม "ทั้ง 4 เฟส" ของ Manual ในคำตอบเดียว แทนที่จะแยกรอบ)
     assessmentFocus:
-      "Scenario นี้คือ Emotionally Responsive Feedback (Level 4 — Advanced) — เมย์เพิ่งทราบผลคะแนน (68/100) " +
-      "ต่ำกว่าที่คาดหวัง และอยู่ในภาวะผิดหวัง เสียใจ เริ่มปกป้องตัวเอง ต่างจาก Scenario 3 ตรงที่ Scenario 3 " +
-      "นักศึกษา “เปิดรับ” feedback แต่ Scenario 4 นักศึกษา “มีอารมณ์” — ผู้เรียนต้องจัดการอารมณ์ของนักศึกษาก่อน " +
-      "จึงจะให้ feedback เชิงเนื้อหาได้ (โจทย์ไม่ใช่การวิจารณ์การนำเสนอ) Assessment Focus ตามเอกสารต้นฉบับ " +
-      "(Instructional Design Manual + VR Scenario Script) คือ Emotion Regulation, Empathic Communication, " +
-      "Psychological Safety, Language Appropriateness, Positive Tone of Voice, Facial Expression, " +
-      "De-escalation Skills ให้ใช้แนวทางนี้ตีความ 4 มิติของ rubric ดังนี้:\n" +
-      "- speechClarity: ในบริบทนี้หมายถึงน้ำเสียงที่สงบ ชัดเจน ไม่รีบเร่ง ช่วยลดความตึงเครียด (Positive Tone of " +
-      "Voice, De-escalation Skills) ไม่ใช่แค่ความชัดเจนของเนื้อหา\n" +
-      "- linguisticAppropriateness: การเลือกใช้ถ้อยคำที่แสดงความเข้าใจและเห็นอกเห็นใจ (Empathic Communication, " +
-      "Language Appropriateness) หลีกเลี่ยงถ้อยคำที่ลดทอนความรู้สึกของนักศึกษา เช่น “คิดมากไปเอง” หรือ “อย่าร้องไห้เลย”\n" +
-      "- balance: ในบริบทนี้ไม่ใช่สมดุลระหว่างคำชมกับข้อติ แต่คือสมดุลระหว่างการรับรู้/ยอมรับความรู้สึกของนักศึกษา " +
-      "(Validate Feelings) กับการค่อย ๆ นำบทสนทนาไปสู่ข้อเสนอแนะเชิงพัฒนา — ต้องไม่รีบอธิบายเหตุผลของคะแนนก่อนที่ " +
-      "นักศึกษาจะพร้อมรับฟัง (Psychological Safety) แต่ก็ต้องไม่ปล่อยให้บทสนทนาวนอยู่กับอารมณ์อย่างเดียวโดยไม่พาไปสู่การเรียนรู้\n" +
-      "- intentConsistency: feedback ช่วยคลี่คลายความตึงเครียดและนำนักศึกษากลับเข้าสู่ความเชื่อมั่น/ความพร้อมพัฒนา " +
-      "ตนเองหรือไม่ (De-escalation Skills) ตามลำดับที่คาดหวัง: Recognize Emotion → Validate Feelings → Create " +
-      "Psychological Safety → Provide Constructive Feedback → Restore Learner Confidence\n" +
-      "ตัวอย่างการตีความจากเอกสาร — feedback คุณภาพสูง (ควรให้คะแนนสูงทุกมิติ): เริ่มจากรับรู้ความรู้สึก " +
-      "(“อาจารย์เข้าใจนะครับว่าคุณรู้สึกผิดหวัง”) ชื่นชมความตั้งใจ อธิบายว่าคะแนนสะท้อนเฉพาะผลงานชิ้นนี้ไม่ใช่ " +
-      "ความสามารถทั้งหมด แล้วจึงค่อยชวนคุยเรื่องการพัฒนาต่อ — ตัวอย่าง Low-quality Feedback ที่ควรให้คะแนนต่ำมาก " +
-      "(ลดทอนความรู้สึกของผู้เรียนทันทีโดยไม่รับรู้อารมณ์เลย): “คะแนนก็เป็นไปตามเกณฑ์ ทุกคนก็ได้ประมาณนี้ " +
-      "ครั้งหน้าก็พยายามใหม่” หรือ “คุณคิดมากไปเอง” หรือ “อย่าร้องไห้เลย”",
+      "Scenario นี้คือ Emotionally Responsive Feedback (Level 4 — Advanced) ตาม Instructional Design Manual V2 — " +
+      "เมย์เพิ่งทราบผลคะแนน (68/100) ต่ำกว่าที่คาดหวังมาก และตีความว่า “อาจารย์คิดว่าหนูไม่เก่งหรือเปล่า” Emotional " +
+      "State ของเมย์คือ Disappointment, Hurt, Perceived Unfairness, Self-doubt, Defensiveness, Need to be Heard — " +
+      "หัวใจของ Scenario ไม่ใช่การรีบอธิบายว่าทำไมได้ 68 คะแนน แต่คือผู้เรียนต้องพาบทสนทนาผ่านลำดับ 4 เฟสตามที่ " +
+      "Manual กำหนด (Recognize Emotion → Listen/Validate Feelings → Create Psychological Safety/Explore เมย์'s " +
+      "Perspective → Transition to Constructive Feedback → Agree on Next Step → Restore Learner Confidence) — " +
+      "เนื่องจากระบบปัจจุบันบันทึกคำตอบเดียว (ไม่ใช่ 4 รอบแยกแบบใน Manual) คำตอบของผู้เรียนจึงควรครอบคลุม " +
+      "การรับรู้อารมณ์+สร้างความปลอดภัยทางใจ+เปิดโอกาสให้เมย์อธิบาย+ค่อยเชื่อมไปสู่ feedback ที่ปฏิบัติได้ " +
+      "ภายในคำตอบเดียวกัน ไม่ใช่ข้ามไปที่การอธิบายคะแนนทันที ให้ใช้แนวทางนี้ตีความ 4 มิติของ rubric ดังนี้:\n" +
+      "- speechClarity: Positive Tone of Voice ที่สงบ ชัดเจน ไม่รีบเร่ง จังหวะการพูดช่วยลด Emotion Level แทนที่จะ " +
+      "เพิ่มความตึงเครียด (Manual เรียกสิ่งนี้ว่า De-escalation ผ่าน Tone/Speech Rate)\n" +
+      "- linguisticAppropriateness: Empathic Communication และ Language Appropriateness — เริ่มด้วยการ " +
+      "Acknowledge Perspective (เช่น “อาจารย์เข้าใจว่าทำไมคุณถึงรู้สึกแบบนั้น”) ไม่ Avoid Immediate Defense ด้วยคำว่า " +
+      '"แต่...", "จริง ๆ แล้ว...", "คุณเข้าใจผิด..." และไม่ใช้ถ้อยคำ Minimize Emotion เช่น “อย่าคิดมากค่ะ” หรือ ' +
+      '"68 ก็ไม่ได้แย่นะ" (Path C ใน Manual — ทำให้เมย์เงียบลงและรู้สึกไม่ถูกรับฟังมากขึ้น)\n' +
+      "- balance: สมดุลระหว่าง Validate Feelings/Explore Perspective (Invite Explanation เช่น “ส่วนไหนของคะแนนที่ทำให้" +
+      "คุณรู้สึกไม่แน่ใจมากที่สุดคะ”) กับการค่อย ๆ นำไปสู่ Constructive Feedback ที่มี Specificity, Evidence, และรับรู้ " +
+      "Strength ก่อน/ร่วมกับ Area for Improvement — ต้องไม่รีบอธิบาย/ปกป้องเกณฑ์ให้คะแนนก่อนเมย์พร้อม (Path B ใน Manual " +
+      "— รีบอธิบายว่า “คะแนนเป็นไปตาม rubric” ทำให้เมย์กอดอกและ Emotion Level เพิ่มขึ้น) แต่ก็ต้องไม่วนอยู่กับอารมณ์" +
+      "อย่างเดียวโดยไม่พาไปสู่การเรียนรู้\n" +
+      "- intentConsistency: feedback ช่วยคลี่คลายความตึงเครียดและนำเมย์จาก Disappointed → Defensive → Heard → Ready " +
+      "to Listen → Reflective → Hopeful ได้หรือไม่ (Restore Learner Confidence) รวมถึงเปิดโอกาสให้เมย์คิดหา Next Step " +
+      "ด้วยตนเอง (Learner Agency) แทนที่จะบอกวิธีแก้ให้ทั้งหมด\n" +
+      "ตัวอย่างจาก Manual — การตอบสนองที่ดี (Path A, ควรให้คะแนนสูง): “อาจารย์เข้าใจว่าคุณคงผิดหวัง เพราะคุณตั้งใจกับ" +
+      "งานนี้มาก...” ตามด้วยการรับฟัง แล้วจึงให้ feedback แบบ Example High-quality Response ของ Manual: “ส่วน Activity " +
+      "Design จริง ๆ มีจุดแข็งนะคะ โดยเฉพาะการที่คุณพยายามให้ AI มีบทบาทกับกิจกรรมของผู้เรียน ... จุดที่ทำให้คะแนนส่วนนี้" +
+      "ลดลงคือ ตอนนำเสนอ ความเชื่อมโยงระหว่าง AI กับ learning objective ยังไม่ชัดพอ ... ถ้าครั้งหน้า คุณเริ่มจาก " +
+      "learning objective แล้วค่อยอธิบายว่า AI ช่วยให้ผู้เรียนทำอะไรได้ดีขึ้น จะทำให้ rationale ของคุณชัดขึ้นมากค่ะ” — " +
+      "ตัวอย่าง Low-quality Feedback ที่ควรให้คะแนนต่ำมาก (Path B/C หรือ Alternative Ending ใน Manual — argues, " +
+      "minimizes emotion, ใช้ภาษาตัดสิน, เทียบเมย์กับเพื่อน, ปกป้องเกณฑ์ให้คะแนนแบบก้าวร้าว): “คะแนนก็เป็นไปตามเกณฑ์ " +
+      "ทุกคนก็ได้ประมาณนี้ ครั้งหน้าก็พยายามใหม่” หรือ “คุณคิดมากไปเอง” หรือ “อย่าร้องไห้เลย” หรือ “แต่หนูก็ดู rubric " +
+      "แล้วนะคะ หนูคิดว่าหนูทำครบเกือบทุกข้อ” เชิงปกป้องเกณฑ์ — feedback แบบนี้ทำให้เมย์ไม่เข้าสู่ full learning " +
+      "conversation (Alternative Ending: เมย์พูดสั้น ๆ ว่า “หนูเข้าใจแล้วค่ะ” ด้วยน้ำเสียงต่ำแล้วเก็บของกลับ)",
   },
   {
     id: "s5",
     order: 5,
-    title: "Capstone Leader ที่ทำเอง 80%",
-    studentName: "นัท",
-    studentAvatar: "linear-gradient(135deg,#b8e0d2,#7dc9a8)",
-    persona: "นักศึกษาปี 4 · Capstone Project",
-    emotion: "หงุดหงิด · รู้สึกว่าเพื่อนถ่วง",
-    courseContext: "Capstone Project",
-    activity: "1-on-1 Coaching",
+    title: "Feedback for Continuous Improvement — ลีนาขอ Feedback ต่อยอดหลังปรับปรุงงาน",
+    studentName: "ลีนา",
+    // Capstone Scenario ("From Progress to the Next Step") — ลีนาไม่ใช่ตัวละครที่เคยปรากฏใน
+    // Scenario ก่อนหน้า ต่างจาก S1/S4 ที่เป็นเมย์คนเดียวกัน นักศึกษากลับมาพร้อมงานที่แก้ไขแล้วตาม
+    // Feedback รอบก่อน เริ่มด้วยความมั่นใจ แต่เปลี่ยนเป็นครุ่นคิด/ไม่แน่ใจตอนพูดถึง Assessment —
+    // โจทย์ของผู้เรียนคือให้ feedback ที่ทั้งเสริมแรงความก้าวหน้าจริง และตอบคำถามที่ถูกถามตรง ๆ
+    studentAvatar: "linear-gradient(135deg,#a8c8f0,#6f9ceb)",
+    persona:
+      "นักศึกษาปี 4 · Capstone Project — กลับมาแก้งานตาม Feedback ครั้งก่อน มั่นใจขึ้นแต่เริ่มไม่แน่ใจเรื่อง Assessment",
+    emotion: "มั่นใจขึ้น → ครุ่นคิด/ไม่แน่ใจ (เมื่อพูดถึง Assessment)",
+    courseContext: "วิชา ‘การออกแบบการเรียนรู้ด้วยเทคโนโลยีดิจิทัล’",
+    activity:
+      "Revision Presentation หลัง Feedback รอบแรก — ปรับ Learning Objective + Activity แล้วขอคำแนะนำเรื่อง Assessment ต่อ",
     difficulty: 5,
-    estimatedMinutes: "10–12 นาที",
-    studentLineFirst: "ผมทำเองเร็วกว่าครับ อธิบายให้เพื่อนเข้าใจใช้เวลามากกว่าลงมือทำ",
-    studentLineRetry: "ผมลองมอบหมายเพื่อนแล้วครับ…แต่ยังกังวลอยู่",
-    behaviors: ["ควบคุมทุกอย่าง", "ไม่ยอมมอบหมาย"],
+    estimatedMinutes: "12–15 นาที",
+    // studentLineFirst คือประโยคที่ลีนาถามอาจารย์ตรง ๆ ตอนจบการนำเสนอ (Dialogue Part 4 —
+    // Request for Feedback) ตรงกับ role ของ field นี้ใน Scenario อื่น (ประโยคเปิดให้อาจารย์เริ่มให้ feedback)
+    studentLineFirst: "ถ้าหนูจะพัฒนางานนี้ต่อ... อาจารย์คิดว่าหนูควรโฟกัสตรงไหนเป็นอันดับต่อไปคะ?",
+    studentLineRetry: "ขอบคุณค่ะอาจารย์ หนูจะลองทบทวน Assessment ใหม่ตามที่อาจารย์แนะนำค่ะ",
+    behaviors: [
+      "สบตาอาจารย์สม่ำเสมอตลอดการพูด",
+      "สีหน้าเปลี่ยนจากมั่นใจเป็นครุ่นคิดตอนพูดถึง Assessment",
+      "ชี้ไปที่เอกสาร/หน้าจอประกอบคำอธิบายเป็นระยะ",
+    ],
+    presentationScript:
+      "หนูลองกลับไปแก้งานตาม Feedback ครั้งที่แล้วแล้วค่ะ รอบก่อนอาจารย์บอกว่า Learning Objective ของหนูยังกว้างเกินไป " +
+      "แล้ว Activity ยังไม่ค่อยเชื่อมกับ Objective รอบนี้หนูเลยลองปรับสองส่วนนี้ใหม่ค่ะ " +
+      "หนูปรับ Objective ให้เฉพาะเจาะจงขึ้น จากเดิมที่เขียนแค่ว่าให้ผู้เรียนเข้าใจการใช้ AI " +
+      "รอบนี้หนูเขียนให้ผู้เรียนวิเคราะห์ว่า AI ช่วยการเรียนรู้ในแต่ละขั้นตอนได้อย่างไรค่ะ " +
+      "แล้ว Activity หนูก็เปลี่ยนให้ผู้เรียนได้ดูตัวอย่าง แล้ววิเคราะห์ด้วยตัวเองมากขึ้น (ยิ้มเล็กน้อย) " +
+      "หนูคิดว่าสองส่วนนี้น่าจะเชื่อมกันดีขึ้นแล้วค่ะ (สีหน้าเปลี่ยนจากมั่นใจเป็นครุ่นคิด) " +
+      "แต่... หนูยังไม่ค่อยมั่นใจเรื่อง Assessment ค่ะ ตอนนี้หนูยังใช้ Quiz หลังเรียนอยู่ " +
+      "คำถามส่วนใหญ่ก็ถามเรื่อง Definition แล้วก็ Function ของ AI tools แต่พอ Objective ของหนูเปลี่ยนเป็นการวิเคราะห์... " +
+      "หนูก็เริ่มไม่แน่ใจว่า Quiz แบบนี้จะวัดสิ่งที่หนูต้องการจริง ๆ หรือเปล่าค่ะ (เงยหน้ามองอาจารย์ สบตาต่อเนื่อง) " +
+      "ถ้าหนูจะพัฒนางานนี้ต่อ... อาจารย์คิดว่าหนูควรโฟกัสตรงไหนเป็นอันดับต่อไปคะ?",
+    // อ้างอิงจาก "9. 2026_Sep_22_Scenario 5_Instructional Design Manual_V2.docx" (Instructional
+    // Design Manual ฉบับทางการของ S5 — เข้ามาแทน draft เดิมที่ตีความจาก VR Scenario Script อย่างเดียว)
+    // Manual ยืนยันชัดเจนว่า Interaction Design Principle ของ S5 คือ "One-shot Feedback Interaction"
+    // (NPC ให้บริบทครบ → ผู้เรียนฟัง/สังเกต → ผู้เรียนให้ feedback ครั้งเดียว → NPC ตอบสนองแบบ fixed
+    // reaction → จบ) ซึ่งตรงกับสถาปัตยกรรม single-recording ที่ใช้อยู่เดิมทั้งระบบพอดี ไม่ต้องปรับโครงสร้าง
+    assessmentFocus:
+      "Scenario นี้คือ Feedback for Continuous Improvement (Level 5 — Capstone) ตาม Instructional Design Manual V2 — " +
+      "ลีนากลับมาพร้อม Version 2 ของงานที่แก้ไขแล้วตาม Feedback รอบก่อน (ปรับ Learning Objective ให้เฉพาะเจาะจงขึ้น และปรับ " +
+      "Activity ให้เชื่อมกับ Objective มากขึ้น จนถึงขั้นให้ผู้เรียนวิเคราะห์แทนรับข้อมูลอย่างเดียว) แต่ Assessment ยังเป็น " +
+      "Post-learning Quiz ที่เน้น Recall ข้อมูล (Definition/Function) ซึ่งไม่ align กับ Objective ใหม่ที่ต้องการ Analysis/Application " +
+      "— นี่คือ Remaining Development Area ที่ Manual ระบุไว้ชัดเจนว่าเป็นประเด็น Objective–Activity–Assessment Alignment " +
+      "Expected Feedback Structure ตาม Manual มี 6 องค์ประกอบเรียงลำดับ: (1) Recognize Progress — ชี้ว่าอะไรดีขึ้นจาก Version 1 " +
+      "(2) Use Evidence — ระบุหลักฐานที่ดีขึ้นจริง ไม่ใช่แค่ “งานดีขึ้นมากค่ะ” ลอย ๆ (3) Identify the Remaining Gap — ชี้ว่า " +
+      "Assessment ยังวัด Recall ขณะที่ Objective ต้องการ Analysis โดยไม่พูดแค่ว่า “Quiz ไม่ดี” (4) Prioritize — เลือก " +
+      "One Meaningful Next Priority เดียว (Assessment Alignment) ไม่ใช่ยัดทุกประเด็นพร้อมกัน (5) Provide an Actionable Next " +
+      "Step — บอกแนวทางที่ทำต่อได้จริง เช่น กลับไปดูว่า Objective ต้องการพฤติกรรมอะไร แล้ว Assessment เปิดโอกาสให้แสดงพฤติกรรม " +
+      "นั้นหรือไม่ (6) Support Learner Agency — ชวนคิดต่อ (“Guide Thinking, Don't Take Over Thinking”) ไม่ออกแบบ Assessment " +
+      "ให้ลีนาทั้งหมด ให้ใช้แนวทางนี้ตีความ 4 มิติของ rubric ดังนี้:\n" +
+      "- speechClarity: Tone of Voice, Speech Rate และการเว้นจังหวะ (Pause) ที่เหมาะสม — อธิบาย Evidence และ Remaining Gap " +
+      "ให้ชัดเจน ไม่คลุมเครือหรือตอบเลี่ยง ๆ โดยเฉพาะตอนตอบคำถามเรื่อง Assessment-Objective Alignment ที่ลีนาถามตรง ๆ\n" +
+      "- linguisticAppropriateness: Supportive Language และ Growth-Oriented Language ที่ให้เกียรติความพยายามจริงของลีนา " +
+      "(ไม่ใช่คำชมทั่วไปแบบ Pattern 1 — Only Praise) และภาษาที่กระตุ้นให้กล้าคิดต่อโดยไม่รู้สึกว่าตนเองถูกตัดสิน\n" +
+      "- balance: สมดุลระหว่าง Progress Recognition (ยอมรับว่า Objective/Activity ดีขึ้นจริง) กับ Identify the Remaining " +
+      "Gap (Assessment ยังไม่ align) — ต้องไม่เอียงไปทาง Pattern 1 (Only Praise ไม่มีทิศทางพัฒนา) หรือ Pattern 2 (Only Focus " +
+      "on Weakness จนทำให้ความพยายามรอบก่อนดูไม่มีความหมาย) และต้อง Prioritize ไม่ยัดทุกประเด็นพร้อมกัน (Pattern 3 — Too Much " +
+      "Feedback ที่เพิ่ม Cognitive Load จนลีนาไม่รู้จะเริ่มตรงไหน)\n" +
+      "- intentConsistency: feedback ต้องตอบคำถามที่ลีนาถามตรง ๆ (“ควรโฟกัสตรงไหนเป็นอันดับต่อไป”) ด้วย Actionable Next Step " +
+      "ที่ปฏิบัติได้จริง พร้อมรักษา Learner Agency ไว้ (ไม่ใช่ Pattern 4 — Instructor Takes Over ที่ออกแบบ solution ให้หมด " +
+      "และไม่ใช่ Pattern 5 — Vague Encouragement ที่ไม่ specific/actionable/มี evidence)\n" +
+      "ตัวอย่าง feedback คุณภาพสูงจาก Manual (Example of Appropriate Direction): “จาก Version ก่อน รอบนี้เห็นความก้าวหน้า" +
+      "ชัดเจนนะคะ โดยเฉพาะ Objective ที่เฉพาะเจาะจงขึ้น และ Activity ที่เปิดโอกาสให้ผู้เรียนได้วิเคราะห์มากขึ้น ... จุดที่อาจเป็น " +
+      "Next Step คือ Assessment เพราะตอนนี้ Objective ต้องการให้ผู้เรียนวิเคราะห์และนำความรู้ไปใช้ แต่ Quiz ยังเน้นการจำข้อมูล" +
+      "เป็นหลัก ... ลองกลับไปดู Objective แล้วถามตัวเองว่า ผู้เรียนต้องแสดงพฤติกรรมอะไรเพื่อให้เราเห็นว่าเขาบรรลุ Objective " +
+      "จริง ๆ” (feedback แบบนี้ควรนำไปสู่ Productive Feedback Reaction ของ NPC คือลีนาพยักหน้า เชื่อมโยง Objective-Assessment " +
+      "เองได้ และขอบคุณอย่างมั่นใจ) — ตัวอย่าง Low-quality Feedback 5 รูปแบบที่ Manual ระบุว่าไม่ควรให้คะแนนสูง: " +
+      '"ดีขึ้นมากค่ะ ทำต่อแบบนี้เลย" (Only Praise ไม่มีทิศทาง), "Assessment ยังไม่ดีค่ะ ต้องแก้อีก" (Only Focus on Weakness), ' +
+      '"Objective ดีขึ้น แต่ Activity ยังแก้ได้อีก แล้ว Assessment ก็ต้องเปลี่ยน Rubric ก็ควรเพิ่ม Reflection ก็ควรมี…" ' +
+      '(Too Much Feedback ไม่มี priority), "เปลี่ยนเป็น Case-based Assessment แล้วทำ Rubric 4 ระดับตามนี้…" (Instructor ' +
+      'Takes Over ลด Learner Agency), "ลองพัฒนา Assessment ให้ดีขึ้นนะคะ" (Vague Encouragement ไม่ specific/actionable) ' +
+      "— feedback แบบ vague/overly directive/focus เฉพาะจุดอ่อน/ข้อมูลเยอะเกินไป/ไม่มี priority จะนำไปสู่ Less Productive " +
+      "Feedback Reaction ของ NPC คือลีนาเพียงรับทราบสั้น ๆ แล้วบอกว่าจะลองทำตามที่อาจารย์แนะนำ โดยไม่ได้แสดงว่าเข้าใจ/" +
+      "เชื่อมโยงประเด็นได้เอง",
   },
 ];
 
@@ -592,6 +675,47 @@ const RATING_STATEMENTS_BY_SCENARIO: Record<string, string[]> = {
   ],
 };
 
+// Stage 2's "Open Reflection" questions, scenario-specific per the "B VR
+// Scenario Reflection" source table — each scenario reframes both questions
+// around what actually happened in that scenario (routine feedback,
+// positive reinforcement, emotional repair, etc.) rather than the generic
+// wording every scenario used before. DEFAULT_REFLECTION_QUESTIONS is the
+// fallback (matches the source table's own "Open Reflection" column) for
+// any scenario id not in this map — should never actually trigger since
+// every real scenario has its own entry below.
+interface ReflectionQuestions {
+  q1: string;
+  q2: string;
+}
+
+const DEFAULT_REFLECTION_QUESTIONS: ReflectionQuestions = {
+  q1: "จากการฟัง Feedback ของตนเอง คุณคิดว่าส่วนใดที่คุณทำได้ดีที่สุด เพราะเหตุใด",
+  q2: "หากให้ Feedback อีกครั้ง คุณต้องการปรับสิ่งใดมากที่สุด และจะปรับอย่างไร",
+};
+
+const REFLECTION_QUESTIONS_BY_SCENARIO: Record<string, ReflectionQuestions> = {
+  s1: {
+    q1: "จากการฟัง Feedback ของตนเอง คุณคิดว่าส่วนใดที่คุณทำได้ดีที่สุด เพราะเหตุใด",
+    q2: "หากมีโอกาสให้ Feedback อีกครั้ง คุณต้องการปรับเปลี่ยนสิ่งใดมากที่สุด และจะปรับอย่างไร",
+  },
+  s2: {
+    q1: "จากการฟัง Feedback ของตนเอง คุณคิดว่าส่วนใดของ Feedback ช่วยให้นักศึกษารู้ว่าตนเองทำอะไรได้ดีที่สุด เพราะเหตุใด",
+    q2: "หากคุณสามารถให้ Feedback ใหม่อีกครั้ง คุณจะปรับอย่างไรเพื่อช่วยให้นักศึกษาเดินหน้าต่อจากความสำเร็จในครั้งนี้",
+  },
+  s3: {
+    q1: "หลังจากฟัง Feedback ของตนเอง คุณคิดว่าประโยชน์ใดช่วยให้นักศึกษารู้สึกปลอดภัยในการรับข้อเสนอแนะมากที่สุด เพราะเหตุใด",
+    q2: "หากคุณสามารถให้ Feedback ใหม่อีกครั้ง คุณจะปรับถ้อยคำหรือโทนเสียงในส่วนใด เพื่อให้นักศึกษารู้สึกได้รับการสนับสนุนมากขึ้น",
+  },
+  s4: {
+    q1: "จากการฟังสนทนาของตนเอง คุณคิดว่าประโยชน์ใดช่วยลดความตึงเครียดของนักศึกษาได้มากที่สุด เพราะเหตุใด",
+    q2: "หากสามารถสนทนาใหม่อีกครั้ง คุณจะปรับวิธีตอบสนองต่ออารมณ์ของนักศึกษาอย่างไร",
+  },
+  s5: {
+    q1: "จากการฟังสนทนาของตนเอง โดยอิงจากความก้าวหน้าและสิ่งที่นักศึกษายังต้องการพัฒนา คุณจะให้ Feedback อย่างไร เพื่อช่วยให้นักศึกษาพัฒนางานต่อไป",
+    q2: "หากสามารถสนทนาใหม่อีกครั้ง คุณจะปรับวิธีการตั้งคำถาม เสนอแนวทางการพัฒนา หรือการสรุปบทสนทนาอย่างไร",
+  },
+};
+
 const GOAL_OPTIONS = [
   "เพิ่มความชัดเจนของคำแนะนำ",
   "พูดช้าลง",
@@ -885,10 +1009,11 @@ function ScenarioRunner({
   }, []);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      completeVrScenario({
-        data: { scenario_id: scenario.id, mock_transcript: transcript1 },
-      }),
+    // Completion is already real: stage4.completedAt (written a moment
+    // earlier via updateSession) is what getLearnerOverview now derives
+    // vr_scenarios_completed from. This mutation's job is just the
+    // save-button's loading state plus the refresh/log/toast below.
+    mutationFn: async () => {},
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["learner-overview"] });
       void logActivity({
@@ -1033,6 +1158,9 @@ function ScenarioRunner({
                 )}
                 {step === "2-reflection" && (
                   <Stage2Reflection
+                    questions={
+                      REFLECTION_QUESTIONS_BY_SCENARIO[scenario.id] ?? DEFAULT_REFLECTION_QUESTIONS
+                    }
                     bestPart={bestPart}
                     setBestPart={setBestPart}
                     personalGoal={personalGoal}
@@ -1914,6 +2042,7 @@ function Stage2Rating({
 }
 
 function Stage2Reflection({
+  questions,
   bestPart,
   setBestPart,
   personalGoal,
@@ -1921,6 +2050,7 @@ function Stage2Reflection({
   onReplay,
   onNext,
 }: {
+  questions: ReflectionQuestions;
   bestPart: string;
   setBestPart: (v: string) => void;
   personalGoal: string;
@@ -1934,9 +2064,7 @@ function Stage2Reflection({
       <h2 className="mb-4 text-xl font-bold text-slate-deep">การสะท้อนคิด (Open Reflection)</h2>
 
       <div className="mb-4 rounded-2xl border border-border p-4">
-        <label className="mb-2 block text-sm font-bold text-slate-deep">
-          1. ส่วนใดที่คุณทำได้ดีที่สุด เพราะเหตุใด
-        </label>
+        <label className="mb-2 block text-sm font-bold text-slate-deep">1. {questions.q1}</label>
         <textarea
           rows={4}
           value={bestPart}
@@ -1947,9 +2075,7 @@ function Stage2Reflection({
       </div>
 
       <div className="rounded-2xl border border-border p-4">
-        <label className="mb-2 block text-sm font-bold text-slate-deep">
-          2. หากให้ Feedback อีกครั้ง คุณต้องการปรับสิ่งใดมากที่สุด และจะปรับอย่างไร
-        </label>
+        <label className="mb-2 block text-sm font-bold text-slate-deep">2. {questions.q2}</label>
         <textarea
           rows={4}
           value={personalGoal}

@@ -125,7 +125,7 @@ export function TrackedYouTube({
         const timer = window.setInterval(() => {
           if (suspended) return;
           sample();
-          if (++ticks % 30 === 0 && ready && (totals.playing > 0 || totals.unobserved > 0))
+          if (++ticks % 60 === 0 && ready && (totals.playing > 0 || totals.unobserved > 0))
             record("heartbeat");
         }, 1000);
         const mount = document.createElement("div");

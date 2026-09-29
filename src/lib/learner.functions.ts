@@ -1,9 +1,20 @@
-// Mock client-side store — NO backend. All state persisted in localStorage.
-// Keeps the same export names as before so pages don't need major changes.
-import type { UserDoc } from "@/lib/firestore";
+// Learner store: identity (profile/consent) and all progress (assessments,
+// modules, VR scenarios, survey) are real Firestore data — this file is now
+// a computed view over it, plus a localStorage write-through cache so pages
+// render instantly on repeat visits. Keeps the same export names/shapes as
+// the original client-only mock so pages didn't need to change when each
+// piece migrated (assessments and survey already had; see computeState).
+import { doc, getDocFromServer } from "firebase/firestore";
+import { getDb, getFirebaseAuth } from "@/lib/firebase";
+import { waitForFirebaseUser } from "@/lib/firebase-auth";
+import { listSessionsForUser, type UserDoc } from "@/lib/firestore";
+import type { AssessmentPhase, AssessmentResult } from "./assessment";
+import { ASSESSMENT_VERSION } from "./assessment";
+import { getAssessmentResults } from "./assessment.functions";
+import { isAllQuestionnairesComplete, type QuestionnaireKey } from "./questionnaires";
+import { getQuestionnaireCompletion } from "./questionnaires.functions";
 
 export const CONSENT_DOC_VERSION = "v1-2026";
-export const POSTTEST_PASS_PERCENT = 80;
 
 const STORAGE_KEY = "flvr.mock.v1";
 const AUTH_KEY = "flvr.mock.auth.v1";
@@ -15,6 +26,7 @@ export interface MockProfile {
   email: string;
   display_name: string | null;
   avatar_url: string | null;
+  university: string | null;
   faculty: string | null;
   department: string | null;
   teaching_experience_years: number | null;
@@ -65,15 +77,6 @@ export interface MockPosttest {
   created_at: string;
 }
 
-export interface MockSurvey {
-  satisfaction: number;
-  usability: number;
-  perceived_learning: number;
-  recommendation: number;
-  comments: string | null;
-  created_at: string;
-}
-
 export interface MockDiagnostic {
   empathy: number;
   clarity: number;
@@ -83,13 +86,25 @@ export interface MockDiagnostic {
   created_at: string;
 }
 
+export interface MockCertificate {
+  issued_at: string;
+  certificate_id: string;
+}
+
 export interface MockData {
+  assessmentResults?: Partial<Record<AssessmentPhase, AssessmentResult>>;
   profile: MockProfile | null;
   state: MockLearnerState;
   consent: MockConsent | null;
   posttest: MockPosttest | null;
-  survey: MockSurvey | null;
+  // Firestore-backed completion mirror (see getQuestionnaireCompletion) —
+  // not a local mock like the other fields here; kept in this shape only so
+  // pages don't need major changes, per this file's header comment.
+  survey: Partial<Record<QuestionnaireKey, boolean>> | null;
   diagnostic: MockDiagnostic | null;
+  // Server-issued only (see issueCertificate in certificate.functions.ts) —
+  // never written by the client, same trust boundary as assessmentResults.
+  certificate: MockCertificate | null;
 }
 
 // -------- Store --------
@@ -120,6 +135,7 @@ function emptyData(profile: MockProfile | null): MockData {
     posttest: null,
     survey: null,
     diagnostic: null,
+    certificate: null,
   };
 }
 
@@ -150,6 +166,171 @@ function recomputeLevel(state: MockLearnerState) {
   state.level = Math.max(1, Math.floor(state.total_points / 300) + 1);
 }
 
+// -------- Derived progress (Firestore is the source of truth) --------
+
+const STAGE_POINTS = {
+  consent: 50,
+  onboarding: 50,
+  module: 100,
+  vrScenario: 150,
+  survey: 100,
+} as const;
+
+// Single place that turns real completion flags into current_stage/points/
+// level — replaces the old sequential single-step `if` chains that only
+// ever advanced current_stage one step at a time and would leave it stale
+// after several stages complete at once (e.g. an admin seeding progress).
+function computeState(input: {
+  consentCompleted: boolean;
+  onboardingCompleted: boolean;
+  pretestCompleted: boolean;
+  completedModuleIds: string[];
+  completedScenarioIds: string[];
+  posttestCompleted: boolean;
+  surveyCompleted: boolean;
+  certificateIssued: boolean;
+}): Pick<
+  MockLearnerState,
+  | "consent_completed"
+  | "onboarding_completed"
+  | "pretest_completed"
+  | "modules_completed"
+  | "vr_scenarios_completed"
+  | "posttest_completed"
+  | "survey_completed"
+  | "certificate_issued"
+  | "current_stage"
+  | "total_points"
+  | "level"
+  | "completed_modules"
+  | "completed_scenarios"
+> {
+  const {
+    consentCompleted,
+    onboardingCompleted,
+    pretestCompleted,
+    completedModuleIds,
+    completedScenarioIds,
+    posttestCompleted,
+    surveyCompleted,
+    certificateIssued,
+  } = input;
+
+  // Strict canonical order — nothing actually blocks a learner from
+  // visiting /posttest or /survey before finishing modules/VR (only pretest
+  // gates posttest), so each stage must be individually confirmed done, not
+  // inferred from a later one being done (surveyCompleted alone used to
+  // short-circuit straight to "certificate" even with 0/5 modules).
+  let current_stage: MockLearnerState["current_stage"];
+  if (!consentCompleted) current_stage = "consent";
+  else if (!onboardingCompleted) current_stage = "onboarding";
+  else if (!pretestCompleted) current_stage = "diagnostic";
+  else if (completedModuleIds.length < 5) current_stage = "modules";
+  else if (completedScenarioIds.length < 5) current_stage = "vr_simulation";
+  else if (!posttestCompleted) current_stage = "posttest";
+  else if (!surveyCompleted) current_stage = "survey";
+  else current_stage = certificateIssued ? "completed" : "certificate";
+
+  const total_points =
+    (consentCompleted ? STAGE_POINTS.consent : 0) +
+    (onboardingCompleted ? STAGE_POINTS.onboarding : 0) +
+    completedModuleIds.length * STAGE_POINTS.module +
+    completedScenarioIds.length * STAGE_POINTS.vrScenario +
+    (surveyCompleted ? STAGE_POINTS.survey : 0);
+
+  return {
+    consent_completed: consentCompleted,
+    onboarding_completed: onboardingCompleted,
+    pretest_completed: pretestCompleted,
+    modules_completed: completedModuleIds.length,
+    vr_scenarios_completed: completedScenarioIds.length,
+    posttest_completed: posttestCompleted,
+    survey_completed: surveyCompleted,
+    certificate_issued: certificateIssued,
+    current_stage,
+    total_points,
+    level: Math.max(1, Math.floor(total_points / 300) + 1),
+    completed_modules: completedModuleIds,
+    completed_scenarios: completedScenarioIds,
+  };
+}
+
+// users/{uid}.moduleProgress was always in the schema but never written
+// until modules.tsx started doing so directly via upsertUserDoc. Certificate
+// info piggybacks on this same read (rather than a second full-document
+// fetch) since both live on the same user doc.
+interface ModuleProgressAndCertificate {
+  completedModuleIds: string[];
+  certificate: MockCertificate | null;
+}
+
+async function getModuleProgressAndCertificate(): Promise<ModuleProgressAndCertificate> {
+  const user = await waitForFirebaseUser();
+  if (!user) return { completedModuleIds: [], certificate: null };
+  const snapshot = await getDocFromServer(doc(getDb(), "users", user.uid));
+  if (getFirebaseAuth().currentUser?.uid !== user.uid)
+    throw new Error("บัญชีผู้ใช้เปลี่ยนระหว่างโหลดข้อมูล กรุณาลองอีกครั้ง");
+  const data = snapshot.data();
+  const progress = data?.moduleProgress as Record<string, { completed?: boolean }> | undefined;
+  const completedModuleIds = Object.entries(progress ?? {})
+    .filter(([, p]) => p?.completed)
+    .map(([id]) => id);
+  const cert = data?.certificate as
+    { issuedAt?: { toDate: () => Date }; certificateId?: string } | undefined;
+  const certificate =
+    cert?.certificateId && cert.issuedAt
+      ? { issued_at: cert.issuedAt.toDate().toISOString(), certificate_id: cert.certificateId }
+      : null;
+  return { completedModuleIds, certificate };
+}
+
+// No dedicated field for this — a scenario counts as completed once its
+// session's stage4 (round 2) has a real completedAt, exactly the signal
+// vr-simulation.tsx already writes via updateSession at the summary step.
+async function getCompletedScenarioIds(): Promise<string[]> {
+  const user = await waitForFirebaseUser();
+  if (!user) return [];
+  const sessions = await listSessionsForUser(user.uid);
+  if (getFirebaseAuth().currentUser?.uid !== user.uid)
+    throw new Error("บัญชีผู้ใช้เปลี่ยนระหว่างโหลดข้อมูล กรุณาลองอีกครั้ง");
+  const ids = new Set<string>();
+  for (const s of sessions) if (s.stage4?.completedAt) ids.add(s.scenarioId);
+  return [...ids];
+}
+
+// Personal VR coaching-score trend for the results dashboard (certificate.tsx)
+// — average AI "overall" score across the learner's own sessions, round 1
+// (stage3, first attempt) vs round 2 (stage4, after retrying with coaching).
+// Same signal AdminMonitoring charts cohort-wide; this is the single-learner
+// version, computed client-side since sessions are already own-uid readable.
+export interface VrRoundScores {
+  round1: number | null;
+  round2: number | null;
+  pairedCount: number;
+}
+
+export async function getVrRoundScores(): Promise<VrRoundScores> {
+  const user = await waitForFirebaseUser();
+  if (!user) return { round1: null, round2: null, pairedCount: 0 };
+  const sessions = await listSessionsForUser(user.uid);
+  if (getFirebaseAuth().currentUser?.uid !== user.uid)
+    throw new Error("บัญชีผู้ใช้เปลี่ยนระหว่างโหลดข้อมูล กรุณาลองอีกครั้ง");
+  const round1 = sessions
+    .map((s) => s.stage3?.aiScores?.overall)
+    .filter((v): v is number => typeof v === "number");
+  const round2 = sessions
+    .map((s) => s.stage4?.aiScores?.overall)
+    .filter((v): v is number => typeof v === "number");
+  const pairedCount = sessions.filter(
+    (s) =>
+      typeof s.stage3?.aiScores?.overall === "number" &&
+      typeof s.stage4?.aiScores?.overall === "number",
+  ).length;
+  const avg = (values: number[]) =>
+    values.length ? Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)) : null;
+  return { round1: avg(round1), round2: avg(round2), pairedCount };
+}
+
 // -------- Auth (mock) --------
 
 export interface MockAuth {
@@ -164,6 +345,7 @@ function profileFromAuth(auth: MockAuth): MockProfile {
     email: auth.email,
     display_name: auth.name,
     avatar_url: null,
+    university: null,
     faculty: null,
     department: null,
     teaching_experience_years: null,
@@ -204,30 +386,64 @@ export function setAuthFromFirebaseUser(user: {
   if (!existing) saveData(emptyData(profileFromAuth(auth)));
 }
 
-// Reconcile setup before rendering any learner page. Later learning progress
-// remains local until its separate Firestore migration.
-export function syncLearnerSetup(
+// Reconcile setup before rendering any learner page — everything here is
+// now real Firestore data (or, for VR scenarios, derived from it below).
+export async function syncLearnerSetup(
   userDoc: UserDoc | null,
-  destination: "/consent" | "/onboarding" | "/dashboard",
-): MockData {
+  destination: "/consent" | "/onboarding" | "/overview",
+): Promise<MockData> {
   const d = loadData();
-  d.state.consent_completed = destination !== "/consent";
-  d.state.onboarding_completed = destination === "/dashboard";
+  const consentCompleted = destination !== "/consent";
+  const onboardingCompleted = destination === "/overview";
   if (userDoc?.profile && d.profile) {
     d.profile = {
       ...d.profile,
       display_name: userDoc.profile.displayName,
       avatar_url: userDoc.profile.avatarUrl,
+      university: userDoc.profile.university,
       faculty: userDoc.profile.faculty,
       department: userDoc.profile.department,
       teaching_experience_years: userDoc.profile.teachingExperienceYears,
     };
   }
-  if (destination !== "/dashboard") {
-    d.state.current_stage = destination === "/consent" ? "consent" : "onboarding";
-  } else if (d.state.current_stage === "consent" || d.state.current_stage === "onboarding") {
-    d.state.current_stage = "diagnostic";
+  d.assessmentResults = {};
+  for (const phase of ["pretest", "posttest"] as const) {
+    const r = userDoc?.assessmentResults?.[phase];
+    if (r?.version === ASSESSMENT_VERSION)
+      d.assessmentResults[phase] = { ...r, submittedAt: r.submittedAt.toDate().toISOString() };
   }
+  d.diagnostic = null;
+  d.posttest = null;
+  d.survey = userDoc?.survey?.completed ?? null;
+  d.certificate = userDoc?.certificate
+    ? {
+        issued_at: userDoc.certificate.issuedAt.toDate().toISOString(),
+        certificate_id: userDoc.certificate.certificateId,
+      }
+    : null;
+
+  const completedModuleIds = Object.entries(userDoc?.moduleProgress ?? {})
+    .filter(([, p]) => p?.completed)
+    .map(([id]) => id);
+  // Only userDoc is available here (no extra round trip at route-guard
+  // time) — getCompletedScenarioIds needs a separate sessions query, so
+  // this uses whatever was last cached; getLearnerOverview (called right
+  // after, on every page) re-derives it for real and corrects this.
+  const completedScenarioIds = d.state.completed_scenarios;
+
+  d.state = {
+    ...d.state,
+    ...computeState({
+      consentCompleted,
+      onboardingCompleted,
+      pretestCompleted: !!d.assessmentResults.pretest,
+      completedModuleIds,
+      completedScenarioIds,
+      posttestCompleted: !!d.assessmentResults.posttest,
+      surveyCompleted: isAllQuestionnairesComplete(d.survey),
+      certificateIssued: !!d.certificate,
+    }),
+  };
   saveData(d);
   return d;
 }
@@ -250,8 +466,33 @@ function sleep(ms: number) {
 // -------- API (all client-side, simulate latency) --------
 
 export async function getLearnerOverview(): Promise<MockData> {
-  await sleep(150);
-  return loadData();
+  const d = loadData();
+  const [results, surveyCompletion, moduleAndCert, completedScenarioIds] = await Promise.all([
+    getAssessmentResults(),
+    getQuestionnaireCompletion(),
+    getModuleProgressAndCertificate(),
+    getCompletedScenarioIds(),
+  ]);
+  d.assessmentResults = results;
+  d.diagnostic = null;
+  d.posttest = null;
+  d.survey = surveyCompletion;
+  d.certificate = moduleAndCert.certificate;
+  d.state = {
+    ...d.state,
+    ...computeState({
+      consentCompleted: d.state.consent_completed,
+      onboardingCompleted: d.state.onboarding_completed,
+      pretestCompleted: !!results.pretest,
+      completedModuleIds: moduleAndCert.completedModuleIds,
+      completedScenarioIds,
+      posttestCompleted: !!results.posttest,
+      surveyCompleted: isAllQuestionnairesComplete(surveyCompletion),
+      certificateIssued: !!moduleAndCert.certificate,
+    }),
+  };
+  saveData(d);
+  return d;
 }
 
 export async function submitConsent(args: {
@@ -285,6 +526,7 @@ export async function submitConsent(args: {
 export async function submitOnboarding(args: {
   data: {
     display_name: string;
+    university: string;
     faculty: string;
     department: string | null;
     teaching_experience_years: number;
@@ -298,11 +540,13 @@ export async function submitOnboarding(args: {
       email: "lecturer.demo@university.ac.th",
       display_name: null,
       avatar_url: null,
+      university: null,
       faculty: null,
       department: null,
       teaching_experience_years: null,
     }),
     display_name: data.display_name,
+    university: data.university,
     faculty: data.faculty,
     department: data.department,
     teaching_experience_years: data.teaching_experience_years,
@@ -316,320 +560,24 @@ export async function submitOnboarding(args: {
   return { ok: true };
 }
 
-// ---- Diagnostic (Pretest) ----
+// Module completion and VR scenario completion are both real Firestore data
+// now — modules.tsx writes moduleProgress directly via upsertUserDoc, and VR
+// scenario completion is derived from sessions.stage4.completedAt (see
+// getCompletedModuleIds/getCompletedScenarioIds above). Neither needs a
+// function here anymore — same retirement submitSurvey already got.
 
-export interface DiagnosticQuestion {
-  id: string;
-  dimension: "empathy" | "clarity" | "motivation" | "actionability";
-  question: string;
-  options: { label: string; score: number }[];
-}
-
-export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
-  {
-    id: "d1",
-    dimension: "empathy",
-    question: "ก่อนให้ Feedback ท่านมักจะรับฟังความรู้สึกของนักศึกษาระดับใด",
-    options: [
-      { label: "แทบไม่เคย", score: 1 },
-      { label: "บางครั้ง", score: 3 },
-      { label: "เกือบทุกครั้ง", score: 5 },
-    ],
-  },
-  {
-    id: "d2",
-    dimension: "empathy",
-    question: "เมื่อนักศึกษาแสดงความอึดอัด ท่านตอบสนองอย่างไร",
-    options: [
-      { label: "ข้ามและอธิบายเนื้อหาต่อ", score: 1 },
-      { label: "พักการสนทนาชั่วขณะ", score: 3 },
-      { label: "สะท้อนความรู้สึกก่อนดำเนินการต่อ", score: 5 },
-    ],
-  },
-  {
-    id: "d3",
-    dimension: "clarity",
-    question: "โดยทั่วไปประโยค Feedback ของท่านมักอ้างอิงชิ้นงานตรงจุดหรือไม่",
-    options: [
-      { label: "พูดกว้าง ๆ", score: 1 },
-      { label: "บางครั้งอ้างอิงส่วนที่ประทับใจ", score: 3 },
-      { label: "อ้างอิงหน้า/บรรทัด/นาทีอย่างเจาะจง", score: 5 },
-    ],
-  },
-  {
-    id: "d4",
-    dimension: "clarity",
-    question: "ท่านตรวจสอบความเข้าใจของนักศึกษาหลังให้ Feedback อย่างไร",
-    options: [
-      { label: "ถามว่าเข้าใจไหม", score: 1 },
-      { label: "ให้ลองสรุปประเด็นสั้น ๆ", score: 3 },
-      { label: "ให้เล่าแผนการปรับปรุงกลับมา", score: 5 },
-    ],
-  },
-  {
-    id: "d5",
-    dimension: "motivation",
-    question: "ท่านเริ่ม Feedback ในแบบใดบ่อยที่สุด",
-    options: [
-      { label: "เริ่มจากข้อผิดพลาดสำคัญ", score: 1 },
-      { label: "เริ่มจากข้อสังเกตทั่วไป", score: 3 },
-      { label: "ยอมรับความพยายามและระบุจุดแข็ง", score: 5 },
-    ],
-  },
-  {
-    id: "d6",
-    dimension: "motivation",
-    question: "ท่านเชื่อมโยง Feedback กับเป้าหมายส่วนตัวของนักศึกษาบ่อยเพียงใด",
-    options: [
-      { label: "ไม่เคย", score: 1 },
-      { label: "บางครั้ง", score: 3 },
-      { label: "เกือบทุกครั้ง", score: 5 },
-    ],
-  },
-  {
-    id: "d7",
-    dimension: "actionability",
-    question: "Feedback ของท่านมักลงท้ายด้วยอะไร",
-    options: [
-      { label: "สรุปข้อผิดพลาด", score: 1 },
-      { label: "คำแนะนำทั่วไป", score: 3 },
-      { label: "ขั้นตอนปฏิบัติ + ตัวชี้วัดความสำเร็จ", score: 5 },
-    ],
-  },
-  {
-    id: "d8",
-    dimension: "actionability",
-    question: "ท่านมั่นใจในการวางแผนปรับปรุงงานร่วมกับนักศึกษาระดับใด",
-    options: [
-      { label: "ยังไม่มั่นใจ", score: 1 },
-      { label: "พอทำได้", score: 3 },
-      { label: "มั่นใจและมีเทคนิคของตนเอง", score: 5 },
-    ],
-  },
-];
-
-export async function submitDiagnostic(args: {
-  data: { answers: { id: string; score: number }[] };
-}) {
-  const byId = new Map(DIAGNOSTIC_QUESTIONS.map((q) => [q.id, q]));
-  const dims = { empathy: 0, clarity: 0, motivation: 0, actionability: 0 };
-  const dimMax = { empathy: 0, clarity: 0, motivation: 0, actionability: 0 };
-  for (const q of DIAGNOSTIC_QUESTIONS) dimMax[q.dimension] += 5;
-  for (const a of args.data.answers) {
-    const q = byId.get(a.id);
-    if (q) dims[q.dimension] += a.score;
-  }
-  const norm = {
-    empathy: Math.round((dims.empathy / (dimMax.empathy || 1)) * 25),
-    clarity: Math.round((dims.clarity / (dimMax.clarity || 1)) * 25),
-    motivation: Math.round((dims.motivation / (dimMax.motivation || 1)) * 25),
-    actionability: Math.round((dims.actionability / (dimMax.actionability || 1)) * 25),
-  };
-  const total = norm.empathy + norm.clarity + norm.motivation + norm.actionability;
-
+// Survey submission now goes through submitQuestionnaireResponse
+// (@/lib/questionnaires.functions) directly, bypassing this file — same
+// split as the ranking assessment (submitRankingAssessment vs.
+// getAssessmentResults here). This just handles the local-only
+// points/level/stage bookkeeping submitSurvey used to do, called once after
+// all questionnaires are submitted.
+export async function markSurveyCompletionAwarded() {
   const d = loadData();
-  d.diagnostic = { ...norm, total, created_at: new Date().toISOString() };
-  d.state.pretest_completed = true;
-  if (d.state.current_stage === "diagnostic" || d.state.current_stage === "onboarding") {
-    d.state.current_stage = "modules";
-  }
-  d.state.total_points += 100;
-  recomputeLevel(d.state);
-  saveData(d);
-  await sleep(400);
-  return { ...norm, total };
-}
-
-// ---- Modules ----
-
-export async function completeModule(args: { data: { module_id: string } }) {
-  const d = loadData();
-  if (!d.state.completed_modules.includes(args.data.module_id)) {
-    d.state.completed_modules.push(args.data.module_id);
-    d.state.modules_completed = d.state.completed_modules.length;
+  if (d.state.current_stage === "survey") {
+    d.state.current_stage = "certificate";
     d.state.total_points += 100;
-    if (d.state.modules_completed >= 5 && d.state.current_stage === "modules") {
-      d.state.current_stage = "vr_simulation";
-    }
     recomputeLevel(d.state);
     saveData(d);
   }
-  await sleep(250);
-  return { ok: true };
-}
-
-// ---- VR Scenarios ----
-
-export async function completeVrScenario(args: {
-  data: { scenario_id: string; mock_transcript?: string };
-}) {
-  const d = loadData();
-  if (!d.state.completed_scenarios.includes(args.data.scenario_id)) {
-    d.state.completed_scenarios.push(args.data.scenario_id);
-    d.state.vr_scenarios_completed = d.state.completed_scenarios.length;
-    d.state.total_points += 150;
-    if (d.state.vr_scenarios_completed >= 5 && d.state.current_stage === "vr_simulation") {
-      d.state.current_stage = "posttest";
-    }
-    recomputeLevel(d.state);
-    saveData(d);
-  }
-  await sleep(250);
-  return { ok: true };
-}
-
-// ---- Posttest ----
-
-export interface PosttestQuestion {
-  id: string;
-  dimension: "empathy" | "clarity" | "motivation" | "actionability";
-  question: string;
-  options: { label: string; score: number }[];
-}
-
-export const POSTTEST_QUESTIONS: PosttestQuestion[] = [
-  {
-    id: "q1",
-    dimension: "empathy",
-    question: "เมื่อให้ Feedback กับนักศึกษาที่ทำผิดพลาด ท่านจะ...",
-    options: [
-      { label: "ตำหนิและชี้ข้อผิดพลาดตรงไปตรงมา", score: 1 },
-      { label: "ชี้ข้อผิดพลาดโดยไม่ใส่ความรู้สึก", score: 3 },
-      { label: "รับฟังก่อน แล้วสะท้อนความรู้สึกและชี้แนะอย่างเห็นใจ", score: 5 },
-    ],
-  },
-  {
-    id: "q2",
-    dimension: "empathy",
-    question: "การเข้าใจสภาวะอารมณ์ของผู้เรียนมีผลต่อ Constructive Feedback อย่างไร",
-    options: [
-      { label: "ไม่จำเป็น เพราะเน้นเนื้อหาวิชาการ", score: 1 },
-      { label: "ช่วยเลือกจังหวะที่เหมาะสม", score: 3 },
-      { label: "เป็นรากฐานของการสื่อสารที่ปลอดภัยและได้ผล", score: 5 },
-    ],
-  },
-  {
-    id: "q3",
-    dimension: "clarity",
-    question: "ประโยค Feedback แบบใดชัดเจนที่สุด",
-    options: [
-      { label: '"งานยังไม่ค่อยดี"', score: 1 },
-      { label: '"เนื้อหายังขาดหลักฐานสนับสนุน"', score: 3 },
-      { label: '"บทนำยังไม่มีคำถามวิจัย ควรเพิ่มในย่อหน้าที่ 2"', score: 5 },
-    ],
-  },
-  {
-    id: "q4",
-    dimension: "clarity",
-    question: "ควรใช้ภาษาแบบใดให้ Feedback เข้าใจง่าย",
-    options: [
-      { label: "ศัพท์วิชาการล้วน", score: 1 },
-      { label: "ผสมภาษาพูดและวิชาการ", score: 3 },
-      { label: "รูปธรรม เจาะจง อ้างอิงชิ้นงานตรงจุด", score: 5 },
-    ],
-  },
-  {
-    id: "q5",
-    dimension: "motivation",
-    question: "ควรเริ่ม Feedback อย่างไรจึงกระตุ้นแรงจูงใจ",
-    options: [
-      { label: "เริ่มด้วยข้อผิดพลาดหลัก", score: 1 },
-      { label: "เริ่มด้วยข้อดี", score: 3 },
-      { label: "ยอมรับความพยายามและระบุจุดแข็งที่เจาะจง", score: 5 },
-    ],
-  },
-  {
-    id: "q6",
-    dimension: "motivation",
-    question: "การเชื่อม Feedback กับเป้าหมายของผู้เรียนทำหน้าที่อะไร",
-    options: [
-      { label: "ไม่จำเป็น", score: 1 },
-      { label: "ช่วยให้จำได้นานขึ้น", score: 3 },
-      { label: "สร้าง Ownership และ Growth Mindset", score: 5 },
-    ],
-  },
-  {
-    id: "q7",
-    dimension: "actionability",
-    question: "Feedback ที่นำไปปฏิบัติได้ต้องมีองค์ประกอบใด",
-    options: [
-      { label: "ระบุข้อผิดพลาด", score: 1 },
-      { label: "ระบุข้อผิดพลาด + คำแนะนำทั่วไป", score: 3 },
-      { label: "ระบุจุด + ขั้นตอนที่ทำได้ + ตัวชี้วัดความสำเร็จ", score: 5 },
-    ],
-  },
-  {
-    id: "q8",
-    dimension: "actionability",
-    question: "ท่านมั่นใจในการวางแผนการปรับปรุงงานร่วมกับนักศึกษาระดับใด",
-    options: [
-      { label: "ยังไม่มั่นใจ", score: 1 },
-      { label: "พอทำได้", score: 3 },
-      { label: "มั่นใจและมีเทคนิคของตนเอง", score: 5 },
-    ],
-  },
-];
-
-export async function submitPosttest(args: { data: { answers: { id: string; score: number }[] } }) {
-  const byId = new Map(POSTTEST_QUESTIONS.map((q) => [q.id, q]));
-  const dims = { empathy: 0, clarity: 0, motivation: 0, actionability: 0 };
-  const dimMax = { empathy: 0, clarity: 0, motivation: 0, actionability: 0 };
-  for (const q of POSTTEST_QUESTIONS) dimMax[q.dimension] += 5;
-  for (const a of args.data.answers) {
-    const q = byId.get(a.id);
-    if (q) dims[q.dimension] += a.score;
-  }
-  const norm = {
-    empathy: Math.round((dims.empathy / (dimMax.empathy || 1)) * 25),
-    clarity: Math.round((dims.clarity / (dimMax.clarity || 1)) * 25),
-    motivation: Math.round((dims.motivation / (dimMax.motivation || 1)) * 25),
-    actionability: Math.round((dims.actionability / (dimMax.actionability || 1)) * 25),
-  };
-  const total = norm.empathy + norm.clarity + norm.motivation + norm.actionability;
-  const percentage = total;
-  const passed = percentage >= POSTTEST_PASS_PERCENT;
-
-  const d = loadData();
-  d.posttest = {
-    empathy_score: norm.empathy,
-    clarity_score: norm.clarity,
-    motivation_score: norm.motivation,
-    actionability_score: norm.actionability,
-    total_score: total,
-    max_score: 100,
-    percentage,
-    passed,
-    created_at: new Date().toISOString(),
-  };
-  d.state.posttest_completed = passed;
-  if (passed) {
-    d.state.current_stage = "survey";
-    d.state.total_points += 200;
-  }
-  recomputeLevel(d.state);
-  saveData(d);
-  await sleep(400);
-  return { passed, percentage, ...norm, total };
-}
-
-// ---- Survey ----
-
-export async function submitSurvey(args: {
-  data: {
-    satisfaction: number;
-    usability: number;
-    perceived_learning: number;
-    recommendation: number;
-    comments: string | null;
-  };
-}) {
-  const d = loadData();
-  d.survey = { ...args.data, created_at: new Date().toISOString() };
-  d.state.survey_completed = true;
-  d.state.current_stage = "certificate";
-  d.state.total_points += 100;
-  recomputeLevel(d.state);
-  saveData(d);
-  await sleep(300);
-  return { ok: true };
 }
