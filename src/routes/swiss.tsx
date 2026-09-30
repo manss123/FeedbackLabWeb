@@ -67,10 +67,10 @@ const dimensions = [
 
 function SwissHome() {
   return (
-    <div className="min-h-screen bg-white font-prompt text-black">
+    <div className="app-page-background min-h-screen bg-white font-prompt text-black">
       {/* Top ticker */}
       <div className="border-b border-black bg-black text-white">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-2 text-[11px] font-medium uppercase tracking-[0.2em]">
+        <div className="app-content-container flex  items-center justify-between px-6 py-2 text-[11px] font-medium uppercase tracking-[0.2em]">
           <span>Research Edition · 2024</span>
           <span className="hidden sm:inline">Desktop VR × NLP × Personalized Learning</span>
           <span>TH / EN</span>
@@ -79,7 +79,7 @@ function SwissHome() {
 
       {/* Nav */}
       <nav className="border-b border-black">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-12 items-center px-6 py-5">
+        <div className="app-content-container grid  grid-cols-12 items-center px-6 py-5">
           <div className="col-span-6 flex items-center gap-3 md:col-span-3">
             <div className="flex h-9 w-9 items-center justify-center bg-black text-white">
               <span className="text-sm font-black">FL</span>
@@ -110,7 +110,7 @@ function SwissHome() {
 
       {/* Hero */}
       <header className="border-b border-black">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-12 gap-0">
+        <div className="app-content-container grid  grid-cols-12 gap-0">
           {/* Left index */}
           <aside className="col-span-12 border-b border-black px-6 py-6 md:col-span-2 md:border-b-0 md:border-r md:py-10">
             <div className="text-[11px] font-medium uppercase tracking-[0.3em] text-neutral-500">
@@ -183,7 +183,7 @@ function SwissHome() {
 
         {/* Stats strip */}
         <div className="border-t border-black">
-          <div className="mx-auto grid max-w-[1400px] grid-cols-2 md:grid-cols-4">
+          <div className="app-content-container grid  grid-cols-2 md:grid-cols-4">
             {[
               { k: "AI Accuracy", v: "98.4%" },
               { k: "Faculty Trained", v: "1,240+" },
@@ -206,7 +206,7 @@ function SwissHome() {
 
       {/* Program / 4 components */}
       <section id="program" className="border-b border-black">
-        <div className="mx-auto max-w-[1400px] px-6 py-16">
+        <div className="app-content-container px-6 py-16">
           <div className="mb-12 grid grid-cols-12 gap-6">
             <div className="col-span-12 md:col-span-4">
               <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#e63946]">
@@ -253,7 +253,7 @@ function SwissHome() {
 
       {/* Analysis / 4 dimensions */}
       <section id="analysis" className="border-b border-black bg-neutral-50">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-12 gap-6 px-6 py-16">
+        <div className="app-content-container grid  grid-cols-12 gap-6 px-6 py-16">
           <div className="col-span-12 md:col-span-5">
             <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#e63946]">
               Section B
@@ -315,7 +315,7 @@ function SwissHome() {
 
       {/* Research / editorial row */}
       <section id="research" className="border-b border-black">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-12 gap-0 px-6 py-16">
+        <div className="app-content-container grid  grid-cols-12 gap-0 px-6 py-16">
           <div className="col-span-12 md:col-span-4 md:pr-8">
             <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#e63946]">
               Section C
@@ -347,7 +347,7 @@ function SwissHome() {
 
       {/* CTA */}
       <section id="contact" className="border-b border-black bg-black text-white">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-12 items-center gap-6 px-6 py-20">
+        <div className="app-content-container grid  grid-cols-12 items-center gap-6 px-6 py-20">
           <div className="col-span-12 md:col-span-8">
             <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#e63946]">
               Enroll
@@ -381,7 +381,7 @@ function SwissHome() {
 
       {/* Footer */}
       <footer>
-        <div className="mx-auto grid max-w-[1400px] grid-cols-12 gap-6 px-6 py-10 text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+        <div className="app-content-container grid  grid-cols-12 gap-6 px-6 py-10 text-[11px] uppercase tracking-[0.2em] text-neutral-500">
           <div className="col-span-6 md:col-span-3">© 2024 My Feedback Lab</div>
           <div className="col-span-6 md:col-span-3">Research Project · TH</div>
           <div className="col-span-6 md:col-span-3">Version 01 · Swiss Edition</div>

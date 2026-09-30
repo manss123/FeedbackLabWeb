@@ -118,7 +118,7 @@ export function RankingAssessment({ phase }: { phase: AssessmentPhase }) {
           กำลังโหลดแบบทดสอบ
         </div>
       ) : overview.error || !uid ? (
-        <Card className="mx-auto max-w-5xl space-y-4 rounded-lg p-8 shadow-none">
+        <Card className="w-full space-y-4 rounded-lg p-8 shadow-none">
           <h1 className="text-xl font-semibold">ยังโหลดแบบทดสอบไม่สำเร็จ</h1>
           <p className="text-slate-text">กรุณาตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</p>
           <Button
@@ -225,7 +225,7 @@ function AssessmentForm({
 
   if (blocked)
     return (
-      <Card className="mx-auto max-w-5xl space-y-4 rounded-lg p-8 shadow-none">
+      <Card className="w-full space-y-4 rounded-lg p-8 shadow-none">
         <ClipboardList className="size-8 text-mint-primary" />
         <h1 className="text-2xl font-bold">เริ่มจากแบบทดสอบก่อนเรียน</h1>
         <p className="text-slate-text">
@@ -240,7 +240,7 @@ function AssessmentForm({
     );
   if (result)
     return (
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="w-full space-y-6">
         <Card className="rounded-xl border-t-4 border-monitor-teal bg-card p-8 text-center shadow-none">
           <CheckCircle2 className="mx-auto mb-3 size-10 text-mint-primary" />
           <h1 className="text-2xl font-bold text-slate-deep">บันทึก{label}เรียบร้อยแล้ว</h1>
@@ -259,7 +259,7 @@ function AssessmentForm({
     );
 
   return (
-    <div className="assessment-form mx-auto max-w-5xl space-y-6 pb-8 font-prompt">
+    <div className="assessment-form w-full space-y-6 pb-8 font-prompt">
       <header className="space-y-3">
         <span className="assessment-kicker inline-flex items-center gap-2 text-sm font-semibold">
           <PhaseIcon className="size-4" aria-hidden="true" />
@@ -303,7 +303,7 @@ function AssessmentForm({
       </p>
       {!review ? (
         <>
-          <Card className="assessment-panel rounded-xl p-5 shadow-none sm:p-8">
+          <Card className="assessment-panel rounded-xl p-3 shadow-none sm:p-8">
             <p className="assessment-accent mb-3 flex items-center gap-2 text-sm font-semibold">
               <MessageCircle className="size-5" aria-hidden="true" />
               สถานการณ์ที่ {index + 1} จาก 20
@@ -339,7 +339,7 @@ function AssessmentForm({
                       {option.label}
                     </p>
                   </div>
-                  <fieldset className="mt-3 pl-7" disabled={mutation.isPending}>
+                  <fieldset className="mt-3 min-w-0 sm:pl-7" disabled={mutation.isPending}>
                     <legend
                       data-scale={ranks[option.id] ? 5 - ranks[option.id]! : undefined}
                       className="assessment-scale-label mb-2 text-xs text-slate-text"

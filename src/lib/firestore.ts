@@ -85,6 +85,9 @@ export interface ModuleProgress {
   completed: boolean;
   quizScore: number | null;
   matchScore: number | null;
+  miniGame?:
+    | ReturnType<typeof import("./module1-mini-game").miniGameResult>
+    | ReturnType<typeof import("./module2-mini-game").miniGameResult>;
   reflectionText: string | null;
   timeSpentSeconds: number | null;
   completedAt: Timestamp | null;

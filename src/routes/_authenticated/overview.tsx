@@ -15,7 +15,6 @@ import {
 import { LearnerShell } from "@/components/learner-shell";
 import { getLearnerOverview } from "@/lib/learner.functions";
 import overviewBanner from "@/assets/banners/overview-banner.webp";
-import overviewBackground from "@/assets/BG.webp";
 import badgeM1 from "@/assets/badge-m1.png";
 import badgeM2 from "@/assets/badge-m2.png";
 import badgeM3 from "@/assets/badge-m3.png";
@@ -197,19 +196,14 @@ function DashboardPage() {
   const currentIdx = quickCards.findIndex((c) => !c.done);
 
   return (
-    <LearnerShell
-      wide
-      backgroundImage={overviewBackground}
-      displayName={profile?.display_name}
-      avatarUrl={profile?.avatar_url}
-    >
+    <LearnerShell wide displayName={profile?.display_name} avatarUrl={profile?.avatar_url}>
       <div className="w-full">
         <section
-          className="relative mb-5 sm:min-h-[340px] 2xl:min-h-[380px]"
+          className="relative mb-5 xl:min-h-[340px] 2xl:min-h-[380px]"
           aria-label="ภาพรวมความคืบหน้า"
         >
           <div
-            className="overview-banner-frame pointer-events-none relative z-0 mb-3 sm:absolute sm:inset-x-0 sm:top-0 sm:mb-0"
+            className="overview-banner-frame pointer-events-none relative z-0 mb-3 xl:absolute xl:inset-x-0 xl:top-0 xl:mb-0"
             aria-hidden="true"
           >
             <img
@@ -218,8 +212,8 @@ function DashboardPage() {
               className="overview-banner-art block h-auto w-full object-contain object-right-top"
             />
           </div>
-          <div className="relative z-[1] mx-auto w-full max-w-[1800px] px-4 sm:px-6 lg:px-8 2xl:px-12">
-            <div className="min-w-0 pb-4 sm:w-[67%] sm:pt-6">
+          <div className="relative z-[1] app-content-container">
+            <div className="min-w-0 pb-4 xl:w-[67%] sm:pt-6">
               <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
                 <div className="min-w-0 flex-1 basis-48">
                   <p className="text-sm text-slate-text">สวัสดี</p>
@@ -291,7 +285,7 @@ function DashboardPage() {
           </div>
         </section>
 
-        <div className="relative z-[1] mx-auto w-full max-w-[1800px] px-4 sm:px-6 lg:px-8 2xl:px-12">
+        <div className="relative z-[1] app-content-container">
           {/* Module badges */}
           <div className="relative mb-5 rounded-2xl border border-border bg-background bg-gradient-to-tr from-background via-background to-mint-primary/10 p-4 sm:p-5">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -310,7 +304,7 @@ function DashboardPage() {
                 / {MODULE_BADGES.length}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 min-[540px]:grid-cols-3 md:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 min-[540px]:grid-cols-3 xl:grid-cols-5">
               {MODULE_BADGES.map((b) => {
                 const earned = (state?.completed_modules ?? []).includes(b.id);
                 return (
@@ -411,9 +405,9 @@ function DashboardPage() {
                     </div>
 
                     {/* Card body */}
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                       <div
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        className={`hidden h-11 w-11 shrink-0 sm:flex items-center justify-center rounded-xl ${
                           done ? "bg-mint-primary/15" : isCurrent ? "bg-mint-light" : "bg-secondary"
                         }`}
                       >
@@ -421,7 +415,7 @@ function DashboardPage() {
                           className={`h-5 w-5 ${done || isCurrent ? "text-mint-primary" : "text-slate-text"}`}
                         />
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <div className="mb-0.5 flex items-center gap-2">
                           <span className="text-xs font-medium text-slate-text">
                             ขั้นที่ {stepNum}

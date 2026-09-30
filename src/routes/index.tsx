@@ -4,7 +4,6 @@ import { Glasses, Loader2 } from "lucide-react";
 import { FirebaseError } from "firebase/app";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-web-vr-lecturer.webp";
-import heroBg from "@/assets/BG.webp";
 import iconChat from "@/assets/icons/icon-1.webp";
 import iconBarChart from "@/assets/icons/icon-2.webp";
 import iconGradCap from "@/assets/icons/icon-3.webp";
@@ -78,10 +77,7 @@ function Home() {
   };
 
   return (
-    <div
-      className="flex min-h-dvh flex-col bg-background bg-cover bg-center bg-fixed bg-no-repeat font-prompt text-slate-deep"
-      style={{ backgroundImage: `url(${heroBg})` }}
-    >
+    <div className="app-page-background flex min-h-dvh flex-col bg-background font-prompt text-slate-deep">
       {/* Navigation — px is a vw-based clamp (not a breakpoint list) so the
           gutter keeps scaling smoothly past xl instead of freezing there;
           max-w-[2400px] only kicks in as a ceiling on very wide/ultrawide
@@ -123,13 +119,15 @@ function Home() {
           src={iconBook}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-[-6vw] top-[16%] z-10 hidden h-[clamp(5.5rem,9vw,11rem)] w-[clamp(5.5rem,9vw,11rem)] -rotate-6 drop-shadow-xl lg:block"
+          style={{ animationDuration: "6s", animationDelay: "0s" }}
+          className="animate-float pointer-events-none absolute left-[-6vw] top-[16%] z-10 hidden h-[clamp(5.5rem,9vw,11rem)] w-[clamp(5.5rem,9vw,11rem)] -rotate-6 drop-shadow-xl lg:block"
         />
         <img
           src={iconBulb}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-[40%] top-[4%] z-10 hidden h-[clamp(5.5rem,9vw,11rem)] w-[clamp(5.5rem,9vw,11rem)] rotate-6 drop-shadow-xl lg:block"
+          style={{ animationDuration: "5s", animationDelay: "0.5s" }}
+          className="animate-float pointer-events-none absolute left-[40%] top-[4%] z-10 hidden h-[clamp(5.5rem,9vw,11rem)] w-[clamp(5.5rem,9vw,11rem)] rotate-6 drop-shadow-xl lg:block"
         />
         <div className="space-y-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
@@ -155,7 +153,9 @@ function Home() {
             {signingIn ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <GoogleGlyph className="h-5 w-5" />
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white">
+                <GoogleGlyph className="h-4 w-4" />
+              </span>
             )}
             {signingIn ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบด้วย Google"}
           </button>
@@ -175,19 +175,28 @@ function Home() {
             src={iconChat}
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute -right-8 -top-8 z-10 hidden h-[clamp(3.5rem,6vw,7rem)] w-[clamp(3.5rem,6vw,7rem)] rotate-6 drop-shadow-xl lg:block"
+            style={{ animationDuration: "5.5s", animationDelay: "1s" }}
+            className="animate-float pointer-events-none absolute -right-8 -top-8 z-10 hidden h-[clamp(3.5rem,6vw,7rem)] w-[clamp(3.5rem,6vw,7rem)] rotate-6 drop-shadow-xl lg:block"
           />
-          <img
-            src={iconBarChart}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-12 top-1/2 z-10 hidden h-[clamp(3rem,5vw,6rem)] w-[clamp(3rem,5vw,6rem)] -translate-y-1/2 -rotate-6 drop-shadow-xl lg:block"
-          />
+          {/* Wrapper handles the static -translate-y-1/2 centering; the float
+              animation goes on the inner img instead, since both the
+              centering offset and the bob use the same CSS `translate`
+              property in Tailwind v4 and would otherwise fight each other. */}
+          <div className="pointer-events-none absolute -right-12 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
+            <img
+              src={iconBarChart}
+              alt=""
+              aria-hidden="true"
+              style={{ animationDuration: "6.5s", animationDelay: "0.3s" }}
+              className="animate-float h-[clamp(3rem,5vw,6rem)] w-[clamp(3rem,5vw,6rem)] -rotate-6 drop-shadow-xl"
+            />
+          </div>
           <img
             src={iconGradCap}
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute -bottom-8 -right-8 z-10 hidden h-[clamp(3.5rem,6vw,7rem)] w-[clamp(3.5rem,6vw,7rem)] rotate-3 drop-shadow-xl lg:block"
+            style={{ animationDuration: "5s", animationDelay: "0.8s" }}
+            className="animate-float pointer-events-none absolute -bottom-8 -right-8 z-10 hidden h-[clamp(3.5rem,6vw,7rem)] w-[clamp(3.5rem,6vw,7rem)] rotate-3 drop-shadow-xl lg:block"
           />
 
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2rem] shadow-2xl outline outline-1 -outline-offset-1 outline-black/5">

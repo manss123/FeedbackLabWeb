@@ -11,9 +11,18 @@ import {
   LogOut,
   User,
   ShieldCheck,
+  Menu,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import bgImage from "@/assets/BG2.webp";
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetClose,
+} from "./ui/sheet";
 import { resetMockData } from "@/lib/learner.functions";
 import { signOutOfFirebase, waitForFirebaseUser } from "@/lib/firebase-auth";
 import { adminCheckAccess } from "@/lib/admin.functions";
@@ -33,7 +42,7 @@ interface Props {
   children: ReactNode;
   displayName?: string | null;
   avatarUrl?: string | null;
-  /** Opt out of the default centered max-w-6xl column and fill exactly one
+  /** Opt out of the shared centered content column and fill exactly one
    * viewport instead (h-dvh, not min-h-dvh — hard-capped, not just a floor)
    * — for immersive, video-like content (e.g. the VR simulation runner)
    * rather than dashboard/form pages. The page itself never scrolls or
@@ -42,7 +51,6 @@ interface Props {
   fullBleed?: boolean;
   /** Wider, scrollable layout for visual overview pages. */
   wide?: boolean;
-  backgroundImage?: string;
 }
 
 export function LearnerShell({
@@ -51,7 +59,6 @@ export function LearnerShell({
   avatarUrl,
   fullBleed = false,
   wide = false,
-  backgroundImage = bgImage,
 }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -78,11 +85,8 @@ export function LearnerShell({
   };
 
   return (
-    <div
-      className="min-h-screen bg-secondary bg-cover bg-center bg-fixed bg-no-repeat font-prompt text-slate-deep"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
-    >
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-background p-6 lg:flex">
+    <div className="app-page-background min-h-screen bg-secondary font-prompt text-slate-deep">
+      <aside className="fixed left-0 top-0 hidden h-dvh w-64 flex-col overflow-y-auto border-r border-border bg-background p-5 xl:flex">
         <Link to="/overview" className="mb-8 flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-mint-primary">
             <Glasses className="h-5 w-5 text-white" strokeWidth={2.5} />
@@ -144,26 +148,77 @@ export function LearnerShell({
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background px-6 py-4 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b border-border bg-background px-4 xl:hidden">
         <Link to="/overview" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint-primary">
             <Glasses className="h-4 w-4 text-white" strokeWidth={2.5} />
           </div>
-          <span className="font-bold">My Feedback Lab</span>
+          <span className="text-sm font-bold">My Feedback Lab</span>
         </Link>
-        <button onClick={handleSignOut} className="text-sm font-medium text-slate-text">
-          ออกจากระบบ
-        </button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              aria-label="เปิดเมนูนำทาง"
+              className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border"
+            >
+              <Menu />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[min(90vw,22rem)] overflow-y-auto font-prompt">
+            <SheetHeader>
+              <SheetTitle>My Feedback Lab</SheetTitle>
+              <SheetDescription>เลือกหน้าที่ต้องการใช้งาน</SheetDescription>
+            </SheetHeader>
+            <nav aria-label="เมนูหลัก" className="mt-6 space-y-1">
+              {navItems.map(({ to, label, icon: Icon }) => (
+                <SheetClose asChild key={to}>
+                  <Link
+                    to={to}
+                    aria-current={pathname === to ? "page" : undefined}
+                    className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-sm ${pathname === to ? "bg-mint-light font-semibold text-monitor-teal" : "text-slate-text hover:bg-secondary"}`}
+                  >
+                    <Icon className="size-5 shrink-0" />
+                    {label}
+                  </Link>
+                </SheetClose>
+              ))}
+              {isAdmin && (
+                <SheetClose asChild>
+                  <Link
+                    to="/admin"
+                    className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-sm"
+                  >
+                    <ShieldCheck className="size-5 shrink-0" />
+                    แผงควบคุมผู้ดูแล
+                  </Link>
+                </SheetClose>
+              )}
+            </nav>
+            <p className="mt-6 break-words border-t border-border pt-4 text-sm font-semibold">
+              {displayName ?? "อาจารย์ผู้เรียน"}
+            </p>
+            <SheetClose asChild>
+              <button
+                onClick={handleSignOut}
+                className="mt-3 flex min-h-11 items-center gap-3 text-sm text-slate-text"
+              >
+                <LogOut className="size-5" />
+                ออกจากระบบ
+              </button>
+            </SheetClose>
+          </SheetContent>
+        </Sheet>
       </header>
 
-      <main className="lg:ml-64">
+      <main className="min-w-0 xl:ml-64">
         <div
           className={
             fullBleed
-              ? "flex h-dvh flex-col overflow-hidden px-4 py-4 lg:px-6 lg:py-6"
+              ? "app-content-container flex h-[calc(100dvh-4rem)] min-w-0 flex-col overflow-hidden py-4 xl:h-dvh xl:py-6"
               : wide
                 ? "w-full pb-8"
-                : "mx-auto max-w-6xl px-6 py-8 lg:px-12 lg:py-12"
+                : "app-content-container py-6"
           }
         >
           {children}

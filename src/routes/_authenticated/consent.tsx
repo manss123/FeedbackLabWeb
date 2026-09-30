@@ -92,7 +92,7 @@ function ConsentPage() {
 
   return (
     <LearnerShell displayName={data?.profile?.display_name} avatarUrl={data?.profile?.avatar_url}>
-      <div className="mx-auto max-w-3xl">
+      <div className="w-full">
         <div className="mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
             <ShieldCheck className="h-3 w-3" />

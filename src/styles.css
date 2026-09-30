@@ -4,6 +4,239 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Shared page canvas for public, learner and researcher routes. */
+.app-content-container {
+  width: 100%;
+  max-width: 1800px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .app-content-container {
+    padding-inline: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .app-content-container {
+    padding-inline: 2rem;
+  }
+}
+@media (min-width: 1536px) {
+  .app-content-container {
+    padding-inline: 3rem;
+  }
+}
+
+.app-page-background {
+  background-image: url("./assets/BG.webp");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* Gentle bob for the home hero's floating sticker icons. Animates the
+   `translate` property specifically (not `transform`) so it layers on top
+   of each icon's own Tailwind `rotate-*` utility — v4 generates those as an
+   independent `rotate` property, so the two never fight over `transform`.
+   Duration/delay are set per-icon inline for a loose, non-synchronized drift. */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-float {
+    animation: float-y 6s ease-in-out infinite;
+  }
+}
+@keyframes float-y {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -14px;
+  }
+}
+
+/* Fades the module-1 banner's left edge to transparent so its hard
+   rectangular boundary blends into the header's own background gradient
+   instead of reading as a visible seam. */
+.mini-banner-fade {
+  mask-image: linear-gradient(to right, transparent 0%, black 40%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 40%);
+}
+
+/* Module 1 game: reference-inspired panels, keeping text on the shared scale.
+   color-mix uses oklab (not oklch) below — oklch mixes toward white/transparent
+   are a polar-hue edge case (chroma 0 = undefined hue) some browsers resolve by
+   substituting hue 0 (red/pink) instead of inheriting the other color's hue,
+   which was tinting these blue/mint panels pink. oklab has no hue channel, so
+   it can't hit that bug, and interpolates identically for chromatic-to-chromatic
+   mixes. */
+.mini-game-panel {
+  box-shadow: 0 0.3rem 1.5rem color-mix(in oklab, var(--monitor-blue) 5%, transparent);
+}
+/* Use the available column width rather than the viewport to place the coach. */
+.mini-game-opening-copy {
+  container: coach-column / inline-size;
+}
+/* Opaque matching fills hide the tail's seam. */
+.ai-coach-speech {
+  --speech-fill: color-mix(in oklab, var(--monitor-violet) 5%, var(--background));
+  --speech-border: color-mix(in oklab, var(--monitor-violet) 22%, var(--background));
+  position: relative;
+  border: 1px solid var(--speech-border);
+  border-radius: 1rem;
+  background: var(--speech-fill);
+}
+.ai-coach-speech::before {
+  content: "";
+  position: absolute;
+  width: 0.875rem;
+  height: 0.875rem;
+  bottom: calc(-0.4375rem - 1px);
+  left: calc(4rem - 0.4375rem);
+  transform: rotate(225deg);
+  border-top: 1px solid var(--speech-border);
+  border-left: 1px solid var(--speech-border);
+  background: var(--speech-fill);
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  .ai-coach-speech::before {
+    left: calc(5rem - 0.4375rem);
+  }
+}
+@container coach-column (min-width: 30rem) {
+  .ai-coach-layout {
+    flex-direction: row;
+    align-items: center;
+  }
+  .ai-coach-layout > span {
+    width: 8rem;
+    height: 8rem;
+  }
+  .ai-coach-speech {
+    width: auto;
+    flex: 1;
+  }
+  .ai-coach-speech::before {
+    top: calc(50% - 0.4375rem);
+    bottom: auto;
+    left: calc(-0.4375rem - 1px);
+    transform: rotate(-45deg);
+  }
+}
+.mini-game-heading-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 0.8rem;
+  padding: 0.55rem;
+  color: var(--background);
+  background: linear-gradient(135deg, var(--mint-primary), var(--monitor-teal));
+}
+.mini-game-step {
+  border: 1px solid color-mix(in oklab, var(--mint-primary) 15%, var(--border));
+  border-radius: 0.9rem;
+  overflow: hidden;
+}
+.mini-game-step-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  color: var(--monitor-teal);
+  background: linear-gradient(
+    100deg,
+    color-mix(in oklab, var(--mint-primary) 15%, var(--background)),
+    var(--background)
+  );
+}
+.mini-game-step-heading .mini-game-heading-icon {
+  border-radius: 50%;
+}
+.mini-process-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-inline: auto;
+  border-radius: 50%;
+  color: var(--background);
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--process-color) 55%, var(--background)),
+    var(--process-color)
+  );
+  box-shadow:
+    inset 0 0 0 0.2rem color-mix(in oklab, var(--background) 30%, transparent),
+    0 0.3rem 1rem color-mix(in oklab, var(--process-color) 20%, transparent);
+}
+.mini-process-teal {
+  --process-color: var(--monitor-teal);
+}
+.mini-process-violet {
+  --process-color: var(--monitor-violet);
+}
+.mini-process-amber {
+  --process-color: var(--monitor-amber);
+}
+.mini-game-facts > span > svg {
+  flex-shrink: 0;
+  box-sizing: content-box;
+  padding: 0.5rem;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--mint-primary) 12%, var(--background));
+}
+.mini-game .mini-game-primary {
+  min-height: 2.75rem;
+  color: var(--background);
+  background: linear-gradient(110deg, var(--mint-primary), var(--monitor-teal));
+  border: 1px solid color-mix(in oklab, var(--mint-primary) 45%, transparent);
+}
+.mini-game .mini-game-primary:hover:not(:disabled) {
+  background: var(--monitor-teal);
+}
+.mini-game-celebration {
+  background: linear-gradient(
+    110deg,
+    color-mix(in oklab, var(--monitor-violet) 7%, var(--background)),
+    var(--background) 45%,
+    color-mix(in oklab, var(--mint-primary) 10%, var(--background))
+  );
+}
+
+.mini-game-celebration-badge {
+  width: 10rem;
+  height: 10rem;
+  max-width: 100%;
+}
+@media (min-width: 640px) {
+  .mini-game-celebration-badge {
+    width: 12rem;
+    height: 12rem;
+  }
+}
+
+/* Anchor the coach to the panel itself, independent of the flex row's height.
+   Reserve the same width in the text layout so the portrait cannot cover copy. */
+@media (min-width: 1440px) {
+  .mini-game-celebration-badge {
+    width: 16rem;
+    height: auto;
+    margin-left: -1rem;
+  }
+  .mini-game-celebration-layout {
+    min-height: 18rem;
+    padding-left: calc(min(28%, 22rem) + 1.5rem);
+  }
+  .mini-game-celebration-portrait {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(28%, 22rem);
+    height: auto;
+  }
+}
+
 /* Shared typography: rem-based controls and spacing grow with the reading scale. */
 @theme {
   --text-xs: 0.8125rem;
@@ -18,7 +251,7 @@
   html {
     font-size: 100%;
   }
-  @media (min-width: 1024px) {
+  @media (min-width: 1440px) {
     html {
       font-size: 112.5%;
     }
@@ -55,7 +288,7 @@
   );
   mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 94%, transparent 100%);
 }
-@media (min-width: 640px) {
+@media (min-width: 1280px) {
   .overview-banner-frame {
     /* Extend behind the badges without changing the section or panel positions. */
     height: calc(100% + 80px);
@@ -133,7 +366,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.375rem;
-    border: 1px solid color-mix(in oklch, var(--choice-color) 65%, var(--border));
+    border: 1px solid color-mix(in oklab, var(--choice-color) 65%, var(--border));
     border-radius: 0.5rem;
     color: var(--choice-color);
     background: var(--background);
@@ -183,7 +416,7 @@
     border: 2px solid var(--form-accent);
   }
   .assessment-form .assessment-primary:hover:not(:disabled) {
-    background: color-mix(in oklch, var(--form-accent) 90%, var(--foreground));
+    background: color-mix(in oklab, var(--form-accent) 90%, var(--foreground));
   }
   .assessment-form fieldset:disabled .assessment-choice {
     opacity: 0.5;

@@ -89,7 +89,7 @@ Validate text, control boundaries and focus visibility on actual backgrounds, in
 
 ### Typography
 
-- Global reading scale is defined in `src/styles.css`: root size is 100% below 1024px, 112.5% from 1024px, and 125% from 1920px. With the default browser font these are 16/18/20px. Relative units preserve user font preferences and let rem-based spacing and controls grow alongside text.
+- Global reading scale is defined in `src/styles.css`: root size is 100% below 1440px, 112.5% from 1440px, and 125% from 1920px. With the default browser font these are 16/18/20px. Relative units preserve user font preferences and let rem-based spacing and controls grow alongside text.
 - Shared `text-xs` is 0.8125rem (13/14.625/16.25px), `text-sm` is 0.9375rem (15/16.875/18.75px), and body text is 1rem (16/18/20px), with line heights 1.5/1.5/1.6. Legacy 10/11/13px caption classes and chart axis labels follow the caption token globally. Do not add new fixed-pixel tiny text.
 - Verify dense tables, sidebar navigation, long Thai labels, mobile forms and 200% zoom when changing this scale. Build/lint checks do not substitute for visual verification. Unity canvas content and embedded third-party players have their own typography and are not resized by these CSS tokens.
 
@@ -104,7 +104,7 @@ Validate text, control boundaries and focus visibility on actual backgrounds, in
 ### Layout and shape
 
 - Base spacing unit: 4px. Use 8–12px within controls, 16–24px within sections and 24–32px between sections.
-- Task forms: `max-w-3xl`; dashboard: `max-w-6xl`; marketing: `max-w-7xl`.
+- All non-home page containers use `.app-content-container`: maximum width 1800px, centered, with horizontal padding 1rem / 1.5rem / 2rem / 3rem at mobile / 640px / 1024px / 1536px. This matches Overview and is defined once in `src/styles.css`. Page wrappers fill this container instead of applying a second narrow max-width; individual controls, dialogs and reading blocks may retain their own widths. The homepage retains its existing layout. The active VR viewport retains its fixed-height behavior within the shared width.
 - Page padding: 16px on small screens, 24px on larger screens; increase only where reading width remains comfortable.
 - Assessment text sections: avoid repeated enclosing borders. Dashboard chart panels and KPI groups: use readable card surfaces with 16–20px corners on a neutral white/gray canvas. Static panels can be visually appealing without implying clickability.
 - Buttons and input groups: 6–8px corners, compact content-based width. Avoid large pill shapes for routine task actions.
@@ -380,3 +380,11 @@ Use neutral white/gray page and panel backgrounds. Keep color on buttons, icons,
 ### Assessment accents (2026-09-28)
 
 Keep the green brand theme across pre-test, post-test and questionnaires, including headings, progress and primary actions. Keep page and question surfaces neutral. Color belongs to the response scale: ranking 1–4 uses teal, blue, amber and violet respectively, with facial emoji from most to least suitable; questionnaire 1–5 uses violet, amber, blue, teal and teal, with facial emoji from the lowest to highest response level. Repeat each level’s color and icon in the explanatory legend and choice controls. Color and emoji describe the response level, never correctness or a preferred answer. Preserve numeric labels, full scale explanations and a visible selected radio dot; do not color the entire option row. Controls have a minimum height of 44px and a keyboard focus outline. Completed answers use a check-circle plus a text label in the review list. These presentation changes do not change scoring, question order or submission behavior.
+
+
+### Responsive layout safeguards
+- Learner navigation uses a keyboard-accessible drawer below 1280px; the fixed sidebar begins at 1280px. Sticky lesson navigation sits below the mobile header.
+- Overview reserves space for its decorative banner beside the welcome panel only from 1280px. On smaller screens the artwork and content flow separately.
+- Mini-game work areas use a single column below 1440px; draggable source and destination panels stack without changing answers or scoring. Long English labels must wrap inside min-width: 0 grid tracks.
+- Narrow assessment panels reduce padding so the four/five response controls fit; never shrink the global reading scale below the browser default to make a layout fit.
+- Validate widths 320, 375, 768, 1024, 1280, 1440 and 1920px, plus browser zoom. Check navigation, long Thai names, assessment choices, drag targets, banners and local table scrolling. TypeScript/lint checks do not replace browser/device verification.

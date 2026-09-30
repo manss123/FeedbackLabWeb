@@ -87,7 +87,7 @@ export function SurveyQuestionnaires() {
 // submitting and on any later revisit while survey_completed is true.
 function SurveyDone() {
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <Card className="rounded-xl border-t-4 border-monitor-teal bg-card p-8 text-center shadow-none">
         <CheckCircle2 className="mx-auto mb-3 size-10 text-mint-primary" />
         <h1 className="text-2xl font-bold text-slate-deep">บันทึกแบบสอบถามเรียบร้อยแล้ว</h1>
@@ -160,7 +160,7 @@ function SurveyWizard({ uid, onAllSubmitted }: { uid: string; onAllSubmitted: ()
   }
 
   return (
-    <div className="assessment-form mx-auto max-w-5xl space-y-6 pb-8 font-prompt">
+    <div className="assessment-form w-full space-y-6 pb-8 font-prompt">
       <p className="sr-only" role="status" aria-live="polite">
         {announcement}
       </p>
@@ -218,7 +218,7 @@ function SurveyWizard({ uid, onAllSubmitted }: { uid: string; onAllSubmitted: ()
           </div>
 
           {current.dimensions.map((dim) => (
-            <Card key={dim.key} className="assessment-panel rounded-xl p-5 shadow-none sm:p-8">
+            <Card key={dim.key} className="assessment-panel rounded-xl p-3 shadow-none sm:p-8">
               <h2 className="assessment-accent mb-5 flex items-center gap-2 text-base font-semibold">
                 <Layers className="size-5 shrink-0" aria-hidden="true" />
                 {dim.title}

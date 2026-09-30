@@ -4,7 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 export function LearnerAccessPending() {
   return (
     <div
-      className="flex min-h-screen items-center justify-center gap-3 bg-background text-slate-text"
+      className="app-page-background flex min-h-screen items-center justify-center gap-3 bg-background text-slate-text"
       role="status"
     >
       <Loader2 className="h-6 w-6 animate-spin text-mint-primary" />
@@ -16,7 +16,7 @@ export function LearnerAccessPending() {
 export function LearnerAccessError() {
   const router = useRouter();
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6">
+    <div className="app-page-background flex min-h-screen items-center justify-center bg-background p-6">
       <div className="space-y-4 text-center" role="alert">
         <p className="text-slate-deep">ไม่สามารถตรวจสอบข้อมูลผู้เข้าร่วมได้ กรุณาลองอีกครั้ง</p>
         <button

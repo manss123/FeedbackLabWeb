@@ -193,7 +193,7 @@ function CertificatePage() {
 
   return (
     <LearnerShell displayName={data?.profile?.display_name} avatarUrl={data?.profile?.avatar_url}>
-      <div className="mx-auto max-w-5xl space-y-8">
+      <div className="w-full space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-deep">สรุปผลการเรียนรู้ของฉัน</h1>
           <p className="mt-1 text-slate-text">

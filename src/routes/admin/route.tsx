@@ -15,9 +15,9 @@ export const Route = createFileRoute("/admin")({
 // makes (see src/lib/admin.functions.ts) — there is no separate route guard.
 function AdminLayout() {
   return (
-    <div className="min-h-screen bg-monitor-canvas font-prompt text-foreground">
-      <header className="border-b border-border bg-background px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+    <div className="app-page-background min-h-screen bg-monitor-canvas font-prompt text-foreground">
+      <header className="border-b border-border bg-background py-4">
+        <div className="app-content-container flex flex-wrap items-center justify-between gap-3">
           <Link
             to="/admin"
             className="flex min-h-11 items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-primary"
@@ -38,7 +38,7 @@ function AdminLayout() {
           </Link>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="app-content-container py-6">
         <Outlet />
       </main>
     </div>

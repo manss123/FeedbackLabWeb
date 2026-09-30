@@ -412,7 +412,7 @@ function VrSimulationPage() {
           userId={data?.profile?.id ?? "guest"}
         />
       ) : (
-        <div className="mx-auto max-w-5xl">
+        <div className="w-full">
           <div className="mb-8 space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
               <Headset className="h-3 w-3" />

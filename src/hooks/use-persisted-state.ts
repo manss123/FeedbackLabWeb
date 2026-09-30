@@ -10,15 +10,20 @@ import { useEffect, useRef, useState } from "react";
 export function usePersistedState<T>(
   key: string,
   initial: T,
+  // Only needed for values JSON can't round-trip as-is (e.g. Set/Map) —
+  // every existing caller stores plain JSON-safe values and omits this.
+  codec?: { serialize: (value: T) => string; deserialize: (raw: string) => T },
 ): [T, React.Dispatch<React.SetStateAction<T>>, () => void] {
   const storageKey = `flvr.draft.${key}`;
   const hydrated = useRef(false);
+  const serialize = codec?.serialize ?? ((v: T) => JSON.stringify(v));
+  const deserialize = codec?.deserialize ?? ((raw: string) => JSON.parse(raw) as T);
 
   const [value, setValue] = useState<T>(() => {
     if (typeof window === "undefined") return initial;
     try {
       const raw = window.localStorage.getItem(storageKey);
-      if (raw != null) return JSON.parse(raw) as T;
+      if (raw != null) return deserialize(raw);
     } catch {
       /* ignore */
     }
@@ -33,10 +38,14 @@ export function usePersistedState<T>(
     }
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify(value));
+      window.localStorage.setItem(storageKey, serialize(value));
     } catch {
       /* ignore quota errors */
     }
+    // serialize/deserialize are passed inline at most call sites (a fresh
+    // function every render) — keying the effect on storageKey/value only
+    // (both otherwise-stable) avoids redundant writes on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey, value]);
 
   const clear = () => {
