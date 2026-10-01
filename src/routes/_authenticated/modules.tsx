@@ -1,10 +1,25 @@
 import { Module1MiniGame } from "@/components/module1-mini-game";
 import { newMiniGame, miniGameResult } from "@/lib/module1-mini-game";
 import { Module2MiniGame } from "@/components/module2-mini-game";
+import { Module3MiniGame } from "@/components/module3-mini-game";
+import { Module4MiniGame } from "@/components/module4-mini-game";
+import { Module5MiniGame } from "@/components/module5-mini-game";
+import {
+  newMiniGame as newMiniGame3,
+  miniGameResult as miniGameResult3,
+} from "@/lib/module3-mini-game";
 import {
   newMiniGame as newMiniGame2,
   miniGameResult as miniGameResult2,
 } from "@/lib/module2-mini-game";
+import {
+  newMiniGame as newMiniGame4,
+  miniGameResult as miniGameResult4,
+} from "@/lib/module4-mini-game";
+import {
+  newMiniGame as newMiniGame5,
+  miniGameResult as miniGameResult5,
+} from "@/lib/module5-mini-game";
 import { TrackedYouTube } from "@/components/tracked-youtube";
 import { LEARNING_VIDEOS } from "@/lib/learning-videos";
 import { deferredEffect } from "@/lib/deferred-effect";
@@ -36,12 +51,13 @@ import {
   Clock,
   MessageCircle,
 } from "lucide-react";
+import { LearningHubLayout } from "@/components/learning-hub-layout";
 import { LearnerShell } from "@/components/learner-shell";
 import { getLearnerOverview } from "@/lib/learner.functions";
 import { logActivity } from "@/lib/activity";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { waitForFirebaseUser } from "@/lib/firebase-auth";
-import { upsertUserDoc } from "@/lib/firestore";
+import { getUserDoc, upsertUserDoc } from "@/lib/firestore";
 import { serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import badgeM1 from "@/assets/badge-m1.png";
@@ -130,20 +146,6 @@ const M1_OBJECTIVES = [
   "เปรียบเทียบ Feedback เชิงบวกกับเชิงลบและผลต่อผู้เรียน",
   "ระบุองค์ประกอบสำคัญของ Feedback ที่มีคุณภาพ",
   "ตระหนักถึงบทบาทของอาจารย์ในฐานะ Coach ผู้สร้างการเรียนรู้",
-];
-
-interface MatchPair {
-  id: string;
-  principle: string;
-  description: string;
-}
-
-const MATCH_PAIRS: MatchPair[] = [
-  { id: "p1", principle: "Specific", description: "ชี้จุดพัฒนาอย่างเจาะจง อ้างอิงชิ้นงาน" },
-  { id: "p2", principle: "Empathetic", description: "เข้าใจอารมณ์และบริบทของผู้เรียน" },
-  { id: "p3", principle: "Motivating", description: "สร้างแรงจูงใจ ยอมรับความพยายาม" },
-  { id: "p4", principle: "Actionable", description: "จบด้วยขั้นตอนที่ปฏิบัติได้จริง" },
-  { id: "p5", principle: "Timely", description: "ให้ในจังหวะที่ผู้เรียนยังต่อยอดได้" },
 ];
 
 // Reflection content for the Evaluate stage — one set per module, from the
@@ -453,48 +455,63 @@ function ModulesPage() {
   }
 
   return (
-    <LearnerShell displayName={data?.profile?.display_name} avatarUrl={data?.profile?.avatar_url}>
-      <div className="w-full">
-        <div className="mb-8 space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
-            <BookOpenText className="h-3 w-3" />
-            Cognitive Learning · 5 Modules
-          </div>
-          <h1 className="text-3xl font-bold">บทเรียน Constructive Feedback</h1>
-          <p className="text-slate-text">
-            แต่ละโมดูลใช้เวลาประมาณ 10 นาที ผ่าน 3 กิจกรรม (Engage · Elaborate · Evaluate) พร้อม
-            Badge เมื่อจบโมดูล
-          </p>
-        </div>
+    <LearnerShell
+      wide
+      displayName={data?.profile?.display_name}
+      avatarUrl={data?.profile?.avatar_url}
+    >
+      <LearningHubLayout
+        hero={
+          <>
+            <header className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
+                <BookOpenText className="h-3 w-3" />
+                Cognitive Learning · 5 Modules
+              </div>
+              <h1 className="text-2xl font-bold leading-tight sm:text-3xl">
+                บทเรียน Constructive Feedback
+              </h1>
+              <p className="text-slate-text">
+                แต่ละโมดูลใช้เวลาประมาณ 10 นาที ผ่าน 3 กิจกรรม (Engage · Elaborate · Evaluate) พร้อม
+                Badge เมื่อจบโมดูล
+              </p>
+            </header>
 
-        <div className="mb-8 rounded-2xl border border-border bg-background p-6">
-          <div className="mb-3 flex items-center justify-between text-sm">
-            <span className="font-semibold text-slate-deep">ความคืบหน้าโมดูล</span>
-            <span className="text-slate-text">
-              {completed.size} / {MODULES.length} ({progress}%)
-            </span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-secondary">
-            <div
-              className="h-full rounded-full bg-mint-primary transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          {completed.size > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {MODULES.filter((m) => completed.has(m.id)).map((m) => (
-                <span
-                  key={m.id}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-mint-light px-3 py-1 text-xs font-semibold text-mint-primary"
-                >
-                  <img src={m.badgeImage} alt="" className="h-4 w-4 rounded-full object-cover" />{" "}
-                  {m.badge}
+            <div className="rounded-2xl border border-border bg-background/95 p-4 shadow-sm sm:p-5">
+              <div className="mb-3 flex items-center justify-between text-sm">
+                <span className="font-semibold text-slate-deep">ความคืบหน้าโมดูล</span>
+                <span className="text-slate-text">
+                  {completed.size} / {MODULES.length} ({progress}%)
                 </span>
-              ))}
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                <div
+                  className="h-full rounded-full bg-mint-primary transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              {completed.size > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {MODULES.filter((m) => completed.has(m.id)).map((m) => (
+                    <span
+                      key={m.id}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-mint-light px-3 py-1 text-xs font-semibold text-mint-primary"
+                    >
+                      <img
+                        src={m.badgeImage}
+                        alt=""
+                        className="h-4 w-4 rounded-full object-cover"
+                      />{" "}
+                      {m.badge}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
+          </>
+        }
+      >
+        <h2 className="text-lg font-bold text-slate-deep">เลือกบทเรียนของคุณ</h2>
         <div className="space-y-3">
           {MODULES.map((m, i) => {
             const done = completed.has(m.id);
@@ -505,7 +522,7 @@ function ModulesPage() {
                 key={m.id}
                 onClick={() => !locked && setActiveModule(m.id)}
                 disabled={locked}
-                className={`flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition-all ${
+                className={`flex w-full items-center gap-3 rounded-2xl border p-4 sm:gap-4 sm:p-5 text-left transition-all ${
                   done
                     ? "border-mint-primary bg-mint-light/40"
                     : locked
@@ -522,8 +539,8 @@ function ModulesPage() {
                     className="h-full w-full object-contain drop-shadow-sm"
                   />
                 </div>
-                <div className="flex-1">
-                  <div className="mb-1 flex items-center gap-2 text-xs text-slate-text">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-slate-text">
                     <span className="font-bold text-mint-primary">Module {m.order}</span>
                     <span>·</span>
                     <span>{m.duration}</span>
@@ -552,12 +569,12 @@ function ModulesPage() {
         {allDone && (
           <button
             onClick={() => navigate({ to: "/vr-simulation" })}
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-8 py-4 font-bold text-white hover:opacity-90"
+            className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-mint-primary to-monitor-teal px-5 py-4 font-bold text-white hover:opacity-90"
           >
             เรียนครบทุกโมดูล · ไป VR Simulation <ArrowRight className="h-4 w-4" />
           </button>
         )}
-      </div>
+      </LearningHubLayout>
     </LearnerShell>
   );
 }
@@ -602,6 +619,9 @@ function ModuleRunner({
   const meta = MODULES.find((m) => m.id === moduleId)!;
   const isM1 = moduleId === "m1";
   const isM2 = moduleId === "m2";
+  const isM3 = moduleId === "m3";
+  const isM4 = moduleId === "m4";
+  const isM5 = moduleId === "m5";
   const stages = STAGES;
   const stageOrder: StageId[] = ["intro", ...stages.map((step) => step.id), "summary"];
   const navigate = useNavigate();
@@ -620,11 +640,6 @@ function ModuleRunner({
   if (!stageOrder.includes(stage)) setStage("intro");
   const [videoDone, setVideoDone] = usePersistedState(`modules.${moduleId}.videoDone`, false);
   const [videoNote, setVideoNote] = usePersistedState(`modules.${moduleId}.videoNote`, "");
-  const [matchedIds, setMatchedIds] = usePersistedState<Set<string>>(
-    `modules.${moduleId}.matchedIds`,
-    new Set(),
-    { serialize: (s) => JSON.stringify([...s]), deserialize: (raw) => new Set(JSON.parse(raw)) },
-  );
   const [miniGame, setMiniGame] = usePersistedState(`modules.${moduleId}.miniGame`, newMiniGame());
   const gameResult = miniGameResult(miniGame);
   const [miniGame2, setMiniGame2] = usePersistedState(
@@ -632,6 +647,30 @@ function ModuleRunner({
     newMiniGame2(),
   );
   const gameResult2 = miniGameResult2(miniGame2);
+  const [miniGame3, setMiniGame3] = usePersistedState(
+    `modules.${moduleId}.miniGame3`,
+    newMiniGame3(),
+  );
+  const gameResult3 = miniGameResult3(miniGame3);
+  const [miniGame4, setMiniGame4] = usePersistedState(
+    `modules.${moduleId}.miniGame4`,
+    newMiniGame4(),
+  );
+  const gameResult4 = miniGameResult4(miniGame4);
+  const [miniGame5, setMiniGame5] = usePersistedState(
+    `modules.${moduleId}.miniGame5`,
+    newMiniGame5(),
+  );
+  const gameResult5 = miniGameResult5(miniGame5);
+  // A draft from the old matching placeholder must not bypass the new game.
+  if (
+    ((isM3 && !gameResult3.completed) ||
+      (isM4 && !gameResult4.completed) ||
+      (isM5 && !gameResult5.completed)) &&
+    (stage === "evaluate" || stage === "summary")
+  ) {
+    setStage("elaborate");
+  }
   const [reflection, setReflection] = usePersistedState(`modules.${moduleId}.reflection`, "");
   const [practiceChoice, setPracticeChoice] = usePersistedState<string | null>(
     `modules.${moduleId}.practiceChoice`,
@@ -666,6 +705,19 @@ function ModuleRunner({
     mutationFn: async (id: string) => {
       const user = getFirebaseAuth().currentUser ?? (await waitForFirebaseUser());
       if (!user) throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");
+      const gameByModule: Record<string, typeof gameResult3 | undefined> = {
+        m3: gameResult3,
+        m4: gameResult4,
+        m5: gameResult5,
+      };
+      const game = gameByModule[id];
+      if (game) {
+        if (!game.completed) throw new Error(`กรุณาทำ Mini Game ${meta.title} ให้ครบก่อน`);
+        // Backfill learners who finished the previous placeholder. Keep the
+        // first completed run of this content version when practicing again.
+        const saved = (await getUserDoc(user.uid))?.moduleProgress?.[id]?.miniGame;
+        if (saved?.version === game.version && saved.completed) return;
+      }
       // Firestore merges map fields recursively under {merge:true}, so this
       // only ever adds/overwrites this one module's entry — the other
       // modules' entries in moduleProgress are untouched.
@@ -674,12 +726,14 @@ function ModuleRunner({
           [id]: {
             completed: true,
             quizScore: null,
-            matchScore: id === "m1" || id === "m2" ? null : MATCH_PAIRS.length,
+            matchScore: null,
             ...(id === "m1"
               ? { miniGame: gameResult }
               : id === "m2"
                 ? { miniGame: gameResult2 }
-                : {}),
+                : game
+                  ? { miniGame: game }
+                  : {}),
             reflectionText: reflection
               ? formatReflectionText({
                   moduleId: id,
@@ -724,12 +778,17 @@ function ModuleRunner({
 
   // ----- Derived gating -----
   const engageDone = videoDone;
-  const elaborateDone =
-    moduleId === "m1"
-      ? gameResult.completed
-      : moduleId === "m2"
-        ? gameResult2.completed
-        : matchedIds.size >= MATCH_PAIRS.length;
+  // Every module (m1-m5) now has a real mini game, keyed by id so the gating
+  // and summary logic below don't need a long isM1/isM2/.../isM5 ternary each.
+  const miniGameByModule: Record<string, { completed: boolean; finalLearningScore: number }> = {
+    m1: gameResult,
+    m2: gameResult2,
+    m3: gameResult3,
+    m4: gameResult4,
+    m5: gameResult5,
+  };
+  const currentMiniGame = miniGameByModule[moduleId];
+  const elaborateDone = !!currentMiniGame?.completed;
   const evaluateDone = reflectionSaved;
 
   const reflectionKeywords = useMemo(() => {
@@ -767,7 +826,7 @@ function ModuleRunner({
       setStage(next);
       if (next === "summary") {
         // trigger completion
-        if (!alreadyCompleted) {
+        if (!alreadyCompleted || isM3 || isM4 || isM5) {
           mutation.mutate(moduleId);
         } else {
           void logActivity({ type: "module_completed", moduleId, runId: timing.runId() });
@@ -787,19 +846,23 @@ function ModuleRunner({
     <LearnerShell displayName={displayName} avatarUrl={avatarUrl}>
       <div className="w-full">
         {/* Sticky progress header */}
-        <div className="sticky top-16 z-20 xl:top-0 -mx-4 mb-6 border-b border-border bg-background/95 px-4 py-4 backdrop-blur">
+        <div className="module-progress-header sticky top-16 z-20 mb-5 rounded-2xl border border-mint-primary/15 bg-background/95 p-3 backdrop-blur sm:p-5 xl:top-2">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <button
               onClick={onExit}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-slate-text hover:text-slate-deep"
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-slate-text transition-colors hover:bg-mint-light hover:text-monitor-teal focus-visible:outline-2 focus-visible:outline-mint-primary"
             >
               <ArrowLeft className="h-4 w-4" /> รายการโมดูล
             </button>
-            <div className="inline-flex items-center gap-1.5 text-xs text-slate-text">
-              <img src={meta.badgeImage} alt="" className="h-5 w-5 rounded-full object-cover" />
+            <div className="order-3 inline-flex w-full min-w-0 items-center justify-center gap-2 text-sm font-medium text-slate-text sm:order-none sm:w-auto">
+              <img
+                src={meta.badgeImage}
+                alt=""
+                className="h-7 w-7 shrink-0 rounded-full object-cover"
+              />
               Module {meta.order} · {meta.badge}
             </div>
-            <div className="text-xs font-bold text-mint-primary">
+            <div className="rounded-full bg-mint-primary/10 px-3 py-1 text-sm font-bold text-monitor-teal">
               {stage === "intro"
                 ? "เริ่มต้น"
                 : stage === "summary"
@@ -807,43 +870,68 @@ function ModuleRunner({
                   : `${stageIndex + 1} / ${stages.length}`}
             </div>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+          <div
+            role="progressbar"
+            aria-label="ตำแหน่งขั้นตอนในโมดูล"
+            aria-valuemin={0}
+            aria-valuemax={stages.length}
+            aria-valuenow={stage === "summary" ? stages.length : Math.max(0, stageIndex + 1)}
+            className="h-2 overflow-hidden rounded-full bg-secondary"
+          >
             <div
-              className="h-full rounded-full bg-mint-primary transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-mint-primary to-monitor-teal transition-all duration-500"
               style={{ width: `${progressPct}%` }}
             />
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {stages.map((s, i) => {
+          <ol aria-label="ขั้นตอนการเรียน" className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-3">
+            {stages.map((s) => {
               const active = s.id === stage;
-              const past = i < stageIndex;
+              const complete =
+                s.id === "engage"
+                  ? engageDone
+                  : s.id === "elaborate"
+                    ? elaborateDone
+                    : evaluateDone;
               const Icon = s.icon;
               return (
-                <div
+                <li
                   key={s.id}
-                  className={`flex min-w-0 items-center gap-1.5 sm:flex-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                  aria-current={active ? "step" : undefined}
+                  aria-label={`${s.label}: ${active ? "ขั้นตอนปัจจุบัน" : complete ? "ทำครบแล้ว" : "ยังไม่เสร็จ"}`}
+                  className={`flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-full px-1 py-2 text-center text-xs font-semibold sm:gap-2 sm:px-3 sm:text-sm lg:justify-start lg:gap-3 lg:px-4 ${
                     active
-                      ? "bg-mint-primary text-white"
-                      : past
-                        ? "bg-mint-light text-mint-primary"
+                      ? "bg-gradient-to-r from-mint-primary to-monitor-teal text-white shadow-sm"
+                      : complete
+                        ? "bg-mint-light text-monitor-teal"
                         : "bg-secondary text-slate-text"
                   }`}
                 >
-                  <Icon className="h-3 w-3 shrink-0" />
-                  <span className="whitespace-normal">{s.label}</span>
-                </div>
+                  {complete ? (
+                    <CheckCircle2 className="hidden size-4 shrink-0 min-[400px]:block sm:size-5" />
+                  ) : (
+                    <Icon className="hidden size-4 shrink-0 min-[400px]:block sm:size-5" />
+                  )}
+                  <span className="whitespace-nowrap lg:hidden">
+                    {s.id === "engage" ? "Video" : s.id === "elaborate" ? "Mini Game" : "Reflect"}
+                  </span>
+                  <span className="hidden whitespace-nowrap lg:inline">{s.label}</span>
+                </li>
               );
             })}
-          </div>
+          </ol>
         </div>
 
         {/* Screens — every module now runs the same 3-step flow (M1's
             shape): Engage (video) → Elaborate (mini game) → Evaluate
             (reflection). Only the "elaborate" stage's content differs per
-            module — real mini games for M1/M2, a "coming soon" placeholder
+            module — real mini games for M1/M2/M3, a "coming soon" placeholder
             for the rest until their content is built. */}
         {stage === "intro" && (
-          <IntroScreen meta={meta} onStart={nextStage} contentReady={isM1 || isM2} />
+          <IntroScreen
+            meta={meta}
+            onStart={nextStage}
+            contentReady={isM1 || isM2 || isM3 || isM4 || isM5}
+          />
         )}
 
         {stage === "engage" && (
@@ -862,11 +950,13 @@ function ModuleRunner({
             <Module1MiniGame value={miniGame} onChange={setMiniGame} />
           ) : isM2 ? (
             <Module2MiniGame value={miniGame2} onChange={setMiniGame2} />
-          ) : (
-            <ElaboratePlaceholder
-              onQuickPass={() => setMatchedIds(new Set(MATCH_PAIRS.map((p) => p.id)))}
-            />
-          ))}
+          ) : isM3 ? (
+            <Module3MiniGame value={miniGame3} onChange={setMiniGame3} />
+          ) : isM4 ? (
+            <Module4MiniGame value={miniGame4} onChange={setMiniGame4} />
+          ) : isM5 ? (
+            <Module5MiniGame value={miniGame5} onChange={setMiniGame5} />
+          ) : null)}
 
         {stage === "evaluate" && (
           <EvaluateScreen
@@ -886,31 +976,49 @@ function ModuleRunner({
         )}
 
         {stage === "summary" && (
-          <SummaryScreen
-            meta={meta}
-            matchScore={
-              isM1
-                ? gameResult.finalLearningScore
-                : isM2
-                  ? gameResult2.finalLearningScore
-                  : MATCH_PAIRS.length
-            }
-            matchMax={isM1 || isM2 ? 10 : MATCH_PAIRS.length}
-            gameLabel={isM1 || isM2 ? "Mini Game" : "Matching"}
-            reflectionKeywords={reflectionKeywords}
-            showBadge={showBadge}
-            onNext={() => {
-              const idx = MODULES.findIndex((m) => m.id === moduleId);
-              const nextMod = MODULES[idx + 1];
-              if (nextMod) {
-                onExit();
-              } else {
-                navigate({ to: "/vr-simulation" });
-              }
-            }}
-            onHome={onExit}
-            hasNext={MODULES.findIndex((m) => m.id === moduleId) < MODULES.length - 1}
-          />
+          <>
+            {mutation.isPending && (
+              <p role="status" className="mb-4 text-sm text-slate-text">
+                กำลังบันทึกผลโมดูล…
+              </p>
+            )}
+            {mutation.isError && (
+              <div
+                role="alert"
+                className="mb-4 rounded-xl border border-destructive/30 bg-background p-4"
+              >
+                <p className="text-sm text-destructive">
+                  บันทึกผลไม่สำเร็จ คำตอบยังอยู่ในอุปกรณ์นี้ กรุณาลองอีกครั้ง
+                </p>
+                <button
+                  type="button"
+                  className="mt-2 min-h-11 font-semibold text-monitor-teal underline"
+                  onClick={() => mutation.mutate(moduleId)}
+                >
+                  บันทึกอีกครั้ง
+                </button>
+              </div>
+            )}
+            <SummaryScreen
+              meta={meta}
+              matchScore={currentMiniGame?.finalLearningScore ?? 0}
+              matchMax={10}
+              gameLabel="Mini Game"
+              reflectionKeywords={reflectionKeywords}
+              showBadge={showBadge}
+              onNext={() => {
+                const idx = MODULES.findIndex((m) => m.id === moduleId);
+                const nextMod = MODULES[idx + 1];
+                if (nextMod) {
+                  onExit();
+                } else {
+                  navigate({ to: "/vr-simulation" });
+                }
+              }}
+              onHome={onExit}
+              hasNext={MODULES.findIndex((m) => m.id === moduleId) < MODULES.length - 1}
+            />
+          </>
         )}
 
         {/* Footer nav */}
@@ -1297,8 +1405,8 @@ function EvaluateScreen({
 function SummaryScreen({
   meta,
   matchScore,
-  matchMax = MATCH_PAIRS.length,
-  gameLabel = "Matching",
+  matchMax = 10,
+  gameLabel = "Mini Game",
   reflectionKeywords,
   showBadge,
   onNext,
@@ -1394,35 +1502,6 @@ function SummaryScreen({
         >
           {hasNext ? `ไป Module ${meta.order + 1}` : "ไป VR Simulation"}{" "}
           <ArrowRight className="h-4 w-4" />
-        </button>
-      </div>
-    </section>
-  );
-}
-
-// ---------- Elaborate placeholder (modules without a real mini game yet) ----------
-
-function ElaboratePlaceholder({ onQuickPass }: { onQuickPass: () => void }) {
-  return (
-    <section className="animate-fade-in">
-      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-mint-primary">
-        Elaborate · ต่อยอด
-      </div>
-      <h2 className="mb-1 text-2xl font-bold text-slate-deep">Mini Game</h2>
-      <p className="mb-6 text-sm text-slate-text">จับคู่ / ประยุกต์ใช้ในสถานการณ์จริง</p>
-
-      <div className="mb-4 flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-mint-light/20 p-12 text-center">
-        <Puzzle className="mb-3 h-12 w-12 text-mint-primary" />
-        <p className="mb-1 text-sm font-semibold text-slate-deep">กำลังจัดทำเนื้อหาเชิงลึก</p>
-        <p className="mb-4 max-w-md text-xs text-slate-text">
-          Mini Game ของโมดูลนี้จะใช้ template เดียวกับ Module 1/2 — สามารถ preview flow
-          ได้โดยคลิกด้านล่างเพื่อจำลองว่าจบกิจกรรม
-        </p>
-        <button
-          onClick={onQuickPass}
-          className="rounded-xl bg-slate-deep px-5 py-2 text-sm font-bold text-white hover:opacity-90"
-        >
-          จำลองว่าจบกิจกรรมนี้
         </button>
       </div>
     </section>

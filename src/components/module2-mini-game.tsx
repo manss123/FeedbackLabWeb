@@ -252,18 +252,23 @@ export function Module2MiniGame({
   }
   return (
     <div className="mini-game space-y-5">
-      <header className="relative isolate overflow-hidden rounded-2xl bg-gradient-to-r from-background to-mint-primary/5 px-4 py-5 sm:p-8">
+      <header className="mini-game-hero relative isolate overflow-hidden rounded-2xl bg-gradient-to-r from-background to-mint-primary/5 px-4 py-5 sm:p-8">
         <img
           src={banner}
           alt=""
           className="mini-banner-fade pointer-events-none absolute right-0 top-0 -z-10 hidden h-full w-auto min-[1440px]:block"
         />
         <div className="min-[1440px]:w-[58%]">
-          <p className="mb-3 inline-flex rounded-full bg-mint-primary/10 px-3 py-1 text-sm font-semibold text-monitor-teal">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-mint-primary/15 bg-mint-primary/10 px-3 py-1.5 text-xs font-semibold text-monitor-teal">
+            <Gamepad2 className="size-4" aria-hidden="true" />
             MINI GAME · MODULE 2
           </p>
-          <h2 className="text-2xl font-bold sm:text-3xl">Structure the Feedback</h2>
-          <p className="mt-1 text-xl font-semibold">จัดโครงสร้าง Feedback ให้เกิดการเรียนรู้</p>
+          <h2 className="mini-game-hero-title">
+            Structure the <span className="text-monitor-teal">Feedback</span>
+          </h2>
+          <p className="mt-3 text-lg font-semibold sm:text-xl">
+            จัดโครงสร้าง Feedback ให้เกิดการเรียนรู้
+          </p>
           <p className="mt-4 leading-relaxed text-slate-text">
             Feedback ที่ดีไม่ได้ขึ้นอยู่กับว่าเราพูดมากแค่ไหน
             แต่ขึ้นอยู่กับว่าผู้เรียนเข้าใจสิ่งที่เราต้องการสื่อ

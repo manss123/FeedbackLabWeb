@@ -232,7 +232,7 @@ export function Module1MiniGame({
   }
   return (
     <div className="mini-game space-y-5">
-      <header className="relative isolate overflow-hidden rounded-2xl bg-gradient-to-r from-background to-mint-primary/5 px-4 py-5 sm:p-8">
+      <header className="mini-game-hero relative isolate overflow-hidden rounded-2xl bg-gradient-to-r from-background to-mint-primary/5 px-4 py-5 sm:p-8">
         {/* h-full + w-auto (no object-fit) lets the image keep its native
             aspect ratio while filling the header's full height, so the whole
             image shows with no vertical cropping and no letterbox gaps.
@@ -245,11 +245,14 @@ export function Module1MiniGame({
           className="mini-banner-fade pointer-events-none absolute right-0 top-0 -z-10 hidden h-full w-auto min-[1440px]:block"
         />
         <div className="min-[1440px]:w-[58%]">
-          <p className="mb-3 inline-flex rounded-full bg-mint-primary/10 px-3 py-1 text-sm font-semibold text-monitor-teal">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-mint-primary/15 bg-mint-primary/10 px-3 py-1.5 text-xs font-semibold text-monitor-teal">
+            <Gamepad2 className="size-4" aria-hidden="true" />
             MINI GAME · MODULE 1
           </p>
-          <h2 className="text-2xl font-bold sm:text-3xl">Build the Best Feedback</h2>
-          <p className="mt-1 text-xl font-semibold">สร้าง Feedback ที่เหมาะสมที่สุด</p>
+          <h2 className="mini-game-hero-title">
+            Build the Best <span className="text-monitor-teal">Feedback</span>
+          </h2>
+          <p className="mt-3 text-lg font-semibold sm:text-xl">สร้าง Feedback ที่เหมาะสมที่สุด</p>
           <p className="mt-4 leading-relaxed text-slate-text">
             ในแต่ละสถานการณ์ ลองคิดว่า ผู้เรียนต้องการอะไรในขณะนั้น และเลือก Feedback
             ที่ช่วยให้เกิดการเรียนรู้มากที่สุด

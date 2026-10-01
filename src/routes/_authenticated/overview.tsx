@@ -203,7 +203,7 @@ function DashboardPage() {
           aria-label="ภาพรวมความคืบหน้า"
         >
           <div
-            className="overview-banner-frame pointer-events-none relative z-0 mb-3 xl:absolute xl:inset-x-0 xl:top-0 xl:mb-0"
+            className="overview-banner-frame pointer-events-none absolute inset-x-0 top-0 z-0"
             aria-hidden="true"
           >
             <img
@@ -213,7 +213,7 @@ function DashboardPage() {
             />
           </div>
           <div className="relative z-[1] app-content-container">
-            <div className="min-w-0 pb-4 xl:w-[67%] sm:pt-6">
+            <div className="min-w-0 pb-4 pt-5 sm:pt-6 xl:w-[67%]">
               <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
                 <div className="min-w-0 flex-1 basis-48">
                   <p className="text-sm text-slate-text">สวัสดี</p>

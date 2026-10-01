@@ -14,7 +14,7 @@ import { getAssessmentResults } from "./assessment.functions";
 import { isAllQuestionnairesComplete, type QuestionnaireKey } from "./questionnaires";
 import { getQuestionnaireCompletion } from "./questionnaires.functions";
 
-export const CONSENT_DOC_VERSION = "v1-2026";
+export const CONSENT_DOC_VERSION = "v2-2026-10-local-audio";
 
 const STORAGE_KEY = "flvr.mock.v1";
 const AUTH_KEY = "flvr.mock.auth.v1";

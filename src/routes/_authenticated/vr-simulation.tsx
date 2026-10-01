@@ -30,6 +30,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from "recharts";
+import { LearningHubLayout } from "@/components/learning-hub-layout";
 import { LearnerShell } from "@/components/learner-shell";
 import { UnityPlayer } from "@/components/UnityPlayer";
 import { getLearnerOverview } from "@/lib/learner.functions";
@@ -402,6 +403,7 @@ function VrSimulationPage() {
     <LearnerShell
       displayName={data?.profile?.display_name}
       avatarUrl={data?.profile?.avatar_url}
+      wide={!active}
       fullBleed={!!active}
     >
       {active ? (
@@ -412,54 +414,58 @@ function VrSimulationPage() {
           userId={data?.profile?.id ?? "guest"}
         />
       ) : (
-        <div className="w-full">
-          <div className="mb-8 space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
-              <Headset className="h-3 w-3" />
-              Web-based VR Simulation
-            </div>
-            <h1 className="text-3xl font-bold">ฝึกให้ Feedback กับนักศึกษาเสมือน</h1>
-            <p className="text-slate-text">
-              ระบบจำลอง VR แบบ Web-based ตามวงจร Experiential Learning (Experience → Reflection →
-              Conceptualization → Experimentation) โดยแต่ละ Scenario จะพาท่านผ่าน 4 Stage
-              พร้อมสรุปผลเปรียบเทียบก่อน/หลังการโค้ช
-            </p>
-          </div>
+        <LearningHubLayout
+          hero={
+            <>
+              <header className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
+                  <Headset className="h-3 w-3" />
+                  Web-based VR Simulation
+                </div>
+                <h1 className="text-2xl font-bold leading-tight sm:text-3xl">
+                  ฝึกให้ Feedback กับนักศึกษาเสมือน
+                </h1>
+                <p className="text-slate-text">
+                  ระบบจำลอง VR แบบ Web-based ตามวงจร Experiential Learning (Experience → Reflection
+                  → Conceptualization → Experimentation) โดยแต่ละ Scenario จะพาท่านผ่าน 4 Stage
+                  พร้อมสรุปผลเปรียบเทียบก่อน/หลังการโค้ช
+                </p>
+              </header>
 
-          <div className="mb-8 rounded-2xl border border-border bg-background p-6">
-            <div className="mb-3 flex items-center justify-between text-sm">
-              <span className="font-semibold text-slate-deep">ความคืบหน้า Scenario</span>
-              <span className="text-slate-text">
-                {completed.size} / {SCENARIOS.length} ({progress}%)
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-secondary">
-              <div
-                className="h-full rounded-full bg-mint-primary transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="mb-4 flex items-end justify-between">
+              <div className="rounded-2xl border border-border bg-background/95 p-4 shadow-sm sm:p-5">
+                <div className="mb-3 flex items-center justify-between text-sm">
+                  <span className="font-semibold text-slate-deep">ความคืบหน้า Scenario</span>
+                  <span className="text-slate-text">
+                    {completed.size} / {SCENARIOS.length} ({progress}%)
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className="h-full rounded-full bg-mint-primary transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            </>
+          }
+        >
+          <div className="flex flex-wrap items-end justify-between gap-2">
             <h2 className="text-lg font-bold text-slate-deep">ลำดับ Scenario การฝึก</h2>
-            <div className="text-xs text-slate-text">ฝึกเรียงลำดับความยากจาก 1 → 5</div>
           </div>
-          <ol className="relative space-y-3">
-            <div
-              className="pointer-events-none absolute left-[27px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-mint-primary/60 via-border to-border"
-              aria-hidden
-            />
+          <ol className="space-y-3">
             {SCENARIOS.map((s, i) => {
               const done = completed.has(s.id);
               const currentIdx = SCENARIOS.findIndex((sc) => !completed.has(sc.id));
               const isCurrent = i === currentIdx;
               const isLocked = currentIdx !== -1 && i > currentIdx;
               return (
-                <li key={s.id} className="relative">
+                <li
+                  key={s.id}
+                  className="relative before:pointer-events-none before:absolute before:left-[calc(2.75rem+1px)] before:top-[calc(2.75rem+1px)] before:z-10 before:h-[calc(100%+0.75rem)] before:border-l before:border-dashed before:border-border last:before:hidden sm:before:left-[calc(3rem+1px)] sm:before:top-[calc(3rem+1px)]"
+                >
                   <button
                     onClick={() => setActiveId(s.id)}
-                    className={`group relative flex w-full items-stretch gap-4 rounded-2xl border p-5 text-left transition-all ${
+                    className={`group relative flex h-full w-full items-stretch gap-3 rounded-2xl border p-4 sm:gap-4 sm:p-5 text-left transition-all ${
                       done
                         ? "border-mint-primary/40 bg-mint-light/30 hover:border-mint-primary"
                         : isCurrent
@@ -471,7 +477,7 @@ function VrSimulationPage() {
                   >
                     {/* Step node */}
                     <div
-                      className={`z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-background text-lg font-bold shadow-sm ${
+                      className={`relative z-20 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-background text-lg font-bold shadow-sm ${
                         done
                           ? "bg-mint-primary text-white"
                           : isCurrent
@@ -483,7 +489,7 @@ function VrSimulationPage() {
                     </div>
 
                     {/* Card body */}
-                    <div className="flex flex-1 flex-col gap-2">
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-mint-primary">
                           Scenario {s.order}
@@ -527,7 +533,7 @@ function VrSimulationPage() {
               );
             })}
           </ol>
-        </div>
+        </LearningHubLayout>
       )}
     </LearnerShell>
   );

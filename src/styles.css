@@ -73,6 +73,50 @@
 .mini-game-panel {
   box-shadow: 0 0.3rem 1.5rem color-mix(in oklab, var(--monitor-blue) 5%, transparent);
 }
+.consent-panel {
+  box-shadow: 0 0.6rem 2rem color-mix(in oklab, var(--monitor-blue) 6%, transparent);
+}
+.consent-choice {
+  grid-template-columns: 1.5rem 2.75rem minmax(0, 1fr);
+  grid-template-areas: "check icon title" ". description description";
+}
+.consent-choice-check {
+  grid-area: check;
+}
+.consent-choice-icon {
+  grid-area: icon;
+}
+.consent-choice-title {
+  grid-area: title;
+}
+.consent-choice-description {
+  grid-area: description;
+}
+@media (min-width: 640px) {
+  .consent-choice {
+    grid-template-columns: 1.5rem 4rem minmax(0, 1fr);
+    grid-template-areas: "check icon title" "check icon description";
+    row-gap: 0.25rem;
+  }
+}
+@media (min-width: 1024px) {
+  .consent-choice {
+    grid-template-columns: 1.5rem 5rem minmax(0, 1fr);
+  }
+}
+.module-progress-header {
+  box-shadow: 0 0.25rem 1.25rem color-mix(in oklab, var(--monitor-blue) 12%, transparent);
+}
+.mini-game-hero {
+  border: 1px solid color-mix(in oklab, var(--mint-primary) 15%, var(--background));
+}
+.mini-game-hero-title {
+  font-size: clamp(1.65rem, 2.3vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
 /* Use the available column width rather than the viewport to place the coach. */
 .mini-game-opening-copy {
   container: coach-column / inline-size;
@@ -278,15 +322,42 @@
 }
 
 /* Fade the decorative banner into the page background without moving content. */
+/* Fade the art into the actual page background, including the reading wash,
+   so neither the image nor its overlay leaves a hard edge below setup heroes. */
+.setup-banner-art {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, transparent 15%, black 48%),
+    linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, transparent 15%, black 48%),
+    linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.setup-banner-wash {
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 100%);
+}
+.overview-banner-frame {
+  height: 100%;
+  overflow: hidden;
+}
 .overview-banner-art {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 5%,
-    black 94%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 94%, transparent 100%);
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: clamp(14rem, 30vw, 22rem);
+  width: auto;
+  max-width: none;
+  opacity: 0.85;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, black 65%),
+    linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, black 65%),
+    linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 @media (min-width: 1280px) {
   .overview-banner-frame {
@@ -302,6 +373,7 @@
     height: 100%;
     width: auto;
     max-width: none;
+    opacity: 1;
     -webkit-mask-image:
       linear-gradient(
         to right,
@@ -340,6 +412,154 @@
   }
   .assessment-panel {
     border-top: 3px solid var(--form-accent);
+  }
+  .assessment-hero {
+    padding-block: 1rem 1.5rem;
+  }
+  .assessment-banner-frame {
+    position: absolute;
+    inset: 0 0 auto;
+    height: calc(100% + 4rem);
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .assessment-hero-art {
+    position: absolute;
+    inset: 0 0 auto auto;
+    width: auto;
+    max-width: none;
+    height: clamp(16rem, 32vw, 24rem);
+    object-fit: contain;
+    object-position: right top;
+    opacity: 0.45;
+    pointer-events: none;
+    mask-image:
+      linear-gradient(to right, transparent, black 55%),
+      linear-gradient(to bottom, black 65%, transparent);
+    mask-composite: intersect;
+  }
+  .assessment-kicker,
+  .assessment-question-kicker {
+    border-radius: 999px;
+    background: var(--mint-light);
+    color: var(--monitor-teal);
+    padding: 0.35rem 0.8rem;
+  }
+  .assessment-hero-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: color-mix(in oklab, var(--card) 90%, transparent);
+  }
+  .assessment-fact-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0.65rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: var(--monitor-teal);
+    background: var(--mint-light);
+  }
+  .assessment-question-panel {
+    border: 1px solid var(--border);
+    background: var(--card);
+    box-shadow: 0 8px 32px color-mix(in oklab, var(--monitor-blue) 5%, transparent);
+  }
+  .assessment-review-strip {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid color-mix(in oklab, var(--mint-primary) 20%, var(--border));
+    border-radius: 1.5rem;
+    background: linear-gradient(110deg, var(--card), var(--mint-light));
+    overflow: visible;
+  }
+  .assessment-review-action {
+    min-width: 0;
+  }
+  .assessment-review-button {
+    min-height: 3.25rem;
+    height: auto;
+    white-space: normal;
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    color: var(--primary-foreground);
+    background: linear-gradient(115deg, #2bb3d4 0%, #087bdc 48%, #1055d5 100%);
+    font-weight: 700;
+    gap: 0.85rem;
+    box-shadow:
+      inset 0 1px 0 #ffffff55,
+      0 6px 18px #087bdc24;
+  }
+  .assessment-review-button:hover:not(:disabled) {
+    background: linear-gradient(115deg, #209fbe 0%, #076dcb 48%, #104dc0 100%);
+  }
+  .assessment-review-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: #fff;
+    color: #1055d5;
+  }
+  .assessment-review-arrow svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    stroke-width: 3;
+  }
+  .assessment-review-prop {
+    pointer-events: none;
+    width: 12rem;
+    max-width: 100%;
+    align-self: center;
+    margin-bottom: -1.25rem;
+  }
+  @media (min-width: 1024px) {
+    .assessment-hero {
+      min-height: 18rem;
+      padding-block: 1.5rem 2rem;
+    }
+    .assessment-hero-copy {
+      width: 64%;
+    }
+    .assessment-banner-frame {
+      /* Reach past progress and rank legends to the first question card. */
+      height: calc(100% + 12rem);
+    }
+    .assessment-hero-art {
+      height: 100%;
+      opacity: 1;
+      mask-image:
+        linear-gradient(to right, transparent, black 55%),
+        linear-gradient(to bottom, black 80%, transparent 100%);
+    }
+    .assessment-review-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      align-items: center;
+      margin-top: 4rem;
+      min-height: 9rem;
+      padding: 1.5rem 15rem 1.5rem 1.5rem;
+    }
+    .assessment-review-action {
+      border-left: 1px solid var(--border);
+      padding-left: 1.5rem;
+    }
+    .assessment-review-prop {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 15rem;
+      margin: 0;
+    }
   }
   .assessment-form [role="progressbar"] > div {
     background: var(--form-accent);
@@ -411,9 +631,10 @@
     background: currentColor;
   }
   .assessment-form .assessment-primary {
-    background: var(--form-accent);
+    background: linear-gradient(110deg, var(--mint-primary), var(--monitor-teal));
     color: var(--primary-foreground);
-    border: 2px solid var(--form-accent);
+    border: 0;
+    min-height: 44px;
   }
   .assessment-form .assessment-primary:hover:not(:disabled) {
     background: color-mix(in oklab, var(--form-accent) 90%, var(--foreground));

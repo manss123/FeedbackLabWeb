@@ -87,7 +87,10 @@ export interface ModuleProgress {
   matchScore: number | null;
   miniGame?:
     | ReturnType<typeof import("./module1-mini-game").miniGameResult>
-    | ReturnType<typeof import("./module2-mini-game").miniGameResult>;
+    | ReturnType<typeof import("./module2-mini-game").miniGameResult>
+    | ReturnType<typeof import("./module3-mini-game").miniGameResult>
+    | ReturnType<typeof import("./module4-mini-game").miniGameResult>
+    | ReturnType<typeof import("./module5-mini-game").miniGameResult>;
   reflectionText: string | null;
   timeSpentSeconds: number | null;
   completedAt: Timestamp | null;
