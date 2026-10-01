@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { Glasses } from "lucide-react";
+import logo from "@/assets/Logo.webp";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -22,11 +22,12 @@ function AdminLayout() {
             to="/admin"
             className="flex min-h-11 items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-primary"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Glasses className="h-4 w-4" strokeWidth={2.5} />
-            </div>
+            <img src={logo} alt="" className="h-8 w-8 rounded-md" />
             <span>
-              <span className="block font-bold tracking-tight">My Feedback Lab</span>
+              <span className="block font-bold tracking-tight">
+                <span className="text-mint-primary">My</span>{" "}
+                <span className="text-slate-deep">Feedback Lab</span>
+              </span>
               <span className="block text-xs text-slate-text">ระบบอาจารย์และผู้วิจัย</span>
             </span>
           </Link>

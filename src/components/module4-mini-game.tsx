@@ -12,9 +12,9 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import banner from "@/assets/banners/module1-banner.webp";
+import banner from "@/assets/banners/module4-banner.webp";
 import coach from "@/assets/contents/ai-coaching-1.webp";
-import avatar from "@/assets/contents/M1/avatar-feedback.webp";
+import avatar from "@/assets/contents/M4/avatar-feedback2.webp";
 import greatJob from "@/assets/contents/great-job.webp";
 import correctBadge from "@/assets/contents/correct.webp";
 import { Button } from "./ui/button";

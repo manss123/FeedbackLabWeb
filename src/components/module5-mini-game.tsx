@@ -12,9 +12,12 @@ import {
   TrendingUp,
   Trophy,
 } from "lucide-react";
-import banner from "@/assets/banners/module1-banner.webp";
+import banner from "@/assets/banners/module5-banner.webp";
+// M5 has no dedicated human avatar art yet, so it uses the shared AI-coach
+// robot for both the Game Opening speech bubble and the celebration portrait
+// — module5-banner.webp (the robot) matches this choice.
 import coach from "@/assets/contents/ai-coaching-1.webp";
-import avatar from "@/assets/contents/M1/avatar-feedback.webp";
+import avatar from "@/assets/contents/ai-coaching-1.webp";
 import greatJob from "@/assets/contents/great-job.webp";
 import correctBadge from "@/assets/contents/correct.webp";
 import { Button } from "./ui/button";

@@ -1,6 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Glasses,
   LayoutDashboard,
   ClipboardCheck,
   BookOpenText,
@@ -27,6 +26,8 @@ import { resetMockData } from "@/lib/learner.functions";
 import { signOutOfFirebase, waitForFirebaseUser } from "@/lib/firebase-auth";
 import { adminCheckAccess } from "@/lib/admin.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import sidebarBackground from "@/assets/BG-sidebar.webp";
+import logo from "@/assets/Logo.webp";
 
 const navItems = [
   { to: "/overview", label: "ภาพรวม", icon: LayoutDashboard },
@@ -86,35 +87,38 @@ export function LearnerShell({
 
   return (
     <div className="app-page-background min-h-screen bg-secondary font-prompt text-slate-deep">
-      <aside className="fixed left-0 top-0 hidden h-dvh w-64 flex-col overflow-y-auto border-r border-border bg-background p-5 xl:flex">
-        <Link to="/overview" className="mb-8 flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-mint-primary">
-            <Glasses className="h-5 w-5 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-lg font-bold tracking-tight">My Feedback Lab</span>
+      <aside
+        style={{ backgroundImage: `url(${sidebarBackground})` }}
+        className="learner-sidebar fixed left-0 top-0 hidden h-dvh w-64 flex-col overflow-y-auto border-r border-border p-3 xl:flex"
+      >
+        <Link to="/overview" className="my-2 mb-6 flex items-center gap-2.5 px-2">
+          <img src={logo} alt="" className="h-9 w-9 rounded-lg" />
+          <span className="text-lg font-bold tracking-tight">
+            <span className="text-mint-primary">My</span>{" "}
+            <span className="text-slate-deep">Feedback Lab</span>
+          </span>
         </Link>
 
-        <nav className="flex flex-1 flex-col gap-1">
+        <nav aria-label="เมนูหลัก" className="learner-sidebar-nav flex flex-col gap-1">
           {navItems.map(({ to, label, icon: Icon }) => {
             const active = pathname === to || pathname.startsWith(to + "/");
             return (
               <Link
                 key={to}
                 to={to as string}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-mint-light text-mint-primary"
-                    : "text-slate-text hover:bg-secondary hover:text-slate-deep"
-                }`}
+                aria-current={active ? "page" : undefined}
+                className="learner-sidebar-link"
               >
-                <Icon className="h-4 w-4" />
-                {label}
+                <span className="learner-sidebar-icon">
+                  <Icon className="size-5" />
+                </span>
+                <span>{label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="mt-auto space-y-2 border-t border-border pt-4">
+        <div className="learner-sidebar-profile mt-auto space-y-2 p-2">
           <div className="flex items-center gap-3 px-2 py-2">
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
@@ -150,10 +154,11 @@ export function LearnerShell({
       {/* Mobile top bar */}
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b border-border bg-background px-4 xl:hidden">
         <Link to="/overview" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint-primary">
-            <Glasses className="h-4 w-4 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-sm font-bold">My Feedback Lab</span>
+          <img src={logo} alt="" className="h-8 w-8 rounded-lg" />
+          <span className="text-sm font-bold">
+            <span className="text-mint-primary">My</span>{" "}
+            <span className="text-slate-deep">Feedback Lab</span>
+          </span>
         </Link>
         <Sheet>
           <SheetTrigger asChild>
@@ -165,20 +170,29 @@ export function LearnerShell({
               <Menu />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[min(90vw,22rem)] overflow-y-auto font-prompt">
+          <SheetContent
+            side="left"
+            style={{ backgroundImage: `url(${sidebarBackground})` }}
+            className="learner-sidebar w-[min(90vw,22rem)] overflow-y-auto font-prompt"
+          >
             <SheetHeader>
-              <SheetTitle>My Feedback Lab</SheetTitle>
+              <SheetTitle>
+                <span className="text-mint-primary">My</span>{" "}
+                <span className="text-slate-deep">Feedback Lab</span>
+              </SheetTitle>
               <SheetDescription>เลือกหน้าที่ต้องการใช้งาน</SheetDescription>
             </SheetHeader>
-            <nav aria-label="เมนูหลัก" className="mt-6 space-y-1">
+            <nav aria-label="เมนูหลัก" className="learner-sidebar-nav mt-6 space-y-1">
               {navItems.map(({ to, label, icon: Icon }) => (
                 <SheetClose asChild key={to}>
                   <Link
                     to={to}
                     aria-current={pathname === to ? "page" : undefined}
-                    className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-3 text-sm ${pathname === to ? "bg-mint-light font-semibold text-monitor-teal" : "text-slate-text hover:bg-secondary"}`}
+                    className="learner-sidebar-link"
                   >
-                    <Icon className="size-5 shrink-0" />
+                    <span className="learner-sidebar-icon">
+                      <Icon className="size-5" />
+                    </span>
                     {label}
                   </Link>
                 </SheetClose>

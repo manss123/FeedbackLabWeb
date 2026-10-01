@@ -2,9 +2,17 @@ import type { ReactNode } from "react";
 import overviewBanner from "@/assets/banners/overview-banner.webp";
 
 /** Shared overview-style frame for the module and simulation catalogues. */
-export function LearningHubLayout({ hero, children }: { hero: ReactNode; children: ReactNode }) {
+export function LearningHubLayout({
+  hero,
+  children,
+  className = "",
+}: {
+  hero: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="w-full">
+    <div className={`w-full ${className}`}>
       <section className="relative mb-5 xl:min-h-[340px] 2xl:min-h-[380px]">
         <div
           className="overview-banner-frame pointer-events-none absolute inset-x-0 top-0 z-0"

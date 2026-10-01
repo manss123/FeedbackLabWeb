@@ -15,11 +15,11 @@ import {
 import { LearnerShell } from "@/components/learner-shell";
 import { getLearnerOverview } from "@/lib/learner.functions";
 import overviewBanner from "@/assets/banners/overview-banner.webp";
-import badgeM1 from "@/assets/badge-m1.png";
-import badgeM2 from "@/assets/badge-m2.png";
-import badgeM3 from "@/assets/badge-m3.png";
-import badgeM4 from "@/assets/badge-m4.png";
-import badgeM5 from "@/assets/badge-m5.png";
+import badgeM1 from "@/assets/badge-m1.webp";
+import badgeM2 from "@/assets/badge-m2.webp";
+import badgeM3 from "@/assets/badge-m3.webp";
+import badgeM4 from "@/assets/badge-m4.webp";
+import badgeM5 from "@/assets/badge-m5.webp";
 
 export const Route = createFileRoute("/_authenticated/overview")({
   head: () => ({

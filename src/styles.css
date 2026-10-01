@@ -249,10 +249,299 @@
   );
 }
 
+.learner-sidebar {
+  background-size: cover;
+  background-position: center;
+  background-color: var(--background);
+}
+.learner-sidebar-nav,
+.learner-sidebar-profile {
+  border: 1px solid color-mix(in oklab, var(--monitor-blue) 8%, transparent);
+  border-radius: 1.5rem;
+  background: color-mix(in oklab, var(--card) 76%, transparent);
+}
+.learner-sidebar-nav {
+  padding: 0.35rem 0;
+  margin-bottom: 2rem;
+}
+.learner-sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  color: var(--slate-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.learner-sidebar-link:hover {
+  background: var(--monitor-blue-soft);
+}
+.learner-sidebar-link[aria-current="page"] {
+  color: var(--monitor-teal);
+  background: linear-gradient(
+    110deg,
+    var(--mint-light),
+    color-mix(in oklab, var(--mint-primary) 18%, var(--card))
+  );
+}
+.learner-sidebar-link[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6rem;
+  bottom: 0.6rem;
+  width: 4px;
+  border-radius: 1rem;
+  background: var(--mint-primary);
+}
+.learner-sidebar-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.8rem;
+  color: var(--monitor-blue);
+  background: linear-gradient(
+    145deg,
+    var(--card),
+    color-mix(in oklab, var(--monitor-blue) 22%, var(--card))
+  );
+  box-shadow: inset 0 1px 0 var(--card);
+}
+.learner-sidebar-link[aria-current="page"] .learner-sidebar-icon {
+  color: var(--mint-primary);
+  background: linear-gradient(
+    145deg,
+    var(--card),
+    color-mix(in oklab, var(--mint-primary) 20%, var(--card))
+  );
+}
+.module-catalogue-progress {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border-color: color-mix(in oklab, var(--card) 90%, var(--monitor-blue-soft));
+  border-radius: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  background: var(--card);
+  box-shadow:
+    0 12px 32px color-mix(in oklab, var(--monitor-blue) 12%, transparent),
+    inset 0 1px 0 var(--card);
+}
+.module-progress-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "title title" "bar count" "earned earned";
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+.module-progress-heading {
+  display: contents;
+}
+.module-progress-heading > :first-child {
+  grid-area: title;
+  font-size: 1.125rem;
+}
+.module-progress-heading > :last-child {
+  grid-area: count;
+  font-size: 1.25rem;
+  white-space: nowrap;
+}
+.module-progress-content [role="progressbar"] {
+  grid-area: bar;
+  height: 1rem;
+  background: color-mix(in oklab, var(--monitor-blue) 10%, var(--card));
+}
+.module-progress-content [role="progressbar"] > div {
+  background: linear-gradient(90deg, #00dfa5, var(--mint-primary));
+}
+.module-progress-earned {
+  grid-area: earned;
+}
+@media (max-width: 639px) {
+  .module-catalogue-progress {
+    padding: 1rem;
+  }
+  .module-progress-content {
+    grid-template-areas: "title title" "bar bar" "count count" "earned earned";
+    gap: 0.5rem;
+  }
+  .module-progress-heading > :last-child {
+    font-size: 1rem;
+  }
+}
+.module-progress-emblem {
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--mint-primary);
+  background: var(--mint-light);
+  box-shadow: none;
+}
+.module-progress-emblem svg {
+  width: 2.7rem;
+  height: 2.7rem;
+}
+.module-catalogue-card {
+  --module-color: var(--mint-primary);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 6rem;
+  background: linear-gradient(
+    120deg,
+    var(--card),
+    color-mix(in oklab, var(--monitor-blue-soft) 35%, var(--card))
+  );
+  border-color: color-mix(in oklab, var(--monitor-blue) 9%, var(--card));
+  box-shadow:
+    0 7px 22px color-mix(in oklab, var(--monitor-blue) 9%, transparent),
+    inset 0 1px 0 var(--card);
+}
+.module-catalogue-card[data-module="2"] {
+  --module-color: var(--monitor-blue);
+}
+.module-catalogue-card[data-module="3"] {
+  --module-color: var(--monitor-amber);
+}
+.module-catalogue-card[data-module="4"] {
+  --module-color: var(--monitor-violet);
+}
+.module-catalogue-card[data-module="5"] {
+  --module-color: #ed6589;
+}
+.module-catalogue-card::after {
+  content: "";
+  position: absolute;
+  right: -2%;
+  bottom: -5rem;
+  width: 35%;
+  height: 8rem;
+  z-index: -1;
+  border-radius: 50%;
+  transform: rotate(-12deg);
+  background: color-mix(in oklab, var(--module-color) 7%, transparent);
+}
+.module-catalogue-card[data-available="true"] {
+  border-color: #00dfa5;
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--card) 85%, transparent),
+    0 8px 26px #00dba51c,
+    inset 0 0 0 1px #ffffffb3;
+}
+.module-catalogue-card:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 2px #00dfa526,
+    0 10px 28px #00dba52e,
+    inset 0 0 0 1px #ffffffb3;
+}
+.module-catalogue-card:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+.module-catalogue-card:disabled {
+  cursor: not-allowed;
+}
+.module-catalogue-number {
+  color: var(--module-color);
+}
+.module-catalogue-badge {
+  position: relative;
+}
+.module-badge-hex {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 5rem;
+  clip-path: polygon(50% 0, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--module-color) 20%, white),
+    var(--module-color)
+  );
+  color: white;
+}
+.module-badge-hex svg {
+  width: 3rem;
+  height: 3.2rem;
+  padding: 0.6rem;
+  border: 2px solid #ffffff80;
+  border-radius: 0.9rem;
+  background: color-mix(in oklab, var(--module-color) 60%, transparent);
+}
+.module-catalogue-action {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--monitor-blue-soft);
+}
+.module-catalogue-card[data-available="true"] .module-catalogue-action {
+  background: var(--mint-light);
+}
+@media (max-width: 639px) {
+  .module-progress-emblem {
+    width: 3rem;
+    height: 3rem;
+    box-shadow: none;
+  }
+  .module-progress-emblem svg {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+  .module-catalogue-progress {
+    gap: 0.75rem;
+  }
+  .module-badge-hex {
+    width: 3.5rem;
+    height: 4rem;
+  }
+  .module-catalogue-action {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+@media (min-width: 1280px) {
+  .module-catalogue .overview-banner-art {
+    mask-image:
+      linear-gradient(to right, transparent, black 55%),
+      linear-gradient(to bottom, black 80%, transparent);
+    mask-composite: intersect;
+  }
+}
+
 .mini-game-celebration-badge {
   width: 10rem;
   height: 10rem;
   max-width: 100%;
+}
+@keyframes celebration-badge-sway {
+  0%,
+  50%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mini-game-celebration-badge {
+    transform-origin: 50% 65%;
+    animation: celebration-badge-sway 3.5s ease-in-out infinite;
+  }
 }
 @media (min-width: 640px) {
   .mini-game-celebration-badge {

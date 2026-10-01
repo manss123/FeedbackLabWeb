@@ -432,18 +432,30 @@ function VrSimulationPage() {
                 </p>
               </header>
 
-              <div className="rounded-2xl border border-border bg-background/95 p-4 shadow-sm sm:p-5">
-                <div className="mb-3 flex items-center justify-between text-sm">
-                  <span className="font-semibold text-slate-deep">ความคืบหน้า Scenario</span>
-                  <span className="text-slate-text">
-                    {completed.size} / {SCENARIOS.length} ({progress}%)
-                  </span>
+              <div className="module-catalogue-progress rounded-2xl border border-border bg-background p-4 sm:p-5">
+                <div className="module-progress-emblem" aria-hidden="true">
+                  <Headset />
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                <div className="module-progress-content min-w-0 flex-1">
+                  <div className="module-progress-heading">
+                    <span className="font-bold text-slate-deep">ความคืบหน้า Scenario</span>
+                    <span className="font-bold text-monitor-teal">
+                      {completed.size} / {SCENARIOS.length} ({progress}%)
+                    </span>
+                  </div>
                   <div
-                    className="h-full rounded-full bg-mint-primary transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
+                    role="progressbar"
+                    aria-label="ความคืบหน้า Scenario"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={progress}
+                    className="h-3 overflow-hidden rounded-full bg-secondary"
+                  >
+                    <div
+                      className="h-full rounded-full bg-mint-primary transition-all"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </>
@@ -465,15 +477,9 @@ function VrSimulationPage() {
                 >
                   <button
                     onClick={() => setActiveId(s.id)}
-                    className={`group relative flex h-full w-full items-stretch gap-3 rounded-2xl border p-4 sm:gap-4 sm:p-5 text-left transition-all ${
-                      done
-                        ? "border-mint-primary/40 bg-mint-light/30 hover:border-mint-primary"
-                        : isCurrent
-                          ? "border-mint-primary bg-background shadow-md ring-4 ring-mint-primary/15 hover:shadow-lg"
-                          : isLocked
-                            ? "border-border bg-background/60 opacity-75 hover:opacity-100"
-                            : "border-border bg-background hover:border-mint-primary/50 hover:shadow-md"
-                    }`}
+                    data-module={s.order}
+                    data-available={done || !isLocked}
+                    className="module-catalogue-card group relative flex h-full w-full items-stretch gap-3 rounded-2xl border p-4 text-left transition-shadow sm:gap-4 sm:p-5"
                   >
                     {/* Step node */}
                     <div
@@ -481,7 +487,7 @@ function VrSimulationPage() {
                         done
                           ? "bg-mint-primary text-white"
                           : isCurrent
-                            ? "bg-slate-deep text-white ring-4 ring-mint-primary/25"
+                            ? "bg-mint-light text-monitor-teal"
                             : "bg-secondary text-slate-text"
                       }`}
                     >
@@ -491,7 +497,7 @@ function VrSimulationPage() {
                     {/* Card body */}
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-mint-primary">
+                        <span className="module-catalogue-number text-xs font-bold uppercase tracking-wider">
                           Scenario {s.order}
                         </span>
                         {done && (
@@ -527,7 +533,9 @@ function VrSimulationPage() {
                         <span className="rounded-md bg-secondary px-2 py-0.5">{s.activity}</span>
                       </div>
                     </div>
-                    <ArrowRight className="mt-1 h-4 w-4 shrink-0 self-center text-slate-text transition-transform group-hover:translate-x-1 group-hover:text-mint-primary" />
+                    <span className="module-catalogue-action self-center">
+                      <ArrowRight className="size-5 text-monitor-teal transition-transform group-hover:translate-x-1" />
+                    </span>
                   </button>
                 </li>
               );

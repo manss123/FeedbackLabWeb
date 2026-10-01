@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { LearningHubLayout } from "@/components/learning-hub-layout";
 import { LearnerShell } from "@/components/learner-shell";
+import { MiniGameFireworks } from "@/components/mini-game-fireworks";
 import { getLearnerOverview } from "@/lib/learner.functions";
 import { logActivity } from "@/lib/activity";
 import { getFirebaseAuth } from "@/lib/firebase";
@@ -60,11 +61,11 @@ import { waitForFirebaseUser } from "@/lib/firebase-auth";
 import { getUserDoc, upsertUserDoc } from "@/lib/firestore";
 import { serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
-import badgeM1 from "@/assets/badge-m1.png";
-import badgeM2 from "@/assets/badge-m2.png";
-import badgeM3 from "@/assets/badge-m3.png";
-import badgeM4 from "@/assets/badge-m4.png";
-import badgeM5 from "@/assets/badge-m5.png";
+import badgeM1 from "@/assets/badge-m1.webp";
+import badgeM2 from "@/assets/badge-m2.webp";
+import badgeM3 from "@/assets/badge-m3.webp";
+import badgeM4 from "@/assets/badge-m4.webp";
+import badgeM5 from "@/assets/badge-m5.webp";
 
 export const Route = createFileRoute("/_authenticated/modules")({
   head: () => ({
@@ -461,6 +462,7 @@ function ModulesPage() {
       avatarUrl={data?.profile?.avatar_url}
     >
       <LearningHubLayout
+        className="module-catalogue"
         hero={
           <>
             <header className="space-y-3">
@@ -477,36 +479,48 @@ function ModulesPage() {
               </p>
             </header>
 
-            <div className="rounded-2xl border border-border bg-background/95 p-4 shadow-sm sm:p-5">
-              <div className="mb-3 flex items-center justify-between text-sm">
-                <span className="font-semibold text-slate-deep">ความคืบหน้าโมดูล</span>
-                <span className="text-slate-text">
-                  {completed.size} / {MODULES.length} ({progress}%)
-                </span>
+            <div className="module-catalogue-progress rounded-2xl border border-border bg-background/95 p-4 shadow-sm sm:p-5">
+              <div className="module-progress-emblem" aria-hidden="true">
+                <BookOpenText />
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                <div
-                  className="h-full rounded-full bg-mint-primary transition-all"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              {completed.size > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {MODULES.filter((m) => completed.has(m.id)).map((m) => (
-                    <span
-                      key={m.id}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-mint-light px-3 py-1 text-xs font-semibold text-mint-primary"
-                    >
-                      <img
-                        src={m.badgeImage}
-                        alt=""
-                        className="h-4 w-4 rounded-full object-cover"
-                      />{" "}
-                      {m.badge}
-                    </span>
-                  ))}
+              <div className="module-progress-content min-w-0 flex-1">
+                <div className="module-progress-heading">
+                  <span className="font-bold text-slate-deep">ความคืบหน้าโมดูล</span>
+                  <span className="font-bold text-monitor-teal">
+                    {completed.size} / {MODULES.length} ({progress}%)
+                  </span>
                 </div>
-              )}
+                <div
+                  role="progressbar"
+                  aria-label="ความคืบหน้าโมดูล"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progress}
+                  className="h-3 overflow-hidden rounded-full bg-secondary"
+                >
+                  <div
+                    className="h-full rounded-full bg-mint-primary transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                {completed.size > 0 && (
+                  <div className="module-progress-earned flex flex-wrap gap-2">
+                    {MODULES.filter((m) => completed.has(m.id)).map((m) => (
+                      <span
+                        key={m.id}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-mint-light px-3 py-1 text-xs font-semibold text-mint-primary"
+                      >
+                        <img
+                          src={m.badgeImage}
+                          alt=""
+                          className="h-4 w-4 rounded-full object-cover"
+                        />{" "}
+                        {m.badge}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         }
@@ -522,26 +536,26 @@ function ModulesPage() {
                 key={m.id}
                 onClick={() => !locked && setActiveModule(m.id)}
                 disabled={locked}
-                className={`flex w-full items-center gap-3 rounded-2xl border p-4 sm:gap-4 sm:p-5 text-left transition-all ${
-                  done
-                    ? "border-mint-primary bg-mint-light/40"
-                    : locked
-                      ? "cursor-not-allowed border-border bg-secondary/40 opacity-60"
-                      : "border-border bg-background hover:border-mint-primary hover:shadow-sm"
-                }`}
+                data-module={m.order}
+                data-available={!locked}
+                className="module-catalogue-card flex w-full items-center gap-3 rounded-2xl border p-3 text-left sm:gap-5 sm:px-5"
               >
-                <div
-                  className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br p-1 ${m.color} ${locked ? "grayscale opacity-60" : ""}`}
-                >
-                  <img
-                    src={m.badgeImage}
-                    alt={m.badge}
-                    className="h-full w-full object-contain drop-shadow-sm"
-                  />
+                <div className="module-catalogue-badge flex size-16 shrink-0 items-center justify-center sm:h-20 sm:w-28">
+                  {done ? (
+                    <img
+                      src={m.badgeImage}
+                      alt={m.badge}
+                      className="h-full w-full object-contain drop-shadow-sm"
+                    />
+                  ) : (
+                    <span className="module-badge-hex" aria-hidden="true">
+                      <Lock />
+                    </span>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-slate-text">
-                    <span className="font-bold text-mint-primary">Module {m.order}</span>
+                    <span className="module-catalogue-number font-bold">Module {m.order}</span>
                     <span>·</span>
                     <span>{m.duration}</span>
                     {done && (
@@ -556,11 +570,13 @@ function ModulesPage() {
                   <div className="font-bold text-slate-deep">{m.title}</div>
                   <div className="text-sm text-slate-text">{m.subtitle}</div>
                 </div>
-                {locked ? (
-                  <Lock className="h-5 w-5 shrink-0 text-slate-text" />
-                ) : (
-                  <ArrowRight className="h-5 w-5 shrink-0 text-mint-primary" />
-                )}
+                <span className="module-catalogue-action">
+                  {locked ? (
+                    <Lock className="h-5 w-5 shrink-0 text-slate-text" />
+                  ) : (
+                    <ArrowRight className="h-5 w-5 shrink-0 text-mint-primary" />
+                  )}
+                </span>
               </button>
             );
           })}
@@ -844,6 +860,7 @@ function ModuleRunner({
 
   return (
     <LearnerShell displayName={displayName} avatarUrl={avatarUrl}>
+      <MiniGameFireworks completed={elaborateDone} />
       <div className="w-full">
         {/* Sticky progress header */}
         <div className="module-progress-header sticky top-16 z-20 mb-5 rounded-2xl border border-mint-primary/15 bg-background/95 p-3 backdrop-blur sm:p-5 xl:top-2">

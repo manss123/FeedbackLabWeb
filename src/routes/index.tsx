@@ -1,8 +1,9 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Glasses, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { FirebaseError } from "firebase/app";
 import { toast } from "sonner";
+import logo from "@/assets/Logo.webp";
 import heroImage from "@/assets/hero-web-vr-lecturer.webp";
 import iconChat from "@/assets/icons/icon-1.webp";
 import iconBarChart from "@/assets/icons/icon-2.webp";
@@ -84,10 +85,11 @@ function Home() {
           monitors. */}
       <nav className="mx-auto flex w-full max-w-[2400px] items-center justify-between px-[clamp(1.5rem,4vw,5rem)] py-[clamp(1.5rem,2.2vw,2.25rem)]">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-mint-primary">
-            <Glasses className="h-5 w-5 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-2xl font-bold tracking-tight">My Feedback Lab</span>
+          <img src={logo} alt="" className="h-10 w-10 rounded-lg" />
+          <span className="text-2xl font-bold tracking-tight">
+            <span className="text-mint-primary">My</span>{" "}
+            <span className="text-slate-deep">Feedback Lab</span>
+          </span>
         </div>
         <button
           onClick={handleGoogleSignIn}
