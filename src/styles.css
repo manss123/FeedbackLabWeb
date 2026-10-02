@@ -320,6 +320,67 @@
     color-mix(in oklab, var(--mint-primary) 20%, var(--card))
   );
 }
+.learning-badges-section {
+  background: var(--card);
+  box-shadow: 0 8px 28px color-mix(in oklab, var(--monitor-blue) 6%, transparent);
+}
+.learning-badge-card {
+  --badge-accent: #008d70;
+  --badge-tint: #d9faf0;
+  background: linear-gradient(
+    155deg,
+    var(--card) 15%,
+    color-mix(in oklab, var(--badge-tint) 65%, var(--card))
+  );
+  border-color: color-mix(in oklab, var(--badge-accent) 25%, var(--card));
+  box-shadow:
+    0 5px 16px color-mix(in oklab, var(--badge-accent) 8%, transparent),
+    inset 0 1px 0 var(--card);
+}
+.learning-badge-card[data-badge="m2"] {
+  --badge-accent: #1769ba;
+  --badge-tint: #e0f1ff;
+}
+.learning-badge-card[data-badge="m3"] {
+  --badge-accent: #a56600;
+  --badge-tint: #fff1c9;
+}
+.learning-badge-card[data-badge="m4"] {
+  --badge-accent: #7846c6;
+  --badge-tint: #efe4ff;
+}
+.learning-badge-card[data-badge="m5"] {
+  --badge-accent: #c63e70;
+  --badge-tint: #ffe3ee;
+}
+.learning-badge-art::before {
+  content: "";
+  position: absolute;
+  inset: -0.4rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--badge-tint), transparent 70%);
+}
+.learning-badge-art > img {
+  position: relative;
+}
+.learning-badge-status {
+  color: var(--badge-accent);
+  background: var(--badge-tint);
+}
+.learning-badge-card[data-earned="false"] {
+  border-style: dashed;
+  border-color: var(--border);
+  background: var(--card);
+  box-shadow: none;
+}
+.learning-badge-card[data-earned="false"] .learning-badge-art {
+  filter: saturate(0.45);
+}
+.learning-badge-card[data-earned="false"] .learning-badge-status {
+  color: var(--slate-text);
+  background: var(--secondary);
+}
+
 .module-catalogue-progress {
   display: flex;
   align-items: center;

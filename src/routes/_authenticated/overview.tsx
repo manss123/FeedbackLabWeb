@@ -46,40 +46,30 @@ const MODULE_BADGES = [
     name: "Feedback Explorer",
     subtitle: "นักสำรวจข้อมูลย้อนกลับ",
     image: badgeM1,
-    tint: "from-emerald-50 to-mint-light",
-    ring: "ring-mint-primary/40",
   },
   {
     id: "m2",
     name: "Principle Master",
     subtitle: "ปรมาจารย์หลักการ",
     image: badgeM2,
-    tint: "from-rose-50 to-slate-50",
-    ring: "ring-rose-300/50",
   },
   {
     id: "m3",
     name: "Empathy Communicator",
     subtitle: "นักสื่อสารด้วยความเข้าใจ",
     image: badgeM3,
-    tint: "from-sky-50 to-blue-50",
-    ring: "ring-sky-300/50",
   },
   {
     id: "m4",
     name: "Motivator Coach",
     subtitle: "โค้ชผู้สร้างแรงบันดาลใจ",
     image: badgeM4,
-    tint: "from-emerald-50 to-teal-50",
-    ring: "ring-emerald-300/50",
   },
   {
     id: "m5",
     name: "Action Designer",
     subtitle: "ผู้ออกแบบการลงมือทำ",
     image: badgeM5,
-    tint: "from-violet-50 to-purple-50",
-    ring: "ring-violet-300/50",
   },
 ];
 
@@ -287,7 +277,7 @@ function DashboardPage() {
 
         <div className="relative z-[1] app-content-container">
           {/* Module badges */}
-          <div className="relative mb-5 rounded-2xl border border-border bg-background bg-gradient-to-tr from-background via-background to-mint-primary/10 p-4 sm:p-5">
+          <div className="learning-badges-section relative mb-5 rounded-2xl border border-border p-4 sm:p-5">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
               <div>
                 <div className="text-sm font-bold uppercase text-mint-primary">Learning Badges</div>
@@ -295,7 +285,8 @@ function DashboardPage() {
                   เหรียญตราจาก 5 โมดูลบทเรียน
                 </h2>
               </div>
-              <div className="text-xs text-slate-text">
+              <div className="inline-flex items-center gap-2 rounded-full bg-mint-light px-3 py-1 text-xs font-semibold text-monitor-teal">
+                <Award className="size-4" aria-hidden="true" />
                 ได้รับ{" "}
                 {
                   MODULE_BADGES.filter((b) => (state?.completed_modules ?? []).includes(b.id))
@@ -304,19 +295,17 @@ function DashboardPage() {
                 / {MODULE_BADGES.length}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 min-[540px]:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 min-[540px]:grid-cols-3 xl:grid-cols-5">
               {MODULE_BADGES.map((b) => {
                 const earned = (state?.completed_modules ?? []).includes(b.id);
                 return (
                   <div
                     key={b.id}
-                    className={`group flex flex-col items-center rounded-xl border px-2 py-3 text-center ${
-                      earned
-                        ? `border-transparent bg-gradient-to-br ${b.tint} shadow-sm ring-2 ${b.ring}`
-                        : "border-dashed border-border bg-background"
-                    }`}
+                    data-badge={b.id}
+                    data-earned={earned}
+                    className="learning-badge-card flex min-w-0 flex-col items-center rounded-2xl border px-3 py-4 text-center"
                   >
-                    <div className="relative mb-1 flex h-16 w-16 items-center justify-center">
+                    <div className="learning-badge-art relative mb-3 flex size-24 items-center justify-center">
                       {earned ? (
                         <img
                           src={b.image}
@@ -339,19 +328,16 @@ function DashboardPage() {
                         </>
                       )}
                     </div>
-                    <div
-                      className={`text-xs font-bold leading-tight ${earned ? "text-slate-deep" : "text-slate-text"}`}
-                    >
-                      {b.name}
-                    </div>
-                    <div
-                      className={`mt-0.5 text-[10px] leading-tight ${earned ? "text-slate-text" : "text-slate-text"}`}
-                    >
+                    <div className="text-sm font-bold leading-tight text-slate-deep">{b.name}</div>
+                    <div className="mb-3 mt-1 text-xs leading-relaxed text-slate-text">
                       {b.subtitle}
                     </div>
-                    <div
-                      className={`mt-1.5 text-[10px] font-bold uppercase tracking-wider ${earned ? "text-mint-primary" : "text-slate-text"}`}
-                    >
+                    <div className="learning-badge-status mt-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
+                      {earned ? (
+                        <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                      ) : (
+                        <Lock className="size-3.5" aria-hidden="true" />
+                      )}
                       {earned ? "ได้รับแล้ว" : "ยังไม่ปลดล็อก"}
                     </div>
                   </div>
@@ -372,14 +358,11 @@ function DashboardPage() {
               const isLocked = currentIdx !== -1 && i > currentIdx;
               const stepNum = i + 1;
               return (
-                <li
-                  key={href}
-                  className="relative before:pointer-events-none before:absolute before:left-8 before:top-1/2 before:z-10 before:h-[calc(100%+0.5rem)] before:border-l before:border-dashed before:border-border last:before:hidden"
-                >
+                <li key={href} className="relative">
                   <button
                     type="button"
                     onClick={() => navigate({ to: href })}
-                    className={`group relative flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint-primary sm:gap-5 ${
+                    className={`group relative flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint-primary sm:gap-5 ${
                       done
                         ? "border-border bg-background hover:border-mint-primary"
                         : isCurrent

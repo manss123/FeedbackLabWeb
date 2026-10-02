@@ -471,15 +471,12 @@ function VrSimulationPage() {
               const isCurrent = i === currentIdx;
               const isLocked = currentIdx !== -1 && i > currentIdx;
               return (
-                <li
-                  key={s.id}
-                  className="relative before:pointer-events-none before:absolute before:left-[calc(2.75rem+1px)] before:top-[calc(2.75rem+1px)] before:z-10 before:h-[calc(100%+0.75rem)] before:border-l before:border-dashed before:border-border last:before:hidden sm:before:left-[calc(3rem+1px)] sm:before:top-[calc(3rem+1px)]"
-                >
+                <li key={s.id} className="relative">
                   <button
                     onClick={() => setActiveId(s.id)}
                     data-module={s.order}
                     data-available={done || !isLocked}
-                    className="module-catalogue-card group relative flex h-full w-full items-stretch gap-3 rounded-2xl border p-4 text-left transition-shadow sm:gap-4 sm:p-5"
+                    className="module-catalogue-card group relative flex h-full w-full cursor-pointer items-stretch gap-3 rounded-2xl border p-4 text-left transition-shadow sm:gap-4 sm:p-5"
                   >
                     {/* Step node */}
                     <div
@@ -1048,7 +1045,7 @@ function ScenarioRunner({
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <button
         onClick={onBack}
-        className="inline-flex w-fit items-center gap-2 text-sm text-slate-text hover:text-slate-deep"
+        className="inline-flex w-fit cursor-pointer items-center gap-2 text-sm text-slate-text hover:text-slate-deep"
       >
         <ArrowLeft className="h-4 w-4" /> กลับหน้ารายการ Scenario
       </button>
@@ -1478,7 +1475,7 @@ function Stage1Intro({ scenario, onStart }: { scenario: Scenario; onStart: () =>
       </div>
       <button
         onClick={onStart}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
       >
         <Play className="h-4 w-4" /> เริ่ม Scenario
       </button>
@@ -1526,7 +1523,7 @@ function Stage1PresentGate({
           {unityReady ? (
             <button
               onClick={onPresent}
-              className="flex items-center justify-center rounded-xl bg-slate-deep px-4 py-2 text-sm font-bold text-white hover:opacity-90"
+              className="flex cursor-pointer items-center justify-center rounded-xl bg-slate-deep px-4 py-2 text-sm font-bold text-white hover:opacity-90"
             >
               ▶ เล่นการนำเสนอ
             </button>
@@ -1549,7 +1546,7 @@ function Stage1PresentGate({
           </div>
           <button
             onClick={onFinish}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-mint-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90"
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-mint-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90"
           >
             ให้ Feedback <ArrowRight className="h-4 w-4" />
           </button>
@@ -1702,7 +1699,7 @@ function StageRecord({
         <button
           onClick={recording ? () => recorder.stop() : start}
           disabled={requesting}
-          className={`flex h-24 w-24 items-center justify-center rounded-full transition-all disabled:opacity-60 ${
+          className={`flex h-24 w-24 cursor-pointer items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
             recording
               ? "bg-red-500 text-white shadow-lg shadow-red-500/40"
               : "bg-mint-primary text-white hover:scale-105"
@@ -1751,7 +1748,7 @@ function StageRecord({
           })
         }
         disabled={!canContinue}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90 disabled:opacity-40"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ไปยังการทบทวนตนเอง <ArrowRight className="h-4 w-4" />
       </button>
@@ -1818,13 +1815,13 @@ function Stage2Transition({
       <div className="flex flex-col justify-center gap-3 sm:flex-row">
         <button
           onClick={onContinue}
-          className="rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
+          className="cursor-pointer rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
         >
           เริ่มทบทวน
         </button>
         <button
           onClick={onReplay}
-          className="rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
+          className="cursor-pointer rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
         >
           ฟังเสียงของฉัน
         </button>
@@ -1878,7 +1875,7 @@ function Stage2Playback({
               setReplays((r) => r + 1);
             }}
             disabled={!audioUrl}
-            className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1 text-xs font-medium text-slate-deep hover:bg-secondary disabled:opacity-40"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-border px-3 py-1 text-xs font-medium text-slate-deep hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
           >
             <RefreshCw className="h-3 w-3" /> ฟังซ้ำ
           </button>
@@ -1906,7 +1903,7 @@ function Stage2Playback({
                   if (audio.paused) audio.play();
                   else audio.pause();
                 }}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-deep text-white hover:opacity-90"
+                className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-slate-deep text-white hover:opacity-90"
               >
                 {playing ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </button>
@@ -1962,7 +1959,7 @@ function Stage2Playback({
 
       <button
         onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
       >
         ประเมินการให้ Feedback ของตนเอง <ArrowRight className="h-4 w-4" />
       </button>
@@ -2021,7 +2018,7 @@ function Stage2Rating({
                       next[i] = n;
                       setRatings(next);
                     }}
-                    className={`h-10 w-10 rounded-lg border font-bold transition ${
+                    className={`h-10 w-10 cursor-pointer rounded-lg border font-bold transition ${
                       active
                         ? "border-slate-deep bg-slate-deep text-white"
                         : "border-border bg-background text-slate-deep hover:border-slate-deep/40"
@@ -2039,14 +2036,14 @@ function Stage2Rating({
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <button
           onClick={onBack}
-          className="flex-1 rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
+          className="flex-1 cursor-pointer rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
         >
           ← ย้อนกลับไปฟังอีกครั้ง
         </button>
         <button
           onClick={onNext}
           disabled={!allRated}
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90 disabled:opacity-40"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           ต่อไป <ArrowRight className="h-4 w-4" />
         </button>
@@ -2105,14 +2102,14 @@ function Stage2Reflection({
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <button
           onClick={onReplay}
-          className="flex-1 rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
+          className="flex-1 cursor-pointer rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
         >
           ย้อนกลับไปฟังอีกครั้ง
         </button>
         <button
           onClick={onNext}
           disabled={!canContinue}
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90 disabled:opacity-40"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           ไปยังคำแนะนำจาก AI <ArrowRight className="h-4 w-4" />
         </button>
@@ -2197,7 +2194,7 @@ function Stage3Awareness({
       </div>
       <button
         onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
       >
         ดูการวิเคราะห์สมรรถนะ <ArrowRight className="h-4 w-4" />
       </button>
@@ -2346,7 +2343,7 @@ function Stage3Radar({
       </div>
       <button
         onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
       >
         ไปยังหลักการ Constructive Feedback <ArrowRight className="h-4 w-4" />
       </button>
@@ -2400,7 +2397,7 @@ function Stage3Principles({ onNext }: { onNext: () => void }) {
       </div>
       <button
         onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
       >
         ดูคำแนะนำเฉพาะบุคคล <ArrowRight className="h-4 w-4" />
       </button>
@@ -2461,7 +2458,7 @@ function Stage3Coaching({
       </div>
       <button
         onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
       >
         ตั้งเป้าหมายสำหรับรอบที่ 2 <ArrowRight className="h-4 w-4" />
       </button>
@@ -2513,7 +2510,7 @@ function Stage3Goal({
             <button
               key={g}
               onClick={() => toggle(g)}
-              className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left text-sm transition ${
+              className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3 text-left text-sm transition ${
                 active
                   ? "border-mint-primary bg-mint-light/40 text-slate-deep"
                   : "border-border bg-background text-slate-deep hover:border-mint-primary/50"
@@ -2545,7 +2542,7 @@ function Stage3Goal({
       <button
         onClick={onNext}
         disabled={!canContinue}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-mint-primary px-6 py-4 font-bold text-white hover:opacity-90 disabled:opacity-40"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-mint-primary px-6 py-4 font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         เริ่มการฝึกรอบที่ 2 <ArrowRight className="h-4 w-4" />
       </button>
@@ -2593,7 +2590,7 @@ function Stage4Before({
       )}
       <button
         onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
       >
         เริ่มการฝึกรอบที่ 2 <Play className="h-4 w-4" />
       </button>
@@ -2713,13 +2710,13 @@ function Stage4Compare({
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           onClick={onRetry}
-          className="flex-1 rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
+          className="flex-1 cursor-pointer rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
         >
           <RefreshCw className="mr-1 inline h-4 w-4" /> ฝึกอีกครั้ง
         </button>
         <button
           onClick={onNext}
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
         >
           ไปยังสรุปผล <ArrowRight className="h-4 w-4" />
         </button>
@@ -2931,7 +2928,7 @@ function SummaryDashboard({
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           onClick={onBackList}
-          className="flex-1 rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
+          className="flex-1 cursor-pointer rounded-2xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
         >
           กลับหน้าหลัก
         </button>
@@ -2939,7 +2936,7 @@ function SummaryDashboard({
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-mint-primary px-6 py-3 font-bold text-white hover:opacity-90 disabled:opacity-40"
+            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-mint-primary px-6 py-3 font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             บันทึกและไป Scenario ถัดไป <ArrowRight className="h-4 w-4" />
@@ -2947,7 +2944,7 @@ function SummaryDashboard({
         ) : (
           <button
             onClick={onNextScenario}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
+            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
           >
             Scenario ถัดไป <ArrowRight className="h-4 w-4" />
           </button>

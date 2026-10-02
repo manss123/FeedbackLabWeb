@@ -538,7 +538,7 @@ function ModulesPage() {
                 disabled={locked}
                 data-module={m.order}
                 data-available={!locked}
-                className="module-catalogue-card flex w-full items-center gap-3 rounded-2xl border p-3 text-left sm:gap-5 sm:px-5"
+                className="module-catalogue-card flex w-full cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left sm:gap-5 sm:px-5 disabled:cursor-not-allowed"
               >
                 <div className="module-catalogue-badge flex size-16 shrink-0 items-center justify-center sm:h-20 sm:w-28">
                   {done ? (
@@ -585,7 +585,7 @@ function ModulesPage() {
         {allDone && (
           <button
             onClick={() => navigate({ to: "/vr-simulation" })}
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-mint-primary to-monitor-teal px-5 py-4 font-bold text-white hover:opacity-90"
+            className="mt-8 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-mint-primary to-monitor-teal px-5 py-4 font-bold text-white hover:opacity-90"
           >
             เรียนครบทุกโมดูล · ไป VR Simulation <ArrowRight className="h-4 w-4" />
           </button>
@@ -867,7 +867,7 @@ function ModuleRunner({
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <button
               onClick={onExit}
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-slate-text transition-colors hover:bg-mint-light hover:text-monitor-teal focus-visible:outline-2 focus-visible:outline-mint-primary"
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm font-semibold text-slate-text transition-colors hover:bg-mint-light hover:text-monitor-teal focus-visible:outline-2 focus-visible:outline-mint-primary"
             >
               <ArrowLeft className="h-4 w-4" /> รายการโมดูล
             </button>
@@ -1009,7 +1009,7 @@ function ModuleRunner({
                 </p>
                 <button
                   type="button"
-                  className="mt-2 min-h-11 font-semibold text-monitor-teal underline"
+                  className="mt-2 min-h-11 cursor-pointer font-semibold text-monitor-teal underline"
                   onClick={() => mutation.mutate(moduleId)}
                 >
                   บันทึกอีกครั้ง
@@ -1043,7 +1043,7 @@ function ModuleRunner({
           <div className="mt-8 flex items-center justify-between gap-3">
             <button
               onClick={prevStage}
-              className="inline-flex items-center gap-1 rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-slate-text hover:bg-secondary"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-slate-text hover:bg-secondary"
             >
               <ArrowLeft className="h-4 w-4" /> ย้อนกลับ
             </button>
@@ -1052,7 +1052,7 @@ function ModuleRunner({
               <button
                 onClick={nextStage}
                 disabled={!canProceed()}
-                className="inline-flex items-center gap-1 rounded-xl bg-slate-deep px-6 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-secondary disabled:text-slate-text"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-xl bg-slate-deep px-6 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-secondary disabled:text-slate-text"
               >
                 ถัดไป <ArrowRight className="h-4 w-4" />
               </button>
@@ -1138,7 +1138,7 @@ function IntroScreen({
 
       <button
         onClick={onStart}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-deep px-8 py-4 font-bold text-white hover:opacity-90"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-8 py-4 font-bold text-white hover:opacity-90"
       >
         เริ่มเรียน <ArrowRight className="h-4 w-4" />
       </button>
@@ -1322,7 +1322,7 @@ function EvaluateScreen({
                   type="button"
                   disabled={saved}
                   onClick={() => setPracticeChoice(opt.id)}
-                  className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all disabled:cursor-not-allowed ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all disabled:cursor-not-allowed ${
                     selected
                       ? "border-mint-primary bg-mint-light/40"
                       : "border-border bg-background hover:border-mint-primary/50"
@@ -1403,7 +1403,7 @@ function EvaluateScreen({
       <button
         onClick={onSave}
         disabled={saved}
-        className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all ${
+        className={`mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all disabled:cursor-not-allowed ${
           saved ? "bg-mint-light text-mint-primary" : "bg-slate-deep text-white hover:opacity-90"
         }`}
       >
@@ -1509,13 +1509,13 @@ function SummaryScreen({
       <div className="flex flex-col gap-2 md:flex-row">
         <button
           onClick={onHome}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-background px-6 py-3 font-bold text-slate-deep hover:bg-secondary"
         >
           <Home className="h-4 w-4" /> กลับหน้ารายการโมดูล
         </button>
         <button
           onClick={onNext}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-deep px-6 py-3 font-bold text-white hover:opacity-90"
         >
           {hasNext ? `ไป Module ${meta.order + 1}` : "ไป VR Simulation"}{" "}
           <ArrowRight className="h-4 w-4" />
