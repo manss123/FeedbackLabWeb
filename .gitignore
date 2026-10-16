@@ -35,6 +35,10 @@ firebase-export-*/
 .env.production
 /tmp/
 
+# Scratch build/export output (e.g. Unity WebGL exports dropped here before
+# being copied into public/unity-build/) — not referenced by the app itself.
+/output/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
