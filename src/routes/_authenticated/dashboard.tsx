@@ -195,7 +195,13 @@ function CertificatePage() {
     <LearnerShell displayName={data?.profile?.display_name} avatarUrl={data?.profile?.avatar_url}>
       <div className="w-full space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-deep">สรุปผลการเรียนรู้ของฉัน</h1>
+          <h1 className="text-3xl font-bold text-slate-deep">
+            สรุป
+            <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
+              ผลการเรียนรู้
+            </span>
+            ของฉัน
+          </h1>
           <p className="mt-1 text-slate-text">
             ภาพรวมความคืบหน้า คะแนน และใบรับรองของคุณตลอดโครงการ
           </p>

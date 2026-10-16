@@ -22,6 +22,10 @@ const AUTH_KEY = "flvr.mock.auth.v1";
 // -------- Types --------
 
 export interface MockProfile {
+  gender?: string;
+  age?: number;
+  teaching_subjects?: string[];
+  teaching_levels?: string[];
   id: string;
   email: string;
   display_name: string | null;
@@ -404,6 +408,10 @@ export async function syncLearnerSetup(
       faculty: userDoc.profile.faculty,
       department: userDoc.profile.department,
       teaching_experience_years: userDoc.profile.teachingExperienceYears,
+      gender: userDoc.profile.gender,
+      age: userDoc.profile.age,
+      teaching_subjects: userDoc.profile.teachingSubjects,
+      teaching_levels: userDoc.profile.teachingLevels,
     };
   }
   d.assessmentResults = {};
@@ -530,6 +538,10 @@ export async function submitOnboarding(args: {
     faculty: string;
     department: string | null;
     teaching_experience_years: number;
+    gender: string;
+    age: number;
+    teaching_subjects: string[];
+    teaching_levels: string[];
   };
 }) {
   const { data } = args;
@@ -550,6 +562,10 @@ export async function submitOnboarding(args: {
     faculty: data.faculty,
     department: data.department,
     teaching_experience_years: data.teaching_experience_years,
+    gender: data.gender,
+    age: data.age,
+    teaching_subjects: data.teaching_subjects,
+    teaching_levels: data.teaching_levels,
   };
   d.state.onboarding_completed = true;
   d.state.current_stage = "diagnostic";

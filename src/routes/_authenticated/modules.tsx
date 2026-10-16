@@ -471,7 +471,10 @@ function ModulesPage() {
                 Cognitive Learning · 5 Modules
               </div>
               <h1 className="text-2xl font-bold leading-tight sm:text-3xl">
-                บทเรียน Constructive Feedback
+                บทเรียน{" "}
+                <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
+                  Constructive Feedback
+                </span>
               </h1>
               <p className="text-slate-text">
                 แต่ละโมดูลใช้เวลาประมาณ 10 นาที ผ่าน 3 กิจกรรม (Engage · Elaborate · Evaluate) พร้อม
@@ -877,7 +880,10 @@ function ModuleRunner({
                 alt=""
                 className="h-7 w-7 shrink-0 rounded-full object-cover"
               />
-              Module {meta.order} · {meta.badge}
+              Module {meta.order} ·{" "}
+              <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text font-semibold text-transparent">
+                {meta.badge}
+              </span>
             </div>
             <div className="rounded-full bg-mint-primary/10 px-3 py-1 text-sm font-bold text-monitor-teal">
               {stage === "intro"

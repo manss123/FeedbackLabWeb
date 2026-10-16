@@ -423,7 +423,11 @@ function VrSimulationPage() {
                   Web-based VR Simulation
                 </div>
                 <h1 className="text-2xl font-bold leading-tight sm:text-3xl">
-                  ฝึกให้ Feedback กับนักศึกษาเสมือน
+                  ฝึกให้{" "}
+                  <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
+                    Feedback
+                  </span>{" "}
+                  กับนักศึกษาเสมือน
                 </h1>
                 <p className="text-slate-text">
                   ระบบจำลอง VR แบบ Web-based ตามวงจร Experiential Learning (Experience → Reflection
@@ -1615,16 +1619,14 @@ function StageRecord({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Live-seed the transcript from speech-to-text while recording; once
-  // stopped, the textarea is fully user-owned (editable) again.
+  // Accept the recognizer's final result even after audio recording stops.
   useEffect(() => {
-    if (!recording) return;
     const combined = [speech.finalTranscript, speech.interimTranscript]
       .filter(Boolean)
       .join(" ")
       .trim();
-    setTranscript(combined);
-  }, [recording, speech.finalTranscript, speech.interimTranscript]);
+    if (combined) setTranscript(combined);
+  }, [speech.finalTranscript, speech.interimTranscript]);
 
   // Covers both a manual stop and the recorder's own auto-stop at MAX.
   useEffect(() => {
@@ -1634,14 +1636,17 @@ function StageRecord({
 
   const start = async () => {
     setTranscript("");
-    const ok = await recorder.start();
-    if (ok && speech.isSupported) {
+    // Start recognition in the click gesture, before awaiting mic permission.
+    if (speech.isSupported) {
       speech.reset();
       speech.start();
     }
+    const ok = await recorder.start();
+    if (!ok) speech.stop();
   };
 
-  const canContinue = !recording && transcript.trim().length >= 10;
+  const canContinue =
+    !recording && !requesting && !speech.listening && transcript.trim().length >= 10;
 
   return (
     <div className="rounded-3xl border border-border bg-background p-8">
@@ -1694,11 +1699,36 @@ function StageRecord({
           <span>{recorder.permissionError}</span>
         </div>
       )}
+      {recording &&
+        speech.isSupported &&
+        !speech.error &&
+        !transcript.trim() &&
+        recorder.elapsedSeconds >= 12 && (
+          <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+            ยังไม่ได้รับข้อความจากบริการถอดเสียง กรุณาตรวจว่าเลือกไมโครโฟนถูกตัวและมีสัญญาณเสียง
+            หากยังไม่มีข้อความ ให้หยุดอัดแล้วลองใหม่ หรือพิมพ์ข้อความด้านล่าง
+          </p>
+        )}
+      {/* Audio was captured but speech-to-text returned nothing — say so, rather than
+          leaving an empty textarea that looks like the mic is dead. */}
+      {speech.isSupported &&
+        !recording &&
+        !speech.listening &&
+        !!recorder.lastResult &&
+        transcript.trim().length === 0 && (
+          <div className="mb-4 flex items-start gap-2 rounded-xl bg-mint-light/60 p-3 text-sm text-slate-deep">
+            <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-mint-primary" />
+            <span>
+              บันทึกเสียงได้ แต่ระบบยังแปลงเป็นข้อความไม่ได้ กรุณาลองบันทึกใหม่อีกครั้ง หรือพิมพ์
+              Feedback ด้วยตนเองด้านล่าง
+            </span>
+          </div>
+        )}
 
       <div className="mb-6 flex flex-col items-center gap-3">
         <button
           onClick={recording ? () => recorder.stop() : start}
-          disabled={requesting}
+          disabled={requesting || (!recording && speech.listening)}
           className={`flex h-24 w-24 cursor-pointer items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
             recording
               ? "bg-red-500 text-white shadow-lg shadow-red-500/40"
@@ -1719,7 +1749,9 @@ function StageRecord({
             ? "กำลังขอสิทธิ์เข้าถึงไมโครโฟน..."
             : recording
               ? "กำลังบันทึก..."
-              : "กดปุ่มเพื่อเริ่มบันทึก"}
+              : speech.listening
+                ? "กำลังรอข้อความถอดเสียงสุดท้าย..."
+                : "กดปุ่มเพื่อเริ่มบันทึก"}
         </div>
         {showSilenceHint && (
           <div className="text-xs text-mint-primary">คุณสามารถเริ่มให้ Feedback ได้เลยค่ะ</div>
@@ -1733,6 +1765,7 @@ function StageRecord({
         <textarea
           rows={6}
           value={transcript}
+          readOnly={recording || requesting || speech.listening}
           onChange={(e) => setTranscript(e.target.value)}
           placeholder="พูดหรือพิมพ์ Feedback ของคุณที่นี่..."
           className="w-full resize-none rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-mint-primary"

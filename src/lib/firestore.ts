@@ -26,6 +26,10 @@ export const COLLECTIONS = {
 } as const;
 
 export interface UserProfile {
+  gender?: string;
+  age?: number;
+  teachingSubjects?: string[];
+  teachingLevels?: string[];
   displayName: string | null;
   email: string;
   avatarUrl: string | null;

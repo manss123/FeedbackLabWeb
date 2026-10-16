@@ -208,6 +208,7 @@ export function useAudioRecorder({ maxSeconds }: { maxSeconds: number }) {
       sourceRef.current = source;
       procRef.current = proc;
       gainRef.current = silentGain;
+      if (ac.state === "suspended") await ac.resume();
       proc.onaudioprocess = (ev) => {
         processFrame(ev.inputBuffer.getChannelData(0), performance.now());
       };

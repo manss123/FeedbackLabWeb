@@ -2,7 +2,8 @@
 const path = require('node:path');
 const auth = require(path.join(process.env.APPDATA, 'npm/node_modules/firebase-tools/lib/auth.js'));
 const ids = ['adminCheckAccess', 'adminExportData', 'adminGetUserActivity', 'adminGetUserSessions', 'adminListActivity', 'adminListUsers', 'adminResearchPage'];
-const email = 'beerss123@gmail.com';
+const email = (process.argv.find(a => a.includes('@')) || '').trim().toLowerCase();
+if (!email) throw new Error('Usage: node scripts/set-production-admin.cjs <email> [--apply] [--inspect-source]');
 const root = 'projects/feedbacklabs/locations/us-central1/functions/';
 const base = 'https://cloudfunctions.googleapis.com/v2/';
 async function main() {

@@ -16,6 +16,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import testBanner from "@/assets/banners/test-banner.webp";
+import resultBanner from "@/assets/banners/resulttest-banner.webp";
 import testProp from "@/assets/contents/tests/prop-1.webp";
 import { toast } from "sonner";
 import { LearnerShell } from "./learner-shell";
@@ -152,6 +153,55 @@ export function RankingAssessment({ phase }: { phase: AssessmentPhase }) {
   );
 }
 
+// Shared hero banner for non-question-flow result/gate screens — same
+// assessment-hero/-banner-frame/-hero-art CSS as the question-flow header
+// above, so all three feel like one continuous form instead of the result
+// screens looking like an afterthought bolted onto a plain white card.
+// `titleHighlight` is the one word/phrase drawn in the gradient accent
+// (e.g. "ก่อนเรียน"/"หลังเรียน"); `titlePrefix`/`titleSuffix` are plain text
+// around it, same text-2xl/font-bold/text-slate-deep styling throughout.
+// Exported — survey-questionnaires.tsx's own post-submission screen reuses
+// this exact component rather than duplicating the markup/CSS.
+export function AssessmentHero({
+  icon: Icon,
+  kicker,
+  titlePrefix,
+  titleHighlight,
+  titleSuffix,
+  subtitle,
+}: {
+  icon: typeof ClipboardList;
+  kicker: string;
+  titlePrefix?: string;
+  titleHighlight: string;
+  titleSuffix?: string;
+  subtitle: string;
+}) {
+  return (
+    <header className="assessment-hero relative isolate">
+      <div className="assessment-banner-frame" aria-hidden="true">
+        <img src={resultBanner} alt="" className="assessment-hero-art" />
+      </div>
+      <div className="app-content-container relative">
+        <div className="assessment-hero-copy relative space-y-4">
+          <span className="assessment-kicker inline-flex items-center gap-2 text-sm font-semibold">
+            <Icon className="size-4" aria-hidden="true" />
+            {kicker}
+          </span>
+          <h1 className="text-2xl font-bold text-slate-deep sm:text-3xl">
+            {titlePrefix}
+            <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
+              {titleHighlight}
+            </span>
+            {titleSuffix}
+          </h1>
+          <p className="leading-relaxed text-slate-text">{subtitle}</p>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 function AssessmentForm({
   uid,
   phase,
@@ -229,36 +279,45 @@ function AssessmentForm({
 
   if (blocked)
     return (
-      <Card className="app-content-container my-6 space-y-4 rounded-lg p-8 shadow-none">
-        <ClipboardList className="size-8 text-mint-primary" />
-        <h1 className="text-2xl font-bold">เริ่มจากแบบทดสอบก่อนเรียน</h1>
-        <p className="text-slate-text">
-          กรุณาทำแบบทดสอบก่อนเรียนชุดนี้ก่อน เพื่อใช้เปรียบเทียบผลก่อนและหลังเรียน
-        </p>
-        <Button asChild>
-          <Link to="/diagnostic">
-            ไปทำแบบทดสอบก่อนเรียน <ArrowRight />
-          </Link>
-        </Button>
-      </Card>
+      <div className="assessment-form w-full space-y-6 pb-8 font-prompt">
+        <AssessmentHero
+          icon={ClipboardList}
+          kicker="DIAGNOSTIC · REQUIRED"
+          titlePrefix="เริ่มจากแบบทดสอบ"
+          titleHighlight="ก่อนเรียน"
+          subtitle="กรุณาทำแบบทดสอบก่อนเรียนชุดนี้ก่อน เพื่อใช้เปรียบเทียบผลก่อนและหลังเรียน"
+        />
+        <div className="app-content-container relative">
+          <Card className="space-y-4 rounded-lg p-8 text-center shadow-none">
+            <Button asChild>
+              <Link to="/diagnostic">
+                ไปทำแบบทดสอบก่อนเรียน <ArrowRight />
+              </Link>
+            </Button>
+          </Card>
+        </div>
+      </div>
     );
   if (result)
     return (
-      <div className="app-content-container space-y-6 py-6">
-        <Card className="rounded-xl border-t-4 border-monitor-teal bg-card p-8 text-center shadow-none">
-          <CheckCircle2 className="mx-auto mb-3 size-10 text-mint-primary" />
-          <h1 className="text-2xl font-bold text-slate-deep">บันทึก{label}เรียบร้อยแล้ว</h1>
-          <p className="mt-3 text-sm text-slate-text">
-            ส่งคำตอบครบ 20 ข้อแล้ว ขอบคุณที่ร่วมทำแบบทดสอบ
-          </p>
-        </Card>
-        <AssessmentSummary results={{ ...initialResults, [phase]: result }} />
-        <Button asChild className="w-full">
-          <Link to={phase === "pretest" ? "/modules" : "/survey"}>
-            {phase === "pretest" ? "ไปยังบทเรียน" : "ไปยังแบบประเมินความพึงพอใจ"}
-            <ArrowRight />
-          </Link>
-        </Button>
+      <div className="assessment-form w-full space-y-6 pb-8 font-prompt">
+        <AssessmentHero
+          icon={CheckCircle2}
+          kicker={phase === "pretest" ? "DIAGNOSTIC · COMPLETED" : "ASSESSMENT · COMPLETED"}
+          titlePrefix="ส่งแบบทดสอบ"
+          titleHighlight={phase === "pretest" ? "ก่อนเรียน" : "หลังเรียน"}
+          titleSuffix="เรียบร้อยแล้ว"
+          subtitle="ส่งคำตอบครบ 20 ข้อแล้ว ขอบคุณที่ร่วมทำแบบทดสอบ"
+        />
+        <div className="app-content-container relative space-y-6">
+          <AssessmentSummary results={{ ...initialResults, [phase]: result }} />
+          <Button asChild className="w-full">
+            <Link to={phase === "pretest" ? "/modules" : "/survey"}>
+              {phase === "pretest" ? "ไปยังบทเรียน" : "ไปยังแบบประเมินความพึงพอใจ"}
+              <ArrowRight />
+            </Link>
+          </Button>
+        </div>
       </div>
     );
 

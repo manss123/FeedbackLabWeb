@@ -141,7 +141,10 @@ function Home() {
           </div>
           <h1 className="text-[clamp(2.75rem,5vw,5.5rem)] font-bold leading-[1.15] text-slate-deep">
             พัฒนาทักษะ <br />
-            <span className="text-mint-primary">Constructive Feedback</span> ด้วยเทคโนโลยี VR
+            <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
+              Constructive Feedback
+            </span>{" "}
+            ด้วยเทคโนโลยี VR
           </h1>
           <p className="max-w-xl text-[clamp(1.05rem,1.3vw,1.35rem)] leading-relaxed text-slate-text">
             ยกระดับทักษะการให้ข้อมูลย้อนกลับสำหรับอาจารย์มหาวิทยาลัย

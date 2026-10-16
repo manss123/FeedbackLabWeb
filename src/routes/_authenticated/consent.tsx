@@ -157,7 +157,11 @@ function ConsentPage() {
                 <ShieldCheck className="size-4" aria-hidden="true" /> STEP 1 OF 3
               </p>
               <h1 className="text-2xl font-bold leading-snug text-slate-deep sm:text-3xl">
-                หนังสือแสดงความยินยอมเข้าร่วมโครงการวิจัย
+                หนังสือแสดง
+                <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
+                  ความยินยอม
+                </span>
+                เข้าร่วมโครงการวิจัย
               </h1>
               <p className="text-base leading-relaxed text-slate-text sm:text-lg">
                 กรุณาอ่านและให้ความยินยอมทุกข้อก่อนเริ่มกิจกรรมการวิจัย

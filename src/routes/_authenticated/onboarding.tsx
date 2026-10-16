@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import {
   ArrowRight,
@@ -10,6 +10,8 @@ import {
   Landmark,
   Loader2,
   User,
+  Plus,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { LearnerShell } from "@/components/learner-shell";
@@ -44,6 +46,12 @@ function OnboardingPage() {
     faculty: string;
     department: string;
     teaching_experience_years: string | number;
+    gender?: string;
+    age?: string | number;
+    teaching_subjects?: string;
+    subject_draft?: string;
+    teaching_levels?: string[];
+    other_teaching_level?: string;
   }>("onboarding.form", {
     display_name: "",
     university: "",
@@ -51,6 +59,31 @@ function OnboardingPage() {
     department: "",
     teaching_experience_years: "",
   });
+
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const subjects = [
+    ...new Set(
+      (form.teaching_subjects ?? "")
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const addSubject = () => {
+    const subject = (form.subject_draft ?? "").trim().replace(/\s+/g, " ");
+    if (!subject) return;
+    if (subjects.some((s) => s.toLocaleLowerCase() === subject.toLocaleLowerCase())) {
+      toast.error("มีวิชานี้ในรายการแล้ว");
+      subjectInputRef.current?.focus();
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      teaching_subjects: [...subjects, subject].join("\n"),
+      subject_draft: "",
+    }));
+    subjectInputRef.current?.focus();
+  };
 
   useEffect(() => {
     if (data?.profile) {
@@ -61,6 +94,10 @@ function OnboardingPage() {
         university: f.university || (data.profile?.university ?? ""),
         faculty: f.faculty || (data.profile?.faculty ?? ""),
         department: f.department || (data.profile?.department ?? ""),
+        gender: f.gender ?? data.profile?.gender ?? "",
+        age: f.age ?? data.profile?.age ?? "",
+        teaching_subjects: f.teaching_subjects ?? data.profile?.teaching_subjects?.join("\n") ?? "",
+        teaching_levels: f.teaching_levels ?? data.profile?.teaching_levels ?? [],
         teaching_experience_years:
           f.teaching_experience_years === ""
             ? (data.profile?.teaching_experience_years ?? "")
@@ -71,12 +108,44 @@ function OnboardingPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
+      if (form.subject_draft?.trim()) {
+        subjectInputRef.current?.focus();
+        throw new Error("กรุณากดเพิ่มวิชาที่พิมพ์ไว้เข้ารายการก่อนบันทึก");
+      }
       const user = getFirebaseAuth().currentUser ?? (await waitForFirebaseUser());
       if (!user) throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");
       const displayName = form.display_name.trim();
       const university = form.university.trim();
       const faculty = form.faculty.trim();
       const teachingExperienceYears = Number(form.teaching_experience_years);
+      const age = Number(form.age);
+      const teachingSubjects = [
+        ...new Set(
+          (form.teaching_subjects ?? "")
+            .split(/\r?\n/)
+            .map((s) => s.trim())
+            .filter(Boolean),
+        ),
+      ];
+      const teachingLevels = [
+        ...new Set(
+          (form.teaching_levels ?? []).map((level) =>
+            level === "อื่น ๆ" ? (form.other_teaching_level ?? "").trim() : level,
+          ),
+        ),
+      ];
+      if (
+        !form.gender ||
+        !String(form.age ?? "").trim() ||
+        !Number.isInteger(age) ||
+        age < 18 ||
+        age > 100 ||
+        !teachingSubjects.length ||
+        !teachingLevels.length ||
+        teachingLevels.some((level) => !level)
+      ) {
+        throw new Error("กรุณาระบุเพศ อายุ 18–100 ปี วิชาที่สอน และระดับชั้นที่สอนให้ครบถ้วน");
+      }
       if (
         !displayName ||
         !university ||
@@ -97,6 +166,10 @@ function OnboardingPage() {
           faculty,
           department: form.department.trim() || null,
           teachingExperienceYears,
+          gender: form.gender,
+          age,
+          teachingSubjects,
+          teachingLevels,
         },
       });
       await queryClient.invalidateQueries({ queryKey: learnerAccessKey(user.uid) });
@@ -107,6 +180,10 @@ function OnboardingPage() {
           faculty,
           department: form.department.trim() || null,
           teaching_experience_years: teachingExperienceYears,
+          gender: form.gender,
+          age,
+          teaching_subjects: teachingSubjects,
+          teaching_levels: teachingLevels,
         },
       });
       void logActivity({ type: "onboarding_completed" });
@@ -148,7 +225,10 @@ function OnboardingPage() {
                 <User className="size-4" aria-hidden="true" /> STEP 2 OF 3
               </p>
               <h1 className="text-2xl font-bold leading-snug text-slate-deep sm:text-3xl">
-                ข้อมูลพื้นฐานผู้เข้าร่วมวิจัย
+                <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
+                  ข้อมูลพื้นฐาน
+                </span>
+                ผู้เข้าร่วมวิจัย
               </h1>
               <p className="text-base leading-relaxed text-slate-text sm:text-lg">
                 ข้อมูลนี้จะใช้เพื่อวิเคราะห์ผลการวิจัยและปรับเส้นทางการเรียนรู้ให้เหมาะกับคุณ
@@ -219,6 +299,50 @@ function OnboardingPage() {
                 </Field>
               </div>
 
+              <div className="grid gap-5 md:grid-cols-2">
+                <Field id="gender" label="เพศ" icon={User} required>
+                  <select
+                    id="gender"
+                    name="gender"
+                    required
+                    value={form.gender ?? ""}
+                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                    className={inputClass}
+                  >
+                    <option value="" disabled>
+                      เลือกเพศ
+                    </option>
+                    {["ชาย", "หญิง", "อื่น ๆ", "ไม่ประสงค์ระบุ"].map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field
+                  id="age"
+                  label="อายุ (ปี)"
+                  icon={User}
+                  required
+                  hint="ระบุอายุเต็ม 18–100 ปี"
+                >
+                  <input
+                    id="age"
+                    name="age"
+                    type="number"
+                    inputMode="numeric"
+                    min={18}
+                    max={100}
+                    step={1}
+                    required
+                    aria-describedby="age-hint"
+                    value={form.age ?? ""}
+                    onChange={(e) => setForm({ ...form, age: e.target.value })}
+                    className={inputClass}
+                    placeholder="เช่น 35"
+                  />
+                </Field>
+              </div>
               <div className="grid gap-5 md:grid-cols-2 min-[1440px]:grid-cols-3">
                 <Field id="faculty" label="คณะ/สำนักวิชา" icon={Landmark} required>
                   <input
@@ -266,6 +390,119 @@ function OnboardingPage() {
                   />
                 </Field>
               </div>
+              <Field
+                id="teaching-subjects"
+                label="วิชาที่สอน"
+                icon={BookOpen}
+                required
+                hint="กรอกทีละวิชา แล้วกดเพิ่มหรือ Enter อย่างน้อย 1 วิชา"
+              >
+                <input
+                  id="teaching-subjects"
+                  name="teaching_subjects"
+                  ref={subjectInputRef}
+                  aria-describedby="teaching-subjects-hint"
+                  value={form.subject_draft ?? ""}
+                  onChange={(e) => setForm({ ...form, subject_draft: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                      e.preventDefault();
+                      addSubject();
+                    }
+                  }}
+                  className={inputClass}
+                  placeholder="เช่น จิตวิทยาการศึกษา"
+                />
+                <button
+                  type="button"
+                  onClick={addSubject}
+                  disabled={!form.subject_draft?.trim()}
+                  className="m-2 flex shrink-0 items-center gap-1 rounded-lg bg-mint-primary px-3 font-bold text-white disabled:opacity-40"
+                >
+                  <Plus className="size-4" aria-hidden="true" /> เพิ่ม
+                </button>
+              </Field>
+              <ul aria-label="รายการวิชาที่สอน" className="flex flex-wrap gap-2">
+                {subjects.map((subject) => (
+                  <li
+                    key={subject}
+                    className="flex max-w-full items-center gap-2 rounded-xl border border-mint-primary/25 bg-mint-light/40 py-1 pl-3 pr-1 text-sm text-slate-deep"
+                  >
+                    <span className="min-w-0 break-words">{subject}</span>
+                    <button
+                      type="button"
+                      aria-label={`ลบวิชา ${subject}`}
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          teaching_subjects: subjects.filter((s) => s !== subject).join("\n"),
+                        }))
+                      }
+                      className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-mint-light focus-visible:outline-2 focus-visible:outline-monitor-teal"
+                    >
+                      <X className="size-4" aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <fieldset className="space-y-3">
+                <legend className="text-base font-bold text-slate-deep sm:text-lg">
+                  ระดับชั้นที่สอน <span className="text-destructive">*</span>
+                </legend>
+                <p id="teaching-levels-hint" className="text-sm text-slate-text">
+                  เลือกได้มากกว่าหนึ่งข้อ
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2" aria-describedby="teaching-levels-hint">
+                  {[
+                    ...new Set([
+                      "ปริญญาตรี",
+                      "ปริญญาโท",
+                      "ปริญญาเอก",
+                      "อื่น ๆ",
+                      ...(form.teaching_levels ?? []),
+                    ]),
+                  ].map((level) => (
+                    <label
+                      key={level}
+                      className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background p-4 has-[:checked]:border-mint-primary has-[:checked]:bg-mint-light/30"
+                    >
+                      <input
+                        type="checkbox"
+                        name="teaching_levels"
+                        value={level}
+                        checked={(form.teaching_levels ?? []).includes(level)}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            teaching_levels: e.target.checked
+                              ? [...(f.teaching_levels ?? []), level]
+                              : (f.teaching_levels ?? []).filter((v) => v !== level),
+                          }))
+                        }
+                        className="size-5 accent-emerald-600"
+                      />
+                      <span>{level}</span>
+                    </label>
+                  ))}
+                </div>
+                {(form.teaching_levels ?? []).includes("อื่น ๆ") && (
+                  <Field
+                    id="other-teaching-level"
+                    label="ระบุระดับชั้นอื่น ๆ"
+                    icon={BookOpen}
+                    required
+                  >
+                    <input
+                      id="other-teaching-level"
+                      required
+                      value={form.other_teaching_level ?? ""}
+                      onChange={(e) => setForm({ ...form, other_teaching_level: e.target.value })}
+                      className={inputClass}
+                      placeholder="เช่น ประกาศนียบัตรบัณฑิต"
+                    />
+                  </Field>
+                )}
+              </fieldset>
             </fieldset>
 
             {mutation.isError && (
