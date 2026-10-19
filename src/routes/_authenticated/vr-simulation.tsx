@@ -146,8 +146,8 @@ const SCENARIOS: Scenario[] = [
   {
     id: "s2",
     order: 2,
-    title: "Positive Feedback after Student Success — พาล์มนำเสนอ Design Thinking",
-    studentName: "พาล์ม",
+    title: "Positive Feedback after Student Success — ปาล์มนำเสนอ Design Thinking",
+    studentName: "ปาล์ม",
     studentAvatar: "linear-gradient(135deg,#ffd166,#f4a300)",
     persona: "นักศึกษาปี 2 · มั่นใจ เตรียมตัวมาดี",
     emotion: "มั่นใจ · ภูมิใจในผลงาน",
@@ -168,7 +168,7 @@ const SCENARIOS: Scenario[] = [
       "กิจกรรมลักษณะนี้ไม่ได้ช่วยเพียงให้ผู้เรียนคิดสร้างสรรค์เท่านั้น แต่ยังช่วยพัฒนาทักษะการทำงานร่วมกัน การสื่อสาร และการแก้ปัญหาอีกด้วย " +
       "หากเป็นทุกคน ทุกคนอยากพัฒนาหรือออกแบบอะไรในโรงเรียนของตัวเองบ้างครับ",
     assessmentFocus:
-      "Scenario นี้คือ Positive Developmental Feedback — พาล์มนำเสนอได้ดีมาก โจทย์ไม่ใช่การแก้ไขข้อผิดพลาด " +
+      "Scenario นี้คือ Positive Developmental Feedback — ปาล์มนำเสนอได้ดีมาก โจทย์ไม่ใช่การแก้ไขข้อผิดพลาด " +
       "แต่คือการต่อยอดจุดแข็ง (Competency: Positive Reinforcement) องค์ประกอบที่ต้องประเมิน:\n" +
       '- Specific Praise: ชมอย่างเฉพาะเจาะจง อธิบายว่าอะไรคือจุดแข็งและทำไมถึงเป็นจุดแข็ง ไม่ใช่คำกว้าง ๆ เช่น "ดีมาก" "เยี่ยมเลย"\n' +
       "- Positive Reinforcement: เชื่อมโยงจุดแข็งกับศักยภาพ/การพัฒนาในอนาคตของนักศึกษา\n" +
