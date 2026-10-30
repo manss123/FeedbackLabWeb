@@ -9,6 +9,7 @@ import {
 } from "@/lib/admin.functions";
 import { ACTIVITY_EVENT_LABELS } from "@/types/activity.types";
 import { waitForFirebaseUser } from "@/lib/firebase-auth";
+import { AdminMasterCompetency } from "@/components/admin-master-competency";
 
 export const Route = createFileRoute("/admin/$userId")({
   ssr: false,
@@ -67,6 +68,7 @@ function AdminUserSessionsPage() {
         </div>
       )}
 
+      {data && <AdminMasterCompetency key={userId} sessions={data} />}
       {activity && <ActivityTimeline events={activity} />}
 
       {data && data.length === 0 && (

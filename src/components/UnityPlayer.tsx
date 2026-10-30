@@ -37,6 +37,7 @@ interface UnityPlayerProps {
   isRecording?: boolean;
   /** Fires once when Unity signals UNITY_READY (or immediately in fallback mode, since there's nothing to load). */
   onUnityReady?: () => void;
+  onPresentationComplete?: (scenarioId: string, round: 1 | 2) => void;
   /** Forwarded from the bridge's AUDIO_RECORDED event (Unity's own mic-capture fallback path). */
   onAudioRecorded?: (blobUrl: string, duration: number) => void;
   /** Forwarded from the bridge's STAGE_CHANGED event. */
@@ -52,6 +53,7 @@ export function UnityPlayer({
   emotion,
   isRecording = false,
   onUnityReady,
+  onPresentationComplete,
   onAudioRecorded,
   onStageChanged,
 }: UnityPlayerProps) {
@@ -91,18 +93,11 @@ export function UnityPlayer({
     }
   };
 
-  // Reveals the iframe / unblocks the parent's own "unityReady" gate. Called
-  // from the iframe's native onLoad (always fires) and, redundantly but
-  // harmlessly, from a real bridge's UNITY_READY (won't fire on a build with
-  // no bridge code, which is fine — onLoad already got us here).
+  // Reveal the document on load; presentation controls wait for UNITY_READY.
   const markReady = () => {
     if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
     injectResponsiveStyles();
     setLoadPhase("ready");
-    if (!firedOnUnityReadyRef.current) {
-      firedOnUnityReadyRef.current = true;
-      onUnityReady?.();
-    }
   };
 
   const { isUnityReady, send } = useUnityBridge({
@@ -110,19 +105,24 @@ export function UnityPlayer({
     targetOrigin,
     enabled: !!BUILD_URL,
     onReady: markReady,
+    onPresentationComplete,
     onStageChanged,
     onAudioRecorded,
   });
+
+  useEffect(() => {
+    if (isUnityReady) onUnityReady?.();
+  }, [isUnityReady, onUnityReady]);
 
   // No build configured — the fallback scene renders immediately, so there's
   // nothing to "wait" for; still fire onUnityReady once so parent state
   // (e.g. a loading gate) doesn't stay stuck false forever.
   useEffect(() => {
-    if (BUILD_URL || firedOnUnityReadyRef.current) return;
+    if (loadPhase !== "failed" || firedOnUnityReadyRef.current) return;
     firedOnUnityReadyRef.current = true;
     onUnityReady?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadPhase]);
 
   useEffect(() => {
     if (!BUILD_URL || loadPhase !== "loading-iframe") return;
@@ -133,21 +133,24 @@ export function UnityPlayer({
   }, [loadPhase]);
 
   useEffect(() => {
-    if (loadPhase === "ready" && isUnityReady && !sentSessionInitRef.current) {
+    if (
+      presented &&
+      !isRetry &&
+      loadPhase === "ready" &&
+      isUnityReady &&
+      !sentSessionInitRef.current
+    ) {
       sentSessionInitRef.current = true;
       send({ command: "OnSessionInit", payload: { scenarioId: scenario.id, userId } });
     }
-  }, [loadPhase, isUnityReady, send, scenario.id, userId]);
+  }, [presented, isRetry, loadPhase, isUnityReady, send, scenario.id, userId]);
 
   useEffect(() => {
     if (emotion === null) return;
     send({ command: "OnEmotionalFeedback", payload: { emotion } });
   }, [emotion, send]);
 
-  // Mute toggle — lets the teacher skip listening to the NPC's presentation
-  // audio and go straight to speaking into the mic (useful for quick
-  // testing). Sent to Unity via AudioListener.volume (see WebGLBridge.cs);
-  // no-op in fallback mode since it has no real audio to mute.
+  // Muting changes audio volume only; completion still comes from Unity.
   const [muted, setMuted] = useState(false);
   useEffect(() => {
     send({ command: "OnMuteToggle", payload: { muted } });
@@ -168,14 +171,14 @@ export function UnityPlayer({
       sentRetryRef.current = false;
       return;
     }
-    if (isRetry && !sentRetryRef.current) {
+    if (isRetry && isUnityReady && !sentRetryRef.current) {
       sentRetryRef.current = true;
       send({
         command: "OnRetryRequested",
         payload: { scenarioId: scenario.id, retryLine: scenario.studentLineRetry },
       });
     }
-  }, [isRetry, presented, send, scenario.id, scenario.studentLineRetry]);
+  }, [isRetry, isUnityReady, presented, send, scenario.id, scenario.studentLineRetry]);
 
   if (BUILD_URL && loadPhase !== "failed") {
     return (
@@ -212,6 +215,7 @@ export function UnityPlayer({
       emotion={emotion}
       failedToLoad={BUILD_URL != null && loadPhase === "failed"}
       isRecording={isRecording}
+      onComplete={() => onPresentationComplete?.(scenario.id, isRetry ? 2 : 1)}
     />
   );
 }
@@ -221,7 +225,7 @@ function MuteButton({ muted, onToggle }: { muted: boolean; onToggle: () => void 
   return (
     <button
       onClick={onToggle}
-      title={muted ? "เปิดเสียง" : "ปิดเสียง (ข้ามการฟัง ไปพูดไมค์เทสได้เลย)"}
+      title={muted ? "เปิดเสียง" : "ปิดเสียง"}
       className={`absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full shadow-md ring-2 ring-white transition ${
         muted ? "bg-chart-1/90 text-white" : "bg-white/90 text-slate-deep hover:bg-white"
       }`}
@@ -265,6 +269,7 @@ function UnityFallbackScene({
   emotion,
   failedToLoad,
   isRecording,
+  onComplete,
 }: {
   scenario: UnityPlayerScenario;
   line: string;
@@ -273,7 +278,10 @@ function UnityFallbackScene({
   emotion: Emotion | null;
   failedToLoad: boolean;
   isRecording: boolean;
+  onComplete: () => void;
 }) {
+  const completeRef = useRef(onComplete);
+  completeRef.current = onComplete;
   const [subtitle, setSubtitle] = useState<string>("");
   const [phase, setPhase] = useState<"idle" | "presenting" | "asking">("idle");
 
@@ -296,6 +304,7 @@ function UnityFallbackScene({
         window.clearInterval(iv);
         setPhase("asking");
         setSubtitle(line);
+        completeRef.current();
       }
     }, 1800);
     return () => window.clearInterval(iv);

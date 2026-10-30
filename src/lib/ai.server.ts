@@ -1,3 +1,4 @@
+import { reflectionContext, normalizeReflectionAnalysis } from "@/lib/vr-reflection";
 import type {
   CoachingReport,
   Emotion,
@@ -178,6 +179,7 @@ function buildContextBlock(context?: PresentationContext): string {
     context.assessmentFocus
       ? `\nจุดเน้นการประเมิน feedback เฉพาะของ scenario นี้ (ใช้เป็นเลนส์หลักในการตีความ/ให้คะแนนแต่ละมิติของ rubric ด้านล่าง ไม่ใช่มิติเพิ่มเติม):\n${context.assessmentFocus}`
       : "",
+    reflectionContext(context.scenarioId),
   ].filter(Boolean);
   return lines.join("\n");
 }
@@ -230,12 +232,32 @@ const COACHING_SYSTEM_PROMPT = `
 7. personalGoalFeedback — คำวิจารณ์ 1-2 ประโยค (ภาษาไทย) ต่อเป้าหมายที่อาจารย์ตั้งใจไว้เอง (personalGoal)
    ถ้าไม่มีการให้ personalGoal มาด้วย ให้ตอบเป็นสตริงว่าง ""
 
+8. reflectionAnalysis — ประเมินเกณฑ์ Self–AI รายข้อที่ให้ในบริบท ครบทุก criterionId ตามลำดับ แยกจาก rubric 4 มิติ
+   แต่ละรายการมี criterionId, score (จำนวนเต็ม 1–5 หรือ null เมื่อประเมินไม่ได้), evidence (ข้อความหลักฐานจาก transcript ของอาจารย์และเหตุผลภาษาไทย), limitation (ข้อจำกัด หรือสตริงว่าง)
+   ระดับคะแนนเพื่อเทียบรายข้อ: 1 = ไม่ปรากฏ/ตรงข้ามเกณฑ์, 2 = ปรากฏเล็กน้อยและยังไม่ชัด, 3 = ปรากฏบางส่วน, 4 = ชัดเจนเกือบครบ, 5 = ชัดเจนครบและมีหลักฐานรองรับ
+   นี่เป็นแนวทางให้คะแนน AI ไม่ใช่คะแนนที่ผ่านการตรวจสอบความเที่ยงตรงจากผู้วิจัย ห้ามคัดลอกหรือแปลงคะแนน rubric 0–100 มาใส่รายข้อ
+   ไม่ประเมินเกณฑ์ด้านเสียง ข้อ partial ประเมินเฉพาะข้อความและระบุข้อจำกัด ห้ามสมมติปฏิกิริยา/การรับฟังจริงของผู้เรียน
+   ถ้าไม่มีเกณฑ์รายข้อในบริบทให้คืน [] ห้ามประดิษฐ์เกณฑ์เอง
+
 ห้ามใส่ข้อความอื่นนอก JSON
 `.trim();
 
 const COACHING_RESPONSE_SCHEMA = {
   type: "OBJECT",
   properties: {
+    reflectionAnalysis: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          criterionId: { type: "STRING" },
+          score: { type: "INTEGER", nullable: true },
+          evidence: { type: "STRING" },
+          limitation: { type: "STRING" },
+        },
+        required: ["criterionId", "score", "evidence", "limitation"],
+      },
+    },
     rubric: RUBRIC_SCHEMA_FIELDS,
     emotion: { type: "STRING", enum: ["neutral", "happy", "sad"] },
     strengths: { type: "ARRAY", items: { type: "STRING" } },
@@ -245,6 +267,7 @@ const COACHING_RESPONSE_SCHEMA = {
     personalGoalFeedback: { type: "STRING" },
   },
   required: [
+    "reflectionAnalysis",
     "rubric",
     "emotion",
     "strengths",
@@ -292,6 +315,10 @@ export async function generateCoachingReport(
       intentConsistency: clampScore(parsed.rubric?.intentConsistency ?? 0, 0, 100),
     };
     const result: CoachingReport = {
+      reflectionAnalysis: normalizeReflectionAnalysis(
+        parsed.reflectionAnalysis,
+        context?.scenarioId,
+      ),
       rubric,
       emotion: asEmotion(parsed.emotion),
       strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],

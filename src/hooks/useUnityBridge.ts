@@ -8,6 +8,7 @@ interface UseUnityBridgeOptions {
   /** false when no build is configured — the listener is not attached at all. */
   enabled: boolean;
   onReady?: () => void;
+  onPresentationComplete?: (scenarioId: string, round: 1 | 2) => void;
   onStageChanged?: (stage: number) => void;
   onAudioRecorded?: (blobUrl: string, duration: number) => void;
   onSessionComplete?: (summary: Record<string, unknown>) => void;
@@ -23,13 +24,26 @@ export function useUnityBridge({
   targetOrigin,
   enabled,
   onReady,
+  onPresentationComplete,
   onStageChanged,
   onAudioRecorded,
   onSessionComplete,
 }: UseUnityBridgeOptions): UseUnityBridgeResult {
   const [isUnityReady, setIsUnityReady] = useState(false);
-  const callbacksRef = useRef({ onReady, onStageChanged, onAudioRecorded, onSessionComplete });
-  callbacksRef.current = { onReady, onStageChanged, onAudioRecorded, onSessionComplete };
+  const callbacksRef = useRef({
+    onReady,
+    onStageChanged,
+    onAudioRecorded,
+    onSessionComplete,
+    onPresentationComplete,
+  });
+  callbacksRef.current = {
+    onReady,
+    onStageChanged,
+    onAudioRecorded,
+    onSessionComplete,
+    onPresentationComplete,
+  };
 
   useEffect(() => {
     if (!enabled) return;
@@ -42,6 +56,9 @@ export function useUnityBridge({
 
       const cb = callbacksRef.current;
       switch (event.data.type) {
+        case "PRESENTATION_COMPLETE":
+          cb.onPresentationComplete?.(event.data.scenarioId, event.data.round);
+          break;
         case "UNITY_READY":
           setIsUnityReady(true);
           cb.onReady?.();

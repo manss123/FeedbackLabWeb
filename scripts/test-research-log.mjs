@@ -224,6 +224,37 @@ test("session cohort keeps later lifecycle evidence and reports backwards time a
   assert.equal(logs.vr[0].elapsed_to_stage4_seconds, 86400);
 });
 
+test("new reflection instruments retain items 9–10 and protect post-AI free text", () => {
+  const input = data({
+    sessions: [
+      session("new", "2026-10-27T00:00:00Z", {
+        scenarioId: "s4",
+        stage2: {
+          selfRatings: Array(10).fill(4),
+          reflectionVersion: "2026-10-27",
+          criterionIds: Array.from({ length: 10 }, (_, i) => `s4-${i + 1}`),
+        },
+        stage3: {
+          reflectionAnalysis: [
+            { criterionId: "s4-10", score: 3, evidence: "PRIVATE EVIDENCE", limitation: "" },
+          ],
+          postAiReflection: ["PRIVATE ANSWER"],
+        },
+      }),
+    ],
+  });
+  const row = buildResearchLogs(input, EMPTY_RESEARCH_FILTERS).vr[0];
+  assert.equal(row.self_rating_9, 4);
+  assert.equal(row.self_rating_10, 4);
+  assert.equal(row.reflection_version, "2026-10-27");
+  assert.ok(row.reflection_ai_scores_json.includes('"score":3'));
+  assert.equal(JSON.stringify(row).includes("PRIVATE"), false);
+  const withText = buildResearchLogs(input, EMPTY_RESEARCH_FILTERS, true).vr[0];
+  assert.ok(withText.post_ai_reflection_json.includes("PRIVATE ANSWER"));
+  assert.ok(withText.reflection_ai_evidence_json.includes("PRIVATE EVIDENCE"));
+  assert.ok(RESEARCH_COLUMNS.vr.includes("self_rating_10"));
+});
+
 test("text export is opt-in and never includes names, emails, or raw user IDs", () => {
   const input = data({
     users: [{ uid: "u1", profile: { displayName: "SECRET NAME", email: "secret@example.test" } }],

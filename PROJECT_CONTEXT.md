@@ -175,11 +175,12 @@ The build lives in `public/unity-build/`; `VITE_UNITY_BUILD_URL` selects it. The
 | Event              | Payload                                                         |
 | ------------------ | --------------------------------------------------------------- |
 | `UNITY_READY`      | `{ type: "UNITY_READY" }`                                       |
+| `PRESENTATION_COMPLETE` | `{ type: "PRESENTATION_COMPLETE", scenarioId: string, round: 1 \| 2 }` |
 | `STAGE_CHANGED`    | `{ type: "STAGE_CHANGED", stage: number }`                      |
 | `AUDIO_RECORDED`   | `{ type: "AUDIO_RECORDED", blobUrl: string, duration: number }` |
 | `SESSION_COMPLETE` | `{ type: "SESSION_COMPLETE", summary: object }`                 |
 
-These are declared event types, not proof that the build emits every event. The React runner currently advances on a stage event without using its numeric stage. `SESSION_COMPLETE` is handled by the hook contract but is not wired through the current player/runner.
+Presentation controls wait for `UNITY_READY`. Clicking play starts the presentation and hides the overlay; only `PRESENTATION_COMPLETE` matching the active scenario and round opens the recording panel and shows a notification. Unity emits it after the full presentation finishes, including the retry presentation (not merely its acknowledgment line). Generic `STAGE_CHANGED` events no longer advance the React runner. `SESSION_COMPLETE` is handled by the hook contract but is not wired through the current player/runner. Older WebGL builds must be replaced to support the completion gate.
 
 ### React → Unity command contract
 

@@ -1,3 +1,10 @@
+import {
+  REFLECTION_CRITERIA,
+  REFLECTION_VERSION,
+  POST_AI_QUESTIONS,
+  type ReflectionAnalysis,
+  type ReflectionCriterion,
+} from "@/lib/vr-reflection";
 import { deferredEffect } from "@/lib/deferred-effect";
 import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -128,10 +135,9 @@ const SCENARIOS: Scenario[] = [
       "AI Functional Specification + เอกสารเปรียบเทียบ Self Reflection and AI ที่จับคู่ 8 ข้อ self-reflection " +
       "กับสัญญาณที่ AI วิเคราะห์จริง) ให้ใช้แนวทางนี้ตีความ 4 มิติของ rubric โดยครอบคลุมสัญญาณทั้ง 8 ข้อจากเอกสารครบถ้วนดังนี้:\n" +
       "- speechClarity: ความชัดเจนของถ้อยคำ ความกระชับ ไม่มีคำซ้ำหรือประโยคที่ไม่จำเป็น (ข้อ 5 — Conciseness: " +
-      "Sentence Length + Redundancy + Word Count) และจังหวะ/ความเร็วในการพูดที่ช่วยให้ผู้ฟังติดตามทัน (ข้อ 6 — " +
-      "Speech Rate + Pause — ไม่รวม Voice Clarity เพราะระบบไม่ได้วิเคราะห์เสียงโดยตรง มีแค่ transcript)\n" +
+      "Sentence Length + Redundancy + Word Count) ประเมินเฉพาะถ้อยคำจาก transcript\n" +
       "- linguisticAppropriateness: การใช้ภาษาที่เหมาะสมสุภาพให้เกียรติผู้เรียน ไม่ใช้ถ้อยคำเชิงลบหรือตัดสิน (ข้อ 8 — " +
-      "Sentiment + Encouragement Score + Negative Keywords + Respectful Language) และน้ำเสียงที่เป็นมิตร สร้างแรงจูงใจ (Emotional Tone)\n" +
+      "Sentiment + Encouragement Score + Negative Keywords + Respectful Language) และถ้อยคำที่เป็นมิตร สร้างแรงจูงใจ\n" +
       "- balance: โครงสร้างของ feedback ครบตามลำดับที่คาดหวังหรือไม่ (ข้อ 1 และ ข้อ 4 — Feedback Structure) — " +
       "Positive Opening → Specific Strength → Specific Improvement → Action Suggestion → Encouraging Closing " +
       "โดยต้องระบุสิ่งที่ควรพัฒนาอย่างชัดเจนและเฉพาะเจาะจงจริง ๆ ไม่ใช่พูดผ่าน ๆ (ข้อ 2 — Specific Improvement) " +
@@ -265,8 +271,7 @@ const SCENARIOS: Scenario[] = [
       "เนื่องจากระบบปัจจุบันบันทึกคำตอบเดียว (ไม่ใช่ 4 รอบแยกแบบใน Manual) คำตอบของผู้เรียนจึงควรครอบคลุม " +
       "การรับรู้อารมณ์+สร้างความปลอดภัยทางใจ+เปิดโอกาสให้เมย์อธิบาย+ค่อยเชื่อมไปสู่ feedback ที่ปฏิบัติได้ " +
       "ภายในคำตอบเดียวกัน ไม่ใช่ข้ามไปที่การอธิบายคะแนนทันที ให้ใช้แนวทางนี้ตีความ 4 มิติของ rubric ดังนี้:\n" +
-      "- speechClarity: Positive Tone of Voice ที่สงบ ชัดเจน ไม่รีบเร่ง จังหวะการพูดช่วยลด Emotion Level แทนที่จะ " +
-      "เพิ่มความตึงเครียด (Manual เรียกสิ่งนี้ว่า De-escalation ผ่าน Tone/Speech Rate)\n" +
+      "- speechClarity: ถ้อยคำที่ชัดเจน ไม่วกวน และไม่ใช้ข้อความที่เพิ่มความตึงเครียด\n" +
       "- linguisticAppropriateness: Empathic Communication และ Language Appropriateness — เริ่มด้วยการ " +
       "Acknowledge Perspective (เช่น “อาจารย์เข้าใจว่าทำไมคุณถึงรู้สึกแบบนั้น”) ไม่ Avoid Immediate Defense ด้วยคำว่า " +
       '"แต่...", "จริง ๆ แล้ว...", "คุณเข้าใจผิด..." และไม่ใช้ถ้อยคำ Minimize Emotion เช่น “อย่าคิดมากค่ะ” หรือ ' +
@@ -346,7 +351,7 @@ const SCENARIOS: Scenario[] = [
       "Step — บอกแนวทางที่ทำต่อได้จริง เช่น กลับไปดูว่า Objective ต้องการพฤติกรรมอะไร แล้ว Assessment เปิดโอกาสให้แสดงพฤติกรรม " +
       "นั้นหรือไม่ (6) Support Learner Agency — ชวนคิดต่อ (“Guide Thinking, Don't Take Over Thinking”) ไม่ออกแบบ Assessment " +
       "ให้ลีนาทั้งหมด ให้ใช้แนวทางนี้ตีความ 4 มิติของ rubric ดังนี้:\n" +
-      "- speechClarity: Tone of Voice, Speech Rate และการเว้นจังหวะ (Pause) ที่เหมาะสม — อธิบาย Evidence และ Remaining Gap " +
+      "- speechClarity: ความชัดเจนของถ้อยคำ — อธิบาย Evidence และ Remaining Gap " +
       "ให้ชัดเจน ไม่คลุมเครือหรือตอบเลี่ยง ๆ โดยเฉพาะตอนตอบคำถามเรื่อง Assessment-Objective Alignment ที่ลีนาถามตรง ๆ\n" +
       "- linguisticAppropriateness: Supportive Language และ Growth-Oriented Language ที่ให้เกียรติความพยายามจริงของลีนา " +
       "(ไม่ใช่คำชมทั่วไปแบบ Pattern 1 — Only Praise) และภาษาที่กระตุ้นให้กล้าคิดต่อโดยไม่รู้สึกว่าตนเองถูกตัดสิน\n" +
@@ -618,86 +623,6 @@ const STEP_ORDER: Step[] = [
   "summary",
 ];
 
-// Self-rating statements are scenario-specific — each scenario has its own
-// 8-item self-reflection instrument. Only s1's set has a documented
-// item→AI-dimension mapping (see the "ข้อ N" comments below and on
-// Stage3Awareness), so the Step 3.1 self-vs-AI comparison is scenario-gated
-// to s1 only (see the "2-reflection" step's onNext in ScenarioRunner) until
-// a mapping for s2-s5's items is supplied.
-const RATING_STATEMENTS_BY_SCENARIO: Record<string, string[]> = {
-  // Wording sourced directly from "Scenario 1_เปรียบเทียบ Self Reflection and
-  // AI.docx" (8 ข้อ self-reflection ที่จับคู่กับสิ่งที่ AI วิเคราะห์จริง) — ถ้อยคำจาก
-  // เอกสารต้นฉบับตรง ๆ เพื่อให้ self-rating กับ AI rubric อ้างอิงคำถามเดียวกันแน่นอน อย่า
-  // เปลี่ยนลำดับ — index 0-3 ถูกใช้เทียบกับคะแนน AI ตรง ๆ ใน Stage3Awareness
-  // (selfBalance/selfClarity/selfAction/selfStructure) index 4-7 เป็น self-reflection
-  // เพิ่มเติม (Conciseness / Speech Rate+Pause / มุมมองผู้รับ / ผลกระทบทางความรู้สึก) ที่เก็บไว้
-  // แต่ไม่ได้ทำ 1:1 comparison กับ AI score เดี่ยว ๆ (เอกสารต้นฉบับก็ปล่อยช่อง "Scoring 4
-  // Dimensions" ว่างไว้สำหรับข้อเหล่านี้เช่นกัน)
-  //
-  // ข้อ 6 (index 5): เอกสารต้นฉบับระบุ "Speech Rate + Pause + Voice Clarity" แต่ตัด
-  // Voice Clarity ออกตามที่ผู้ใช้ระบุ — ระบบไม่ได้ส่งไฟล์เสียงให้ AI วิเคราะห์โดยตรง (มีแค่
-  // transcript ข้อความ) จึงประเมิน "ความชัดเจนของน้ำเสียง" จริง ๆ ไม่ได้ เหลือแค่จังหวะ/
-  // ความเร็วในการพูดที่ผู้พูดประเมินตนเองได้
-  s1: [
-    "ฉันเริ่มต้นการให้ Feedback ด้วยการกล่าวถึงจุดแข็งหรือสิ่งที่นักศึกษาทำได้ดี และลงท้ายด้วยการให้กำลังใจหรือแรงกระตุ้นพัฒนาการ",
-    "ฉันระบุสิ่งที่นักศึกษาควรพัฒนาได้อย่างชัดเจนและเฉพาะเจาะจง",
-    "ฉันเสนอแนวทางที่นักศึกษาสามารถนำไปใช้ปรับปรุงการนำเสนอครั้งต่อไปได้",
-    "Feedback ของฉันมีลำดับที่ช่วยให้นักศึกษาเข้าใจทั้งจุดแข็งและสิ่งที่ควรพัฒนา",
-    "Feedback ของฉันมีความกระชับ ตรงประเด็น และไม่มีข้อความที่ซ้ำหรือไม่จำเป็น",
-    "ฉันพูดด้วยความเร็วและจังหวะที่เหมาะสม มีการเว้นวรรคที่ช่วยให้นักศึกษาติดตามสิ่งที่ฉันสื่อสารได้",
-    "หากฉันเป็นนักศึกษา ฉันจะเข้าใจว่าตนเองทำอะไรได้ดีและควรปรับปรุงอะไรต่อไป",
-    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกว่า Feedback นี้ช่วยสนับสนุนให้ฉันพัฒนาตนเอง",
-  ],
-  s2: [
-    "ฉันกล่าวชื่นชมจุดแข็งของนักศึกษาอย่างเฉพาะเจาะจง",
-    "ฉันอธิบายได้ว่าทำไมสิ่งที่นักศึกษาทำจึงเป็นจุดแข็ง",
-    "ฉันช่วยให้นักศึกษามองเห็นคุณค่าและศักยภาพของตนเอง",
-    "ฉันเชื่อมโยงความสำเร็จของนักศึกษากับโอกาสในการพัฒนาต่อไป",
-    "ข้อเสนอแนะของฉันช่วยให้นักศึกษาทราบว่าควรต่อยอดสิ่งใด",
-    "Feedback ของฉันมีความสมดุลระหว่างการชื่นชมและการเสนอแนะแนวทางพัฒนา",
-    "ฉันใช้ภาษาที่สร้างแรงจูงใจและส่งเสริม Growth Mindset",
-    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกภาคภูมิใจ พร้อมทั้งอยากพัฒนาตนเองต่อไป",
-  ],
-  s3: [
-    "ฉันเริ่มต้นการสนทนาด้วยถ้อยคำที่ช่วยลดความกังวลของนักศึกษา",
-    "ฉันกล่าวถึงจุดแข็งของนักศึกษาก่อนพูดถึงข้อที่ควรปรับปรุง",
-    "ฉันอธิบายข้อผิดพลาดโดยมุ่งเน้นที่พฤติกรรมมากกว่าตัวบุคคล",
-    "ฉันหลีกเลี่ยงการใช้คำพูดที่อาจทำให้ผู้เรียนรู้สึกถูกตำหนิ",
-    "ฉันใช้ถ้อยคำที่สุภาพ ให้เกียรติ และเหมาะสม",
-    "น้ำเสียงของฉันช่วยให้นักศึกษารู้สึกได้รับการสนับสนุน",
-    "ข้อเสนอแนะของฉันมีความชัดเจนและสามารถนำไปปฏิบัติได้",
-    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกว่าตนเองยังสามารถพัฒนาได้",
-  ],
-  s4: [
-    "ฉันรับรู้อารมณ์ของนักศึกษาก่อนเริ่มให้ Feedback",
-    "ฉันใช้น้ำเสียงที่สงบและช่วยลดความตึงเครียด",
-    "ฉันแสดงความเข้าใจความรู้สึกของนักศึกษา",
-    "ฉันหลีกเลี่ยงการโต้แย้งหรือปกป้องการตัดสินใจของตนเองทันที",
-    "ฉันใช้ถ้อยคำที่ช่วยให้นักศึกษารู้สึกปลอดภัย",
-    "ฉันค่อย ๆ นำบทสนทนาเข้าสู่การพัฒนาตนเอง",
-    "หากฉันเป็นนักศึกษา ฉันจะรู้สึกว่าอาจารย์รับฟังและเข้าใจฉัน",
-    "หลังจบบทสนทนา นักศึกษาน่าจะพร้อมรับข้อเสนอแนะมากขึ้น",
-  ],
-  s5: [
-    "ฉันใช้คำถามปลายเปิดเพื่อกระตุ้นการคิดของนักศึกษา",
-    "ฉันเปิดโอกาสให้นักศึกษาอธิบายความคิดของตนเอง",
-    "ฉันรับฟังโดยไม่รีบแทรกหรือบอกคำตอบ",
-    "ฉันเว้นจังหวะให้ผู้เรียนได้คิดก่อนตอบ",
-    "ฉันช่วยสรุปสิ่งที่นักศึกษาสะท้อนคิดได้อย่างถูกต้อง",
-    "ฉันช่วยให้นักศึกษาค้นพบแนวทางพัฒนาด้วยตนเอง",
-    "ฉันหลีกเลี่ยงการเป็นผู้ให้คำตอบทั้งหมด",
-    "หลังจบบทสนทนา นักศึกษาน่าจะมีเป้าหมายการพัฒนาที่ชัดเจน",
-  ],
-};
-
-// Stage 2's "Open Reflection" questions, scenario-specific per the "B VR
-// Scenario Reflection" source table — each scenario reframes both questions
-// around what actually happened in that scenario (routine feedback,
-// positive reinforcement, emotional repair, etc.) rather than the generic
-// wording every scenario used before. DEFAULT_REFLECTION_QUESTIONS is the
-// fallback (matches the source table's own "Open Reflection" column) for
-// any scenario id not in this map — should never actually trigger since
-// every real scenario has its own entry below.
 interface ReflectionQuestions {
   q1: string;
   q2: string;
@@ -719,7 +644,7 @@ const REFLECTION_QUESTIONS_BY_SCENARIO: Record<string, ReflectionQuestions> = {
   },
   s3: {
     q1: "หลังจากฟัง Feedback ของตนเอง คุณคิดว่าประโยชน์ใดช่วยให้นักศึกษารู้สึกปลอดภัยในการรับข้อเสนอแนะมากที่สุด เพราะเหตุใด",
-    q2: "หากคุณสามารถให้ Feedback ใหม่อีกครั้ง คุณจะปรับถ้อยคำหรือโทนเสียงในส่วนใด เพื่อให้นักศึกษารู้สึกได้รับการสนับสนุนมากขึ้น",
+    q2: "หากคุณสามารถให้ Feedback ใหม่อีกครั้ง คุณจะปรับถ้อยคำในส่วนใด เพื่อให้นักศึกษารู้สึกได้รับการสนับสนุนมากขึ้น",
   },
   s4: {
     q1: "จากการฟังสนทนาของตนเอง คุณคิดว่าประโยชน์ใดช่วยลดความตึงเครียดของนักศึกษาได้มากที่สุด เพราะเหตุใด",
@@ -733,7 +658,7 @@ const REFLECTION_QUESTIONS_BY_SCENARIO: Record<string, ReflectionQuestions> = {
 
 const GOAL_OPTIONS = [
   "เพิ่มความชัดเจนของคำแนะนำ",
-  "พูดช้าลง",
+  "ใช้ถ้อยคำให้กระชับขึ้น",
   "เพิ่มการชื่นชมอย่างเฉพาะเจาะจง",
   "จัดลำดับ Feedback ใหม่",
 ];
@@ -785,13 +710,18 @@ function ScenarioRunner({
   const [presented1, setPresented1] = useState(false);
 
   // Stage 2 data
-  const [ratings, setRatings] = useState<number[]>(() => Array(8).fill(0));
+  const [ratings, setRatings] = useState<number[]>(() =>
+    Array(REFLECTION_CRITERIA[scenario.id].length).fill(0),
+  );
   const [bestPart, setBestPart] = useState("");
   const [personalGoal, setPersonalGoal] = useState("");
 
   // Stage 3 data
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [customGoal, setCustomGoal] = useState("");
+  const [postAiReflection, setPostAiReflection] = useState<string[]>(() =>
+    POST_AI_QUESTIONS[scenario.id].map(() => ""),
+  );
 
   // Stage 4 data
   const [transcript2, setTranscript2] = useState("");
@@ -841,12 +771,16 @@ function ScenarioRunner({
     [],
   );
 
-  const advanceStep = useCallback(() => {
-    setStep((prev) => {
-      const idx = STEP_ORDER.indexOf(prev);
-      return STEP_ORDER[Math.min(idx + 1, STEP_ORDER.length - 1)];
-    });
-  }, []);
+  const handlePresentationComplete = (completedScenario: string, round: 1 | 2) => {
+    if (completedScenario !== scenario.id) return;
+    if (round === 1 && step === "1-vr" && presented1) {
+      toast.success("การนำเสนอจบแล้ว พร้อมให้ Feedback");
+      setStep("1-record");
+    } else if (round === 2 && step === "4-vr" && presented2) {
+      toast.success("การนำเสนอรอบที่ 2 จบแล้ว พร้อมให้ Feedback");
+      setStep("4-record");
+    }
+  };
 
   // Unity's own mic-capture fallback path (PROJECT_CONTEXT.md §4 AUDIO_RECORDED)
   // — saves into whichever round is currently active, same slot StageRecord's
@@ -905,6 +839,7 @@ function ScenarioRunner({
   // was actually presented in Unity — see PresentationContext in
   // unity.types.ts.
   const presentationContext: PresentationContext = {
+    scenarioId: scenario.id,
     studentName: scenario.studentName,
     persona: scenario.persona,
     courseContext: scenario.courseContext,
@@ -1090,7 +1025,7 @@ function ScenarioRunner({
             isRecording={isRecording}
             onUnityReady={() => setUnityReady(true)}
             onAudioRecorded={handleUnityAudioRecorded}
-            onStageChanged={advanceStep}
+            onPresentationComplete={handlePresentationComplete}
           />
         </div>
 
@@ -1099,12 +1034,11 @@ function ScenarioRunner({
             {step === "1-intro" && (
               <Stage1Intro scenario={scenario} onStart={() => setStep("1-vr")} />
             )}
-            {step === "1-vr" && (
+            {step === "1-vr" && !presented1 && (
               <Stage1PresentGate
                 scenario={scenario}
                 presented={presented1}
                 onPresent={() => setPresented1(true)}
-                onFinish={() => setStep("1-record")}
                 unityReady={unityReady}
               />
             )}
@@ -1164,9 +1098,7 @@ function ScenarioRunner({
                   <Stage2Rating
                     ratings={ratings}
                     setRatings={setRatings}
-                    statements={
-                      RATING_STATEMENTS_BY_SCENARIO[scenario.id] ?? RATING_STATEMENTS_BY_SCENARIO.s1
-                    }
+                    statements={REFLECTION_CRITERIA[scenario.id].map((c) => c.statement)}
                     onBack={() => setStep("2-playback")}
                     onNext={() => setStep("2-reflection")}
                   />
@@ -1186,6 +1118,8 @@ function ScenarioRunner({
                         updateSession(sessionId, {
                           stage2: {
                             selfRatings: ratings,
+                            reflectionVersion: REFLECTION_VERSION,
+                            criterionIds: REFLECTION_CRITERIA[scenario.id].map((c) => c.id),
                             bestPart,
                             personalGoal,
                             completedAt: serverTimestamp(),
@@ -1197,12 +1131,7 @@ function ScenarioRunner({
                         scenarioId: scenario.id,
                         sessionId: sessionId ?? undefined,
                       });
-                      // Step 3.1's self-vs-AI comparison reads ratings[0/1/2/7]
-                      // against a mapping only s1's statement set has been
-                      // authored against (see RATING_STATEMENTS_BY_SCENARIO
-                      // above) — skip straight to the radar step for every
-                      // other scenario until a mapping for their items exists.
-                      setStep(scenario.id === "s1" ? "3-awareness" : "3-radar");
+                      setStep("3-awareness");
                     }}
                   />
                 )}
@@ -1215,7 +1144,11 @@ function ScenarioRunner({
               ) : (
                 <Stage3Awareness
                   ratings={ratings}
-                  scores={scores1}
+                  criteria={REFLECTION_CRITERIA[scenario.id]}
+                  analysis={report1?.reflectionAnalysis ?? []}
+                  questions={POST_AI_QUESTIONS[scenario.id]}
+                  answers={postAiReflection}
+                  setAnswers={setPostAiReflection}
                   onNext={() => setStep("3-radar")}
                 />
               ))}
@@ -1258,6 +1191,9 @@ function ScenarioRunner({
                     updateSession(sessionId, {
                       stage3: {
                         aiScores: scores1,
+                        reflectionVersion: REFLECTION_VERSION,
+                        reflectionAnalysis: report1?.reflectionAnalysis ?? [],
+                        postAiReflection,
                         selectedGoals,
                         customGoal,
                         emotion,
@@ -1278,12 +1214,11 @@ function ScenarioRunner({
                 onNext={() => setStep("4-vr")}
               />
             )}
-            {step === "4-vr" && (
+            {step === "4-vr" && !presented2 && (
               <Stage1PresentGate
                 scenario={scenario}
                 presented={presented2}
                 onPresent={() => setPresented2(true)}
-                onFinish={() => setStep("4-record")}
                 unityReady={unityReady}
               />
             )}
@@ -1501,61 +1436,27 @@ function StatCard({ label, value }: { label: string; value: string }) {
 // "ready for feedback" copy+button, floating in the overlay panel.
 function Stage1PresentGate({
   scenario,
-  presented,
   onPresent,
-  onFinish,
   unityReady = true,
 }: {
   scenario: Scenario;
   presented: boolean;
   onPresent: () => void;
-  onFinish: () => void;
   unityReady?: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-background p-5 shadow-sm">
-      {!presented ? (
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="text-sm font-bold text-slate-deep">
-              พร้อมเริ่มการนำเสนอของ {scenario.studentName}
-            </div>
-            <div className="text-xs text-slate-text">
-              พฤติกรรมที่สังเกตได้: {scenario.behaviors.join(" · ")}
-            </div>
-          </div>
-          {unityReady ? (
-            <button
-              onClick={onPresent}
-              className="flex cursor-pointer items-center justify-center rounded-xl bg-slate-deep px-4 py-2 text-sm font-bold text-white hover:opacity-90"
-            >
-              ▶ เล่นการนำเสนอ
-            </button>
-          ) : (
-            <div className="flex items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-medium text-slate-text">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              กำลังเตรียมฉาก VR...
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="text-sm font-bold text-slate-deep">
-              การนำเสนอจบแล้ว — {scenario.studentName}กำลังรอ Feedback จากท่าน
-            </div>
-            <div className="text-xs text-slate-text">
-              เมื่อพร้อม กดปุ่มเพื่อไปยังหน้าบันทึกเสียง Feedback
-            </div>
-          </div>
-          <button
-            onClick={onFinish}
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-mint-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90"
-          >
-            ให้ Feedback <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      <div className="text-sm font-bold">พร้อมเริ่มการนำเสนอของ {scenario.studentName}</div>
+      <p className="my-3 text-xs text-slate-text">
+        พฤติกรรมที่สังเกตได้: {scenario.behaviors.join(" · ")}
+      </p>
+      <button
+        disabled={!unityReady}
+        onClick={onPresent}
+        className="w-full rounded-xl bg-slate-deep px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+      >
+        {unityReady ? "▶ เล่นการนำเสนอ" : "กำลังเตรียมฉาก VR..."}
+      </button>
     </div>
   );
 }
@@ -1891,8 +1792,6 @@ function Stage2Playback({
     .filter((s) => s.trim().length);
 
   const words = transcript.trim().split(/\s+/).filter(Boolean).length;
-  const pauses = Math.max(1, (transcript.match(/[,\s…]{2,}|—/g)?.length ?? 0) + 3);
-  const wpm = duration > 0 ? Math.round((words / duration) * 60) : words;
 
   return (
     <div className="space-y-4">
@@ -1978,11 +1877,9 @@ function Stage2Playback({
 
       <div className="rounded-3xl border border-border bg-background p-6">
         <div className="mb-3 text-sm font-bold text-slate-deep">ข้อมูลเชิงพรรณนา</div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3">
           <MiniStat label="ระยะเวลาพูด" value={`${duration} วินาที`} />
-          <MiniStat label="จำนวนคำ" value={`${words} คำ`} />
-          <MiniStat label="จำนวนช่วงหยุด" value={`${pauses} ครั้ง`} />
-          <MiniStat label="ความเร็วเฉลี่ย" value={`${wpm} คำ/นาที`} />
+          <MiniStat label="กลุ่มข้อความคั่นด้วยช่องว่าง" value={`${words} กลุ่ม`} />
         </div>
         <p className="mt-3 text-xs text-slate-text">
           ข้อมูลเหล่านี้ใช้ประกอบการสังเกตตนเอง ยังไม่ใช่คะแนนประเมิน
@@ -2022,7 +1919,9 @@ function Stage2Rating({
   onBack: () => void;
   onNext: () => void;
 }) {
-  const allRated = ratings.every((r) => r > 0);
+  const allRated =
+    ratings.length === statements.length &&
+    ratings.every((r) => Number.isInteger(r) && r >= 1 && r <= 5);
   return (
     <div className="rounded-3xl border border-border bg-background p-6">
       <h2 className="mb-1 text-xl font-bold text-slate-deep">Self-Rating</h2>
@@ -2151,83 +2050,96 @@ function Stage2Reflection({
   );
 }
 
-// ============================================================
-// STAGE 3 — Coaching
-// ============================================================
-
-// Self-vs-AI dimension mapping per "Scenario 1_เปรียบเทียบ Self Reflection and
-// AI.docx" — one row per canonical rubric dimension, each backed by the item
-// the doc actually scores under that dimension:
-//   ข้อ 1 (opening/closing)      → "Feedback Structure" → balance
-//   ข้อ 3 (action suggestion)    → "Action Suggestion"   → intentConsistency
-//   ข้อ 8 (emotional impact)     → "Sentiment/Respectful Language" → linguisticAppropriateness
-// ข้อ 4 (overall sequence) also scores "Feedback Structure" in the doc (same as
-// ข้อ 1) so it's intentionally not given its own row — it would just duplicate
-// the balance comparison ข้อ 1 already covers.
 function Stage3Awareness({
   ratings,
-  scores,
+  criteria,
+  analysis,
+  questions,
+  answers,
+  setAnswers,
   onNext,
 }: {
   ratings: number[];
-  scores: (CompScores & { overall: number }) | null;
+  criteria: ReflectionCriterion[];
+  analysis: ReflectionAnalysis[];
+  questions: string[];
+  answers: string[];
+  setAnswers: (values: string[]) => void;
   onNext: () => void;
 }) {
-  const selfClarity = ((ratings[1] ?? 3) / 5) * 100;
-  const selfSupport = ((ratings[7] ?? 3) / 5) * 100;
-  const selfAction = ((ratings[2] ?? 3) / 5) * 100;
-  const selfBalance = ((ratings[0] ?? 3) / 5) * 100;
   return (
     <div className="space-y-4">
       <div className="rounded-3xl border border-border bg-background p-6">
-        <div className="mb-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
-          Step 3.1 · Self-Awareness Comparison
-        </div>
-        <h2 className="mb-1 text-xl font-bold text-slate-deep">
-          เปรียบเทียบการประเมินตนเอง กับผลวิเคราะห์จาก AI
+        <div className="text-xs font-bold text-mint-primary">Step 3.1 · Self–AI Comparison</div>
+        <h2 className="mt-2 text-xl font-bold text-slate-deep">
+          เปรียบเทียบการประเมินตนเองกับผลวิเคราะห์ AI
         </h2>
-        <div className="mb-4 flex flex-wrap items-center gap-4 text-xs font-semibold">
-          <span className="inline-flex items-center gap-1.5 text-amber-700">
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> ประเมินตนเอง (Self)
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-mint-primary">
-            <span className="h-2.5 w-2.5 rounded-full bg-mint-primary" /> AI วิเคราะห์
-          </span>
+        <p className="my-3 text-sm text-slate-text">
+          เทียบตามเกณฑ์เดียวกันรายข้อ (1–5) แยกจากคะแนนสมรรถนะรวม 4 มิติ
+          ความต่างเป็นจุดเริ่มต้นให้ทบทวนหลักฐาน ไม่ใช่ข้อสรุปว่าใครถูกหรือผิด
+        </p>
+        <div className="space-y-3">
+          {criteria.map((criterion, i) => {
+            const result = analysis.find((r) => r.criterionId === criterion.id);
+            const ai = result?.score ?? null;
+            return (
+              <div key={criterion.id} className="rounded-2xl border border-border p-4">
+                <h3 className="text-sm font-bold text-slate-deep">
+                  {i + 1}. {criterion.dimension}
+                </h3>
+                <p className="mt-1 text-sm text-slate-text">{criterion.statement}</p>
+                <div className="my-3 flex flex-wrap gap-4 text-sm font-semibold">
+                  <span className="text-amber-700">Self: {ratings[i] || "—"}/5</span>
+                  <span className="text-mint-primary">
+                    AI: {ai === null ? "ประเมินไม่ได้จากข้อมูลที่มี" : `${ai}/5`}
+                  </span>
+                  {ai !== null && ratings[i] > 0 && (
+                    <span className="text-slate-text">
+                      ต่างกัน {Math.abs(ratings[i] - ai)} คะแนน
+                    </span>
+                  )}
+                </div>
+                {result?.evidence && (
+                  <p className="text-sm text-slate-deep">หลักฐาน/เหตุผล: {result.evidence}</p>
+                )}
+                {result?.limitation && (
+                  <p className="mt-1 text-xs text-slate-text">ข้อจำกัด: {result.limitation}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
-        <div className="space-y-4">
-          <CompareRow
-            label="ความชัดเจนของคำแนะนำ"
-            self={selfClarity}
-            ai={scores?.speechClarity ?? null}
-          />
-          <CompareRow
-            label="แนวทางที่นำไปปฏิบัติได้"
-            self={selfAction}
-            ai={scores?.intentConsistency ?? null}
-          />
-          <CompareRow
-            label="ภาษาที่เหมาะสมและให้กำลังใจ"
-            self={selfSupport}
-            ai={scores?.linguisticAppropriateness ?? null}
-          />
-          <CompareRow
-            label="ความสมดุลของคำชมและคำแนะนำปรับปรุง"
-            self={selfBalance}
-            ai={scores?.balance ?? null}
-          />
-        </div>
-        <div className="mt-5 rounded-2xl bg-mint-light/40 p-4 text-sm text-slate-deep">
-          <strong>ข้อสังเกต:</strong>{" "}
-          {scores === null
-            ? "ไม่มีผลวิเคราะห์จาก AI สำหรับรอบนี้"
-            : selfClarity > scores.speechClarity + 10
-              ? "คุณประเมินตนเองว่าข้อเสนอแนะชัดเจนสูง แต่ระบบพบแนวทางปฏิบัติที่เป็นรูปธรรมเพียงเล็กน้อย"
-              : "การประเมินตนเองใกล้เคียงกับผลวิเคราะห์ของระบบ — แสดงถึงการรู้ตนเองที่ดี"}
-        </div>
+      </div>
+      <div className="rounded-3xl border border-border bg-background p-6">
+        <h3 className="mb-4 font-bold text-slate-deep">สะท้อนคิดหลังเปรียบเทียบ Self–AI</h3>
+        {!analysis.some((r) => r.score !== null) && (
+          <p className="mb-3 text-sm text-slate-text">
+            ยังไม่มีคะแนน AI ที่ใช้เปรียบเทียบได้ คุณสามารถทบทวนจาก Feedback ของตนเอง
+            และข้ามคำถามเปรียบเทียบในรอบนี้ได้
+          </p>
+        )}
+        {questions.map((question, i) => (
+          <label key={question} className="mb-4 block text-sm text-slate-deep">
+            {i + 1}. {question}
+            <textarea
+              rows={3}
+              value={answers[i] ?? ""}
+              onChange={(e) => {
+                const next = [...answers];
+                next[i] = e.target.value;
+                setAnswers(next);
+              }}
+              className="mt-2 w-full rounded-xl border border-border bg-background p-3 outline-none focus:border-mint-primary"
+            />
+          </label>
+        ))}
       </div>
       <button
         onClick={onNext}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white hover:opacity-90"
+        disabled={
+          analysis.some((r) => r.score !== null) && !questions.every((_, i) => answers[i]?.trim())
+        }
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-deep px-6 py-4 font-bold text-white disabled:opacity-40"
       >
         ดูการวิเคราะห์สมรรถนะ <ArrowRight className="h-4 w-4" />
       </button>
@@ -2243,45 +2155,6 @@ function AiWaitingCard() {
     <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-background p-12 text-center">
       <Loader2 className="h-6 w-6 animate-spin text-mint-primary" />
       <div className="text-sm text-slate-text">AI กำลังวิเคราะห์ feedback ของคุณ...</div>
-    </div>
-  );
-}
-
-function CompareRow({ label, self, ai }: { label: string; self: number; ai: number | null }) {
-  return (
-    <div>
-      <div className="mb-1.5 text-xs font-bold text-slate-deep">{label}</div>
-      <div className="grid grid-cols-2 gap-3">
-        <ScoreBar tone="self" value={self} />
-        <ScoreBar tone="ai" value={ai} />
-      </div>
-    </div>
-  );
-}
-
-// value === null means the real AI score isn't available (unavailable, not
-// "zero") — shown as "-" with an empty gray bar instead of a 0% bar, which
-// would misleadingly look like a real (very low) score.
-function ScoreBar({ tone, value }: { tone: "self" | "ai"; value: number | null }) {
-  const isSelf = tone === "self";
-  return (
-    <div>
-      <div
-        className={`mb-0.5 flex items-center justify-between text-[10px] font-bold uppercase tracking-wide ${
-          isSelf ? "text-amber-700" : "text-mint-primary"
-        }`}
-      >
-        <span>{isSelf ? "Self" : "AI"}</span>
-        <span className="tabular-nums">{value === null ? "-" : Math.round(value)}</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-secondary">
-        <div
-          className={`h-full rounded-full ${
-            value === null ? "bg-slate-300" : isSelf ? "bg-amber-500" : "bg-mint-primary"
-          }`}
-          style={{ width: value === null ? "0%" : `${value}%` }}
-        />
-      </div>
     </div>
   );
 }

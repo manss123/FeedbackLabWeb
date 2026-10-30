@@ -6,6 +6,7 @@ import type { CoachingReport, FinalSummaryReport, RoundTwoReport } from "@/types
 // transcript so the LLM can judge feedback against what was actually
 // presented in Unity, not just generic feedback quality in a vacuum.
 const PresentationContextInput = z.object({
+  scenarioId: z.enum(["s1", "s2", "s3", "s4", "s5"]).optional(),
   studentName: z.string(),
   persona: z.string(),
   courseContext: z.string(),

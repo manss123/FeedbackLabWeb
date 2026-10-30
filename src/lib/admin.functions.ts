@@ -82,12 +82,17 @@ export interface AdminSessionRow {
     completedAt: string | null;
   } | null;
   stage2: {
+    reflectionVersion?: string;
+    criterionIds?: string[];
     selfRatings: number[];
     bestPart: string;
     personalGoal: string;
     completedAt: string | null;
   } | null;
   stage3: {
+    reflectionVersion?: string;
+    reflectionAnalysis?: import("@/lib/vr-reflection").ReflectionAnalysis[];
+    postAiReflection?: string[];
     aiScores: SessionAiScores | null;
     selectedGoals: string[];
     customGoal: string;

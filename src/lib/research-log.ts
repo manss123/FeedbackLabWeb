@@ -239,13 +239,31 @@ export function buildResearchLogs(
       row[`round2_${key}`] = b;
       row[`delta_${key}`] = a !== null && b !== null ? b - a : null;
     }
-    for (let i = 0; i < 8; i++) row[`self_rating_${i + 1}`] = numeric(ratings[i], 1, 5);
+    for (let i = 0; i < 10; i++) row[`self_rating_${i + 1}`] = numeric(ratings[i], 1, 5);
+    row.reflection_version = s.stage2?.reflectionVersion ?? null;
+    row.reflection_criterion_ids_json = s.stage2?.criterionIds
+      ? JSON.stringify(s.stage2.criterionIds)
+      : null;
+    row.reflection_ai_scores_json = s.stage3?.reflectionAnalysis
+      ? JSON.stringify(
+          s.stage3.reflectionAnalysis.map((r) => ({
+            criterionId: r.criterionId,
+            score: numeric(r.score, 1, 5),
+          })),
+        )
+      : null;
     row.selected_goal_count = Array.isArray(s.stage3?.selectedGoals)
       ? s.stage3.selectedGoals.length
       : null;
     if (includeText) {
       row.round1_transcript = s.stage1?.transcript ?? null;
       row.round2_transcript = s.stage4?.transcript ?? null;
+      row.post_ai_reflection_json = s.stage3?.postAiReflection
+        ? JSON.stringify(s.stage3.postAiReflection)
+        : null;
+      row.reflection_ai_evidence_json = s.stage3?.reflectionAnalysis
+        ? JSON.stringify(s.stage3.reflectionAnalysis)
+        : null;
       row.best_part = s.stage2?.bestPart ?? null;
       row.personal_goal = s.stage2?.personalGoal ?? null;
       row.selected_goals_json = s.stage3 ? JSON.stringify(s.stage3.selectedGoals ?? []) : null;
@@ -542,7 +560,10 @@ export const RESEARCH_COLUMNS = {
     "round2_ai_present",
     "timestamp_order_valid",
     ...VR_DIMENSIONS.flatMap((k) => [`round1_${k}`, `round2_${k}`, `delta_${k}`]),
-    ...Array.from({ length: 8 }, (_, i) => `self_rating_${i + 1}`),
+    ...Array.from({ length: 10 }, (_, i) => `self_rating_${i + 1}`),
+    "reflection_version",
+    "reflection_criterion_ids_json",
+    "reflection_ai_scores_json",
     "selected_goal_count",
   ],
   modules: [
@@ -606,6 +627,8 @@ export const RESEARCH_COLUMNS = {
 export const TEXT_COLUMNS = [
   "round1_transcript",
   "round2_transcript",
+  "post_ai_reflection_json",
+  "reflection_ai_evidence_json",
   "best_part",
   "personal_goal",
   "selected_goals_json",

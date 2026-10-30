@@ -7,6 +7,11 @@ export type Emotion = "neutral" | "happy" | "sad";
 export interface UnityReadyEvent {
   type: "UNITY_READY";
 }
+export interface PresentationCompleteEvent {
+  type: "PRESENTATION_COMPLETE";
+  scenarioId: string;
+  round: 1 | 2;
+}
 export interface StageChangedEvent {
   type: "STAGE_CHANGED";
   stage: number;
@@ -22,10 +27,15 @@ export interface SessionCompleteEvent {
 }
 
 export type UnityToReactEvent =
-  UnityReadyEvent | StageChangedEvent | AudioRecordedEvent | SessionCompleteEvent;
+  | UnityReadyEvent
+  | StageChangedEvent
+  | AudioRecordedEvent
+  | SessionCompleteEvent
+  | PresentationCompleteEvent;
 
 const UNITY_TO_REACT_TYPES = new Set<UnityToReactEvent["type"]>([
   "UNITY_READY",
+  "PRESENTATION_COMPLETE",
   "STAGE_CHANGED",
   "AUDIO_RECORDED",
   "SESSION_COMPLETE",
@@ -36,6 +46,10 @@ const UNITY_TO_REACT_TYPES = new Set<UnityToReactEvent["type"]>([
 export function isUnityToReactEvent(data: unknown): data is UnityToReactEvent {
   if (typeof data !== "object" || data === null || !("type" in data)) return false;
   const type = (data as { type: unknown }).type;
+  if (type === "PRESENTATION_COMPLETE") {
+    const event = data as Partial<PresentationCompleteEvent>;
+    return typeof event.scenarioId === "string" && (event.round === 1 || event.round === 2);
+  }
   return typeof type === "string" && UNITY_TO_REACT_TYPES.has(type as UnityToReactEvent["type"]);
 }
 
@@ -111,6 +125,7 @@ export type UnityCommand =
 // the LLM can judge whether the teacher's feedback actually matches what
 // the student presented (not just generic feedback quality in a vacuum).
 export interface PresentationContext {
+  scenarioId?: string;
   studentName: string;
   persona: string;
   courseContext: string;
@@ -133,6 +148,7 @@ export interface PresentationContext {
 // Round 1 (Stage 3: Abstract Conceptualization) — one call produces
 // everything steps 3.1-3.5 need.
 export interface CoachingReport {
+  reflectionAnalysis?: import("@/lib/vr-reflection").ReflectionAnalysis[];
   rubric: RubricScores;
   emotion: Emotion;
   strengths: string[];

@@ -166,6 +166,8 @@ export interface SessionStage1 {
 }
 
 export interface SessionStage2 {
+  reflectionVersion?: string;
+  criterionIds?: string[];
   selfRatings: number[];
   bestPart: string;
   personalGoal: string;
@@ -173,6 +175,9 @@ export interface SessionStage2 {
 }
 
 export interface SessionStage3 {
+  reflectionVersion?: string;
+  reflectionAnalysis?: import("@/lib/vr-reflection").ReflectionAnalysis[];
+  postAiReflection?: string[];
   aiScores: SessionAiScores | null;
   selectedGoals: string[];
   customGoal: string;
