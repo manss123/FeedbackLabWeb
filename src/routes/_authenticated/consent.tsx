@@ -1,16 +1,10 @@
+import { useState } from "react";
+import { ConsentDocuments, emptyConsentFields } from "@/components/consent-documents";
+import { consentDetailsSchema, CONSENT_DOCUMENTS } from "@/lib/consent-details";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePersistedState } from "@/hooks/use-persisted-state";
-import {
-  ArrowRight,
-  AudioWaveform,
-  Info,
-  Loader2,
-  ShieldCheck,
-  Mic,
-  FileText,
-  Users,
-} from "lucide-react";
+import { ArrowRight, AudioWaveform, Info, Loader2, Mic, FileText, Users } from "lucide-react";
 import { LearnerShell } from "@/components/learner-shell";
 import { CONSENT_DOC_VERSION, getLearnerOverview, submitConsent } from "@/lib/learner.functions";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +15,6 @@ import { waitForFirebaseUser } from "@/lib/firebase-auth";
 import { upsertUserDoc } from "@/lib/firestore";
 import { logActivity } from "@/lib/activity";
 import { learnerAccessKey } from "@/lib/learner-access";
-import pdpaBanner from "@/assets/banners/pdpa-banner.webp";
 import pdpaDocsArt from "@/assets/contents/pdpa/props-1.webp";
 
 export const Route = createFileRoute("/_authenticated/consent")({
@@ -44,14 +37,26 @@ function ConsentPage() {
   });
 
   const [research, setResearch, clearResearchDraft] = usePersistedState<boolean>(
-    "consent.research",
+    `consent.${CONSENT_DOC_VERSION}.research`,
     false,
   );
-  const [mic, setMic, clearMicDraft] = usePersistedState<boolean>("consent.mic", false);
-  const [audio, setAudio, clearAudioDraft] = usePersistedState<boolean>("consent.audio", false);
+  const [mic, setMic, clearMicDraft] = usePersistedState<boolean>(
+    `consent.${CONSENT_DOC_VERSION}.mic`,
+    false,
+  );
+  const [audio, setAudio, clearAudioDraft] = usePersistedState<boolean>(
+    `consent.${CONSENT_DOC_VERSION}.audio`,
+    false,
+  );
+
+  const [signatory, setSignatory] = useState(emptyConsentFields);
+  const signatoryValidation = consentDetailsSchema.safeParse(signatory);
+  const validSignatory = signatoryValidation.success;
 
   const mutation = useMutation({
     mutationFn: async () => {
+      const parsed = consentDetailsSchema.safeParse(signatory);
+      if (!parsed.success) throw new Error(parsed.error.issues[0].message);
       if (!research || !mic || !audio) {
         throw new Error("ต้องให้ความยินยอมทุกข้อจึงจะเริ่มโครงการวิจัยได้");
       }
@@ -71,6 +76,13 @@ function ConsentPage() {
       await upsertUserDoc(uid, {
         consent: {
           documentVersion: CONSENT_DOC_VERSION,
+          signatory: parsed.data,
+          signatureMethod: "typed-name",
+          documents: CONSENT_DOCUMENTS.map((doc) => ({
+            id: doc.id,
+            version: "2026-03-22",
+            url: `/documents/consent/${doc.id}.pdf`,
+          })),
           researchConsent: research,
           microphonePermission: mic,
           audioRecordingConsent: audio,
@@ -99,7 +111,7 @@ function ConsentPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const allChecked = research && mic && audio;
+  const allChecked = research && mic && audio && validSignatory;
   const choices = [
     {
       id: "research",
@@ -140,43 +152,13 @@ function ConsentPage() {
       avatarUrl={data?.profile?.avatar_url}
     >
       <div className="w-full">
-        <header className="relative isolate overflow-hidden pb-12">
-          <img
-            src={pdpaBanner}
-            alt=""
-            aria-hidden="true"
-            className="setup-banner-art pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover object-right"
-          />
-          <div
-            aria-hidden="true"
-            className="setup-banner-wash pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-background/95 via-background/80 to-background/40 lg:via-background/40 lg:to-transparent"
-          />
-          <div className="app-content-container py-7 sm:py-10 lg:py-12">
-            <div className="space-y-4 lg:w-[75%]">
-              <p className="inline-flex items-center gap-2 rounded-full bg-mint-light px-4 py-2 text-sm font-bold text-monitor-teal">
-                <ShieldCheck className="size-4" aria-hidden="true" /> STEP 1 OF 3
-              </p>
-              <h1 className="text-2xl font-bold leading-snug text-slate-deep sm:text-3xl">
-                หนังสือแสดง
-                <span className="bg-gradient-to-r from-mint-primary to-monitor-teal bg-clip-text text-transparent">
-                  ความยินยอม
-                </span>
-                เข้าร่วมโครงการวิจัย
-              </h1>
-              <p className="text-base leading-relaxed text-slate-text sm:text-lg">
-                กรุณาอ่านและให้ความยินยอมทุกข้อก่อนเริ่มกิจกรรมการวิจัย
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <div className="app-content-container relative z-[1] -mt-10 pb-8">
+        <div className="app-content-container relative z-[1] py-6">
           <form
             onSubmit={(event) => {
               event.preventDefault();
               if (allChecked && !mutation.isPending) mutation.mutate();
             }}
-            className="consent-panel space-y-6 rounded-3xl border border-border bg-background p-4 sm:space-y-8 sm:p-6 lg:p-8"
+            className="consent-panel space-y-5 rounded-3xl border border-border bg-background p-4 sm:space-y-5 sm:p-6 lg:p-8"
           >
             <section
               aria-labelledby="research-info-title"
@@ -217,6 +199,18 @@ function ConsentPage() {
               />
             </section>
 
+            <ConsentDocuments
+              values={signatory}
+              onChange={setSignatory}
+              disabled={mutation.isPending}
+            />
+            {!signatoryValidation.success &&
+              Object.values(signatory).some((value) => value !== "") && (
+                <p role="status" className="text-sm text-destructive">
+                  {signatoryValidation.error.issues[0].message}
+                </p>
+              )}
+
             <fieldset disabled={mutation.isPending} className="min-w-0 space-y-3 sm:space-y-4">
               <legend className="sr-only">ความยินยอมเข้าร่วมโครงการวิจัยทั้ง 3 ข้อ</legend>
               {choices.map(({ id, checked, change, icon: Icon, tone, title, description }) => (
@@ -224,7 +218,7 @@ function ConsentPage() {
                   key={id}
                   htmlFor={"consent-" + id}
                   className={
-                    "consent-choice grid cursor-pointer items-center gap-3 rounded-2xl border p-4 transition-colors focus-within:ring-2 focus-within:ring-mint-primary/50 sm:gap-5 sm:p-5 " +
+                    "consent-choice grid cursor-pointer items-center gap-3 rounded-2xl border p-4 transition-colors focus-within:ring-2 focus-within:ring-mint-primary/50 sm:gap-4 sm:p-3 " +
                     (checked
                       ? "border-mint-primary/60 bg-mint-primary/5"
                       : "border-border bg-background hover:border-mint-primary/50") +
@@ -242,7 +236,7 @@ function ConsentPage() {
                   <span
                     aria-hidden="true"
                     className={
-                      "consent-choice-icon flex size-11 shrink-0 items-center justify-center rounded-full sm:size-16 lg:size-20 " +
+                      "consent-choice-icon flex size-11 shrink-0 items-center justify-center rounded-full sm:size-14 " +
                       tone
                     }
                   >

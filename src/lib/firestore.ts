@@ -40,6 +40,9 @@ export interface UserProfile {
 }
 
 export interface UserConsent {
+  signatory?: import("./consent-details").ConsentDetails;
+  signatureMethod?: "typed-name";
+  documents?: { id: string; version: string; url: string }[];
   documentVersion: string;
   researchConsent: boolean;
   microphonePermission: boolean;

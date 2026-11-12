@@ -1167,9 +1167,8 @@ function EngageScreen({
   note: string;
   setNote: (v: string) => void;
 }) {
-  // Only M1 has its own video today — every other module reuses it rather
-  // than showing an empty Engage stage while module-specific videos are
-  // being produced.
+  // Each module has its own video; the m1 fallback only covers an
+  // unexpected/unmapped moduleId rather than showing an empty Engage stage.
   const video = LEARNING_VIDEOS[moduleId] ?? LEARNING_VIDEOS.m1;
 
   return (

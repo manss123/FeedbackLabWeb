@@ -139,12 +139,12 @@ function OnboardingPage() {
         !String(form.age ?? "").trim() ||
         !Number.isInteger(age) ||
         age < 18 ||
-        age > 100 ||
+        age > 65 ||
         !teachingSubjects.length ||
         !teachingLevels.length ||
         teachingLevels.some((level) => !level)
       ) {
-        throw new Error("กรุณาระบุเพศ อายุ 18–100 ปี วิชาที่สอน และระดับชั้นที่สอนให้ครบถ้วน");
+        throw new Error("กรุณาระบุเพศ อายุ 18–65 ปี วิชาที่สอน และระดับชั้นที่สอนให้ครบถ้วน");
       }
       if (
         !displayName ||
@@ -319,20 +319,14 @@ function OnboardingPage() {
                     ))}
                   </select>
                 </Field>
-                <Field
-                  id="age"
-                  label="อายุ (ปี)"
-                  icon={User}
-                  required
-                  hint="ระบุอายุเต็ม 18–100 ปี"
-                >
+                <Field id="age" label="อายุ (ปี)" icon={User} required hint="ระบุอายุเต็ม 18–65 ปี">
                   <input
                     id="age"
                     name="age"
                     type="number"
                     inputMode="numeric"
                     min={18}
-                    max={100}
+                    max={65}
                     step={1}
                     required
                     aria-describedby="age-hint"

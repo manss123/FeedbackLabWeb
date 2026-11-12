@@ -1,5 +1,7 @@
-// YouTube's official API example, temporarily authorized for integration testing.
-// Replace with approved lesson content before research collection.
 export const LEARNING_VIDEOS: Record<string, { id: string; test: boolean } | undefined> = {
-  m1: { id: "M7lc1UVf-VE", test: true },
+  m1: { id: "34scoprqHZw", test: false },
+  m2: { id: "9ICPdqgFlvk", test: false },
+  m3: { id: "VHw93jf1hME", test: false },
+  m4: { id: "stx81eoPbs8", test: false },
+  m5: { id: "SD7fQU0dtPo", test: false },
 };
