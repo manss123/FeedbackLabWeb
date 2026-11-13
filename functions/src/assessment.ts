@@ -3,6 +3,22 @@ import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp, type Firestore } from "firebase-admin/firestore";
 
 export const ASSESSMENT_VERSION = "cfct-ranking-2026-09-v1";
+export const POSTTEST_PASS_PERCENT = 80;
+// Keep in sync with src/lib/assessment.ts. Existing results are evaluated without rewriting research data.
+export function isPosttestPassed(result?: {
+  version: string;
+  totalScore: number;
+  maxScore: number;
+}) {
+  return (
+    !!result &&
+    result.version === ASSESSMENT_VERSION &&
+    result.maxScore === 240 &&
+    Number.isFinite(result.totalScore) &&
+    result.totalScore <= result.maxScore &&
+    result.totalScore * 100 >= result.maxScore * POSTTEST_PASS_PERCENT
+  );
+}
 type Phase = "pretest" | "posttest";
 type Option = "A" | "B" | "C" | "D";
 const options: Option[] = ["A", "B", "C", "D"];
@@ -67,6 +83,12 @@ export function scoreAssessment(input: unknown) {
     totalScore,
     maxScore: 240,
     percentage: Math.round((totalScore / 240) * 10000) / 100,
+    ...(phase === "posttest"
+      ? {
+          passed: totalScore * 100 >= 240 * POSTTEST_PASS_PERCENT,
+          passThreshold: POSTTEST_PASS_PERCENT,
+        }
+      : {}),
   };
 }
 

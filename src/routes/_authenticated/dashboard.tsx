@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { isPosttestPassed } from "@/lib/assessment";
 import { useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -58,7 +59,9 @@ function CertificatePage() {
     mutationFn: issueCertificateCall,
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["learner-overview"] }),
   });
-  const readyToIssue = overview.data?.state?.current_stage === "certificate";
+  const readyToIssue =
+    overview.data?.state?.current_stage === "certificate" &&
+    isPosttestPassed(overview.data?.assessmentResults?.posttest);
   useEffect(() => {
     if (readyToIssue && issueMutation.isIdle) issueMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,7 +136,11 @@ function CertificatePage() {
       label: `VR Simulation (${state?.vr_scenarios_completed ?? 0}/5)`,
       done: (state?.vr_scenarios_completed ?? 0) >= 5,
     },
-    { key: "posttest", label: "แบบทดสอบหลังเรียน (Post-test)", done: !!results.posttest },
+    {
+      key: "posttest",
+      label: "ผ่านแบบทดสอบหลังเรียน (Post-test) อย่างน้อย 80%",
+      done: isPosttestPassed(results.posttest),
+    },
     { key: "survey", label: `แบบสำรวจ (${surveyDoneCount}/4)`, done: surveyDoneCount >= 4 },
   ];
   const certificateStepsDone = certificateSteps.filter((s) => s.done).length;

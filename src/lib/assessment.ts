@@ -1,5 +1,21 @@
 import content from "./assessment-content.json";
 export const ASSESSMENT_VERSION = "cfct-ranking-2026-09-v1";
+export const POSTTEST_PASS_PERCENT = 80;
+// Compare raw scores, never a rounded display percentage. Keep in sync with functions/src/assessment.ts.
+export function isPosttestPassed(result?: {
+  version: string;
+  totalScore: number;
+  maxScore: number;
+}) {
+  return (
+    !!result &&
+    result.version === ASSESSMENT_VERSION &&
+    result.maxScore === 240 &&
+    Number.isFinite(result.totalScore) &&
+    result.totalScore <= result.maxScore &&
+    result.totalScore * 100 >= result.maxScore * POSTTEST_PASS_PERCENT
+  );
+}
 export type AssessmentPhase = "pretest" | "posttest";
 export type OptionId = "A" | "B" | "C" | "D";
 export type Ranks = Partial<Record<OptionId, number>>;

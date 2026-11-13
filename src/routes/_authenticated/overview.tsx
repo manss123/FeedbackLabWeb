@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { canOpenModule, canOpenVr } from "@/lib/learning-unlocks";
 import { useQuery } from "@tanstack/react-query";
 import {
   Loader2,
@@ -354,14 +355,21 @@ function DashboardPage() {
           </div>
           <ol className="relative space-y-2">
             {quickCards.map(({ title, desc, icon: Icon, href, done }, i) => {
-              const isCurrent = i === currentIdx;
-              const isLocked = currentIdx !== -1 && i > currentIdx;
+              const activityBlocked =
+                href === "/modules"
+                  ? !canOpenModule(state, "m1")
+                  : href === "/vr-simulation"
+                    ? !canOpenVr(state)
+                    : false;
+              const isCurrent = !activityBlocked && i === currentIdx;
+              const isLocked = activityBlocked || (currentIdx !== -1 && i > currentIdx);
               const stepNum = i + 1;
               return (
                 <li key={href} className="relative">
                   <button
                     type="button"
-                    onClick={() => navigate({ to: href })}
+                    onClick={() => !activityBlocked && navigate({ to: href })}
+                    disabled={activityBlocked}
                     className={`group relative flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint-primary sm:gap-5 ${
                       done
                         ? "border-border bg-background hover:border-mint-primary"

@@ -26,6 +26,7 @@ export interface MockProfile {
   age?: number;
   teaching_subjects?: string[];
   teaching_levels?: string[];
+  learning_goal_weeks?: number;
   id: string;
   email: string;
   display_name: string | null;
@@ -412,6 +413,7 @@ export async function syncLearnerSetup(
       age: userDoc.profile.age,
       teaching_subjects: userDoc.profile.teachingSubjects,
       teaching_levels: userDoc.profile.teachingLevels,
+      learning_goal_weeks: userDoc.profile.learningGoalWeeks,
     };
   }
   d.assessmentResults = {};
@@ -542,6 +544,7 @@ export async function submitOnboarding(args: {
     age: number;
     teaching_subjects: string[];
     teaching_levels: string[];
+    learning_goal_weeks: number;
   };
 }) {
   const { data } = args;
@@ -566,6 +569,7 @@ export async function submitOnboarding(args: {
     age: data.age,
     teaching_subjects: data.teaching_subjects,
     teaching_levels: data.teaching_levels,
+    learning_goal_weeks: data.learning_goal_weeks,
   };
   d.state.onboarding_completed = true;
   d.state.current_stage = "diagnostic";

@@ -1,3 +1,5 @@
+import { MiniGameScenario } from "./mini-game-scenario";
+import { MiniGameFeedback } from "./mini-game-feedback";
 import { useRef, useState, type ReactNode } from "react";
 import {
   DndContext,
@@ -151,156 +153,183 @@ function StepEditor({
         <p className="rounded-xl bg-monitor-blue/5 p-4 leading-relaxed">{config.context}</p>
       )}
       <p className="font-semibold">{config.prompt}</p>
-      {config.kind === "delivery" ? (
-        <DndContext
-          sensors={sensors}
-          onDragStart={(e) => setDragging(Number(String(e.active.id).replace("delivery-", "")))}
-          onDragEnd={drop}
-          onDragCancel={() => setDragging(null)}
-        >
-          <p className="text-sm text-slate-text">
-            ลากไปวางในช่องที่ตรงกัน ลากกลับฝั่งซ้ายเพื่อคืนตัวเลือก หรือลากตัวเลือกใหม่ไปแทนที่ได้
-          </p>
-          <div className="grid items-start gap-5 min-[1440px]:grid-cols-2">
-            <div className="space-y-3">
-              <h4 className="font-semibold">ตัวเลือกวิธีส่งสาร</h4>
-              <DropZone id="delivery-pool">
-                <div className="space-y-2">
-                  {[0, 4, 8, 2, 6, 1, 5, 7, 3]
-                    .filter((n) => !selected.includes(n))
-                    .map((n) => (
-                      <DragCard key={n} id={n} text={config.options[n].text} disabled={locked} />
-                    ))}
-                </div>
-              </DropZone>
-            </div>
-            <div className="space-y-3">
-              <h4 className="font-semibold">ปรับ 3 องค์ประกอบ</h4>
-              {DELIVERY_SLOTS.map((slot, i) => (
-                <div key={slot} className={`rounded-xl border p-3 ${tones[i]}`}>
-                  <p className="mb-2 font-semibold">{slot}</p>
-                  <DropZone id={`delivery-slot-${i}`}>
-                    {selected[i] >= 0 ? (
-                      <DragCard
-                        id={selected[i]}
-                        text={config.options[selected[i]].text}
-                        disabled={locked}
-                      />
-                    ) : (
-                      <p className="py-3 text-sm text-slate-text">ลากตัวเลือกมาวางที่นี่</p>
-                    )}
+      <div className="grid items-start gap-4 min-[1440px]:grid-cols-2">
+        <div className="min-w-0 space-y-4">
+          {config.kind === "delivery" ? (
+            <DndContext
+              sensors={sensors}
+              onDragStart={(e) => setDragging(Number(String(e.active.id).replace("delivery-", "")))}
+              onDragEnd={drop}
+              onDragCancel={() => setDragging(null)}
+            >
+              <p className="text-sm text-slate-text">
+                ลากไปวางในช่องที่ตรงกัน ลากกลับฝั่งซ้ายเพื่อคืนตัวเลือก
+                หรือลากตัวเลือกใหม่ไปแทนที่ได้
+              </p>
+              <div className="grid items-start gap-5 min-[1440px]:grid-cols-2">
+                <div className="space-y-3">
+                  <h4 className="font-semibold">ตัวเลือกวิธีส่งสาร</h4>
+                  <DropZone id="delivery-pool">
+                    <div className="space-y-2">
+                      {[0, 4, 8, 2, 6, 1, 5, 7, 3]
+                        .filter((n) => !selected.includes(n))
+                        .map((n) => (
+                          <DragCard
+                            key={n}
+                            id={n}
+                            text={config.options[n].text}
+                            disabled={locked}
+                          />
+                        ))}
+                    </div>
                   </DropZone>
                 </div>
-              ))}
-              <Button
-                variant="outline"
-                disabled={locked || selected.every((n) => n < 0)}
-                onClick={() => edit([-1, -1, -1])}
-              >
-                <RotateCcw /> รีเซ็ต
-              </Button>
-            </div>
-          </div>
-          <DragOverlay>
-            {dragging !== null && (
-              <div className="max-w-xs rounded-lg border border-mint-primary bg-background p-3 text-sm shadow-xl">
-                {config.options[dragging]?.text}
+                <div className="space-y-3">
+                  <h4 className="font-semibold">ปรับ 3 องค์ประกอบ</h4>
+                  {DELIVERY_SLOTS.map((slot, i) => (
+                    <div key={slot} className={`rounded-xl border p-3 ${tones[i]}`}>
+                      <p className="mb-2 font-semibold">{slot}</p>
+                      <DropZone id={`delivery-slot-${i}`}>
+                        {selected[i] >= 0 ? (
+                          <DragCard
+                            id={selected[i]}
+                            text={config.options[selected[i]].text}
+                            disabled={locked}
+                          />
+                        ) : (
+                          <p className="py-3 text-sm text-slate-text">ลากตัวเลือกมาวางที่นี่</p>
+                        )}
+                      </DropZone>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    disabled={locked || selected.every((n) => n < 0)}
+                    onClick={() => edit([-1, -1, -1])}
+                  >
+                    <RotateCcw /> รีเซ็ต
+                  </Button>
+                </div>
               </div>
-            )}
-          </DragOverlay>
-        </DndContext>
-      ) : (
-        <fieldset disabled={locked} className="space-y-2">
-          <legend className="sr-only">{config.prompt}</legend>
-          {config.options.map((opt, i) => (
-            <label
-              key={opt.text}
-              className={`flex items-start gap-3 rounded-xl border p-3 sm:p-4 ${selected.includes(i) ? "border-mint-primary bg-mint-primary/10" : "border-control-border/30 bg-background"} ${locked ? "" : "cursor-pointer hover:border-mint-primary"}`}
-            >
-              <input
-                type={config.kind === "multi" ? "checkbox" : "radio"}
-                name={config.title}
-                checked={selected.includes(i)}
-                onChange={() =>
-                  edit(
-                    config.kind === "single"
-                      ? [i]
-                      : selected.includes(i)
-                        ? selected.filter((n) => n !== i)
-                        : [...selected, i],
-                  )
-                }
-                className="mt-1 size-4 shrink-0 accent-mint-primary"
-              />
-              <span className="min-w-0">
-                <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text}
-              </span>
-            </label>
-          ))}
-        </fieldset>
-      )}
-      {!locked && (
-        <Button className="mini-game-primary w-full sm:w-auto" disabled={!ready} onClick={submit}>
-          <CheckCircle2 />
-          {history.length ? "ตรวจคำตอบอีกครั้ง" : "ตรวจคำตอบ"}
-        </Button>
-      )}
-      {review && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`space-y-3 rounded-xl border p-4 ${review.correct ? "border-mint-primary/30 bg-mint-primary/5" : "border-monitor-amber/30 bg-monitor-amber/5"}`}
-        >
-          <p className="flex items-center gap-2 font-bold text-monitor-teal">
-            {review.correct ? <CheckCircle2 /> : <Lightbulb />}
-            {review.correct ? "ถูกต้องค่ะ!" : "ลองพิจารณาอีกครั้งนะคะ"}
-          </p>
-          {review.selected.map((n, i) => (
-            <div key={n} className="space-y-1 text-sm leading-relaxed">
-              <p>
-                {config.kind === "delivery" && <strong>{DELIVERY_SLOTS[i]}: </strong>}
-                {config.kind === "delivery" && Math.floor(n / 3) !== i
-                  ? "ตัวเลือกนี้เป็นคนละองค์ประกอบ ลองจับคู่กับหัวข้อของช่องก่อนนะคะ"
-                  : config.options[n].response}
-              </p>
-              {!review.correct && config.options[n].hint && (
-                <p className="text-slate-text">คำใบ้: {config.options[n].hint}</p>
-              )}
-            </div>
-          ))}
-          {!review.correct && config.kind === "multi" && (
-            <p className="text-sm text-slate-text">
-              ตรวจให้ครบทั้งน้ำเสียง จังหวะ ท่าทาง และการสบตา
-              โดยแยกความชัดเจนของข้อความออกจากวิธีส่งสาร
-            </p>
-          )}
-          {!review.correct && config.kind === "delivery" && (
-            <p className="text-sm text-slate-text">
-              จับคู่แต่ละองค์ประกอบให้ตรง แล้วเลือกวิธีที่สงบ เป็นธรรมชาติ และเปิดรับผู้เรียน
-            </p>
-          )}
-          {review.correct && (
-            <div className="flex flex-wrap gap-2">
-              {config.achievements.map((a) => (
-                <span
-                  key={a}
-                  className="rounded-full bg-mint-primary/10 px-3 py-1 text-xs font-semibold text-monitor-teal"
+              <DragOverlay>
+                {dragging !== null && (
+                  <div className="max-w-xs rounded-lg border border-mint-primary bg-background p-3 text-sm shadow-xl">
+                    {config.options[dragging]?.text}
+                  </div>
+                )}
+              </DragOverlay>
+            </DndContext>
+          ) : (
+            <fieldset disabled={locked} className="space-y-2">
+              <legend className="sr-only">{config.prompt}</legend>
+              {config.options.map((opt, i) => (
+                <label
+                  key={opt.text}
+                  className={`flex items-start gap-3 rounded-xl border p-3 sm:p-4 ${selected.includes(i) ? "border-mint-primary bg-mint-primary/10" : "border-control-border/30 bg-background"} ${locked ? "" : "cursor-pointer hover:border-mint-primary"}`}
                 >
-                  ✓ {a}
-                </span>
+                  <input
+                    type={config.kind === "multi" ? "checkbox" : "radio"}
+                    name={config.title}
+                    checked={selected.includes(i)}
+                    onChange={() =>
+                      edit(
+                        config.kind === "single"
+                          ? [i]
+                          : selected.includes(i)
+                            ? selected.filter((n) => n !== i)
+                            : [...selected, i],
+                      )
+                    }
+                    className="mt-1 size-4 shrink-0 accent-mint-primary"
+                  />
+                  <span className="min-w-0">
+                    <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text}
+                  </span>
+                </label>
               ))}
-            </div>
+            </fieldset>
           )}
-          {review.correct && config.title === "Notice Your Own Reaction" && (
-            <p className="text-sm font-semibold">Notice → Pause → Regulate → Respond</p>
-          )}
-          {review.correct && !last && (
-            <Button className="mini-game-primary w-full sm:w-auto" onClick={onNext}>
-              ไปขั้นตอนถัดไป <ArrowRight />
+          {!locked && (
+            <Button
+              className="mini-game-primary w-full sm:w-auto"
+              disabled={!ready}
+              onClick={submit}
+            >
+              <CheckCircle2 />
+              {history.length ? "ตรวจคำตอบอีกครั้ง" : "ตรวจคำตอบ"}
             </Button>
           )}
         </div>
-      )}
+        <div className="min-w-0 space-y-4">
+          {review && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`space-y-3 rounded-xl border p-4 ${review.correct ? "border-mint-primary/30 bg-mint-primary/5" : "border-monitor-amber/30 bg-monitor-amber/5"}`}
+            >
+              <p className="flex items-center gap-2 font-bold text-monitor-teal">
+                {review.correct ? <CheckCircle2 /> : <Lightbulb />}
+                {review.correct ? "ถูกต้องค่ะ!" : "ลองพิจารณาอีกครั้งนะคะ"}
+              </p>
+              {review.selected.map((n, i) => (
+                <div key={n} className="space-y-1 text-sm leading-relaxed">
+                  {config.kind === "multi" && (
+                    <p className="font-semibold">
+                      ข้อ {String.fromCharCode(65 + n)} ·{" "}
+                      {config.correct.includes(n) ? "ถูกต้อง" : "ยังไม่ถูกต้อง"}
+                    </p>
+                  )}
+                  <MiniGameFeedback
+                    response={
+                      config.kind === "delivery" && Math.floor(n / 3) !== i
+                        ? "ตัวเลือกนี้เป็นคนละองค์ประกอบ ลองจับคู่กับหัวข้อของช่องก่อนนะคะ"
+                        : config.options[n].response
+                    }
+                    hint={
+                      !review.correct
+                        ? config.kind === "delivery" && Math.floor(n / 3) !== i
+                          ? `ลองเลือกข้อความที่สอดคล้องกับ ${DELIVERY_SLOTS[i]}`
+                          : config.options[n].hint
+                        : undefined
+                    }
+                  />
+                </div>
+              ))}
+              {!review.correct && config.kind === "multi" && (
+                <p className="text-sm text-slate-text">
+                  ตรวจให้ครบทั้งน้ำเสียง จังหวะ ท่าทาง และการสบตา
+                  โดยแยกความชัดเจนของข้อความออกจากวิธีส่งสาร
+                </p>
+              )}
+              {!review.correct && config.kind === "delivery" && (
+                <p className="text-sm text-slate-text">
+                  จับคู่แต่ละองค์ประกอบให้ตรง แล้วเลือกวิธีที่สงบ เป็นธรรมชาติ และเปิดรับผู้เรียน
+                </p>
+              )}
+              {review.correct && (
+                <div className="flex flex-wrap gap-2">
+                  {config.achievements.map((a) => (
+                    <span
+                      key={a}
+                      className="rounded-full bg-mint-primary/10 px-3 py-1 text-xs font-semibold text-monitor-teal"
+                    >
+                      ✓ {a}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {review.correct && config.title === "Notice Your Own Reaction" && (
+                <p className="text-sm font-semibold">Notice → Pause → Regulate → Respond</p>
+              )}
+              {review.correct && !last && (
+                <Button className="mini-game-primary w-full sm:w-auto" onClick={onNext}>
+                  ไปขั้นตอนถัดไป <ArrowRight />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -454,20 +483,12 @@ export function Module3MiniGame({
               {roundIndex + 1} / 3
             </span>
           </div>
-          <div className="rounded-xl border border-monitor-blue/15 bg-gradient-to-br from-background to-monitor-blue/10 p-4 sm:p-5">
-            <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-monitor-teal">
-              <MessageCircle className="size-5" />
-              สถานการณ์
-            </p>
-            <p className="leading-relaxed">{round.situation}</p>
-            {round.cues.length > 0 && (
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-text">
-                {round.cues.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <MiniGameScenario
+            title={round.title}
+            situation={round.situation}
+            cues={round.cues}
+            videoId={["hZ2Q6Xij6hs", "gCfK2J88GiU", "QkEzItbkPfI"][roundIndex]}
+          />
           {roundIndex === 1 && (
             <div className="space-y-3">
               <p className="text-sm text-slate-text">

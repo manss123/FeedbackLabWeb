@@ -1,6 +1,6 @@
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp, type Firestore } from "firebase-admin/firestore";
-import { ASSESSMENT_VERSION } from "./assessment";
+import { ASSESSMENT_VERSION, isPosttestPassed } from "./assessment";
 
 // Keep in sync with src/lib/questionnaires.ts / modules.tsx / vr-simulation.tsx —
 // functions/ is a separate TS project and can't import client-side content
@@ -53,7 +53,7 @@ export async function issueCertificate(db: Firestore, uid: string): Promise<Cert
       !!profile.faculty?.trim() &&
       typeof profile.teachingExperienceYears === "number" &&
       user.assessmentResults?.pretest?.version === ASSESSMENT_VERSION &&
-      user.assessmentResults?.posttest?.version === ASSESSMENT_VERSION &&
+      isPosttestPassed(user.assessmentResults?.posttest) &&
       MODULE_IDS.every((id) => moduleProgress[id]?.completed) &&
       SCENARIO_IDS.every((id) => completedScenarioIds.has(id)) &&
       QUESTIONNAIRE_KEYS.every((key) => surveyCompleted[key]);

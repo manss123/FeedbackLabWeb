@@ -7,6 +7,10 @@ import {
   BookOpen,
   Building2,
   Clock3,
+  Target,
+  CalendarDays,
+  Flag,
+  Check,
   Landmark,
   Loader2,
   User,
@@ -23,6 +27,7 @@ import { upsertUserDoc } from "@/lib/firestore";
 import { logActivity } from "@/lib/activity";
 import { learnerAccessKey } from "@/lib/learner-access";
 import overviewBanner from "@/assets/banners/overview-banner.webp";
+import onboardGoal from "@/assets/contents/onboard-goal.webp";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -52,6 +57,7 @@ function OnboardingPage() {
     subject_draft?: string;
     teaching_levels?: string[];
     other_teaching_level?: string;
+    learning_goal_weeks?: string | number;
   }>("onboarding.form", {
     display_name: "",
     university: "",
@@ -98,6 +104,7 @@ function OnboardingPage() {
         age: f.age ?? data.profile?.age ?? "",
         teaching_subjects: f.teaching_subjects ?? data.profile?.teaching_subjects?.join("\n") ?? "",
         teaching_levels: f.teaching_levels ?? data.profile?.teaching_levels ?? [],
+        learning_goal_weeks: f.learning_goal_weeks ?? data.profile?.learning_goal_weeks ?? "",
         teaching_experience_years:
           f.teaching_experience_years === ""
             ? (data.profile?.teaching_experience_years ?? "")
@@ -119,6 +126,10 @@ function OnboardingPage() {
       const faculty = form.faculty.trim();
       const teachingExperienceYears = Number(form.teaching_experience_years);
       const age = Number(form.age);
+      const learningGoalWeeks = Number(form.learning_goal_weeks);
+      if (!Number.isInteger(learningGoalWeeks) || learningGoalWeeks < 1 || learningGoalWeeks > 12) {
+        throw new Error("กรุณาเลือกเป้าหมายเรียนจบภายใน 1–12 สัปดาห์");
+      }
       const teachingSubjects = [
         ...new Set(
           (form.teaching_subjects ?? "")
@@ -170,6 +181,7 @@ function OnboardingPage() {
           age,
           teachingSubjects,
           teachingLevels,
+          learningGoalWeeks,
         },
       });
       await queryClient.invalidateQueries({ queryKey: learnerAccessKey(user.uid) });
@@ -184,6 +196,7 @@ function OnboardingPage() {
           age,
           teaching_subjects: teachingSubjects,
           teaching_levels: teachingLevels,
+          learning_goal_weeks: learningGoalWeeks,
         },
       });
       void logActivity({ type: "onboarding_completed" });
@@ -497,6 +510,107 @@ function OnboardingPage() {
                   </Field>
                 )}
               </fieldset>
+            </fieldset>
+
+            <fieldset
+              disabled={mutation.isPending}
+              className="min-w-0 overflow-hidden rounded-2xl border border-sky-100 bg-white p-2 shadow-[0_4px_20px_rgba(56,139,166,0.05)] sm:p-3"
+            >
+              <legend className="sr-only">Goal Setting ของผู้เรียน</legend>
+              <div className="relative isolate mb-3 flex min-h-24 items-center gap-3 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 p-3 pr-24 sm:min-h-28 sm:px-4 sm:pr-56">
+                <img
+                  src={onboardGoal}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-1 right-1 -z-10 h-20 w-24 object-contain object-bottom sm:right-5 sm:h-28 sm:w-48"
+                />
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100/70 text-mint-primary">
+                  <Target className="size-7" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="font-bold text-slate-deep sm:text-lg">Goal Setting ของผู้เรียน</h3>
+                  <p className="mt-1 text-xs text-slate-text sm:text-sm">
+                    กำหนดเป้าหมายระยะเวลาที่ต้องการเรียนให้เสร็จ
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/30 p-3 sm:p-4">
+                <div className="flex flex-wrap items-start gap-3">
+                  <CalendarDays
+                    className="size-9 shrink-0 rounded-lg bg-emerald-50 p-1.5 text-mint-primary"
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="learning-goal-weeks" className="font-semibold">
+                      กำหนดระยะเวลาเรียน (รายสัปดาห์) <span className="text-destructive">*</span>
+                    </label>
+                    <p id="learning-goal-help" className="mt-1 text-sm text-slate-text">
+                      เลือกจำนวนสัปดาห์ที่ตั้งใจจะเรียนให้เสร็จ
+                      <span className="ml-2 inline-block rounded-full bg-mint-light px-2 py-0.5 text-xs font-medium text-monitor-teal">
+                        สูงสุด 12 สัปดาห์ (ไม่เกิน 3 เดือน)
+                      </span>
+                    </p>
+                    <select
+                      id="learning-goal-weeks"
+                      required
+                      aria-describedby="learning-goal-help"
+                      value={form.learning_goal_weeks ?? ""}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, learning_goal_weeks: e.target.value }))
+                      }
+                      className="mt-3 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-mint-primary focus:ring-2 focus:ring-mint-primary/15 sm:w-48"
+                    >
+                      <option value="" disabled>
+                        เลือกระยะเวลาเรียน
+                      </option>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((week) => (
+                        <option key={week} value={week}>
+                          {week} สัปดาห์
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div aria-hidden="true" className="mb-1 mt-5 grid grid-cols-12 sm:ml-12">
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((week) => (
+                    <div key={week} className="relative flex flex-col items-center gap-2">
+                      {week < 12 && (
+                        <span
+                          className={`absolute left-1/2 top-2.5 h-0.5 w-full ${week < Number(form.learning_goal_weeks) ? "bg-mint-primary" : "bg-border"}`}
+                        />
+                      )}
+                      <span
+                        className={`relative flex size-5 items-center justify-center rounded-full border-2 ${week <= Number(form.learning_goal_weeks) ? "border-mint-primary bg-mint-primary text-white" : "border-border bg-white"} ${week === Number(form.learning_goal_weeks) ? "ring-4 ring-mint-primary/15" : ""}`}
+                      >
+                        {week <= Number(form.learning_goal_weeks) && <Check className="size-3" />}
+                      </span>
+                      <span
+                        className={`text-xs ${week === Number(form.learning_goal_weeks) ? "font-bold text-monitor-teal" : "text-slate-text"}`}
+                      >
+                        {week}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p
+                aria-live="polite"
+                className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-mint-primary/10 bg-gradient-to-r from-emerald-50/70 to-teal-50/70 p-3 text-sm text-slate-deep sm:px-4"
+              >
+                <Flag className="size-5 shrink-0 text-mint-primary" aria-hidden="true" />
+                <strong className="sm:mr-3 sm:border-r sm:border-monitor-teal/20 sm:pr-6">
+                  เป้าหมายของฉัน
+                </strong>
+                <span className="flex flex-wrap items-center gap-2">
+                  <CalendarDays className="size-4 text-mint-primary" aria-hidden="true" />
+                  เรียนให้เสร็จภายใน
+                  <span className="rounded-full bg-mint-light px-3 py-1 font-bold text-monitor-teal">
+                    {form.learning_goal_weeks
+                      ? `${form.learning_goal_weeks} สัปดาห์`
+                      : "ยังไม่ได้เลือก"}
+                  </span>
+                </span>
+              </p>
             </fieldset>
 
             {mutation.isError && (

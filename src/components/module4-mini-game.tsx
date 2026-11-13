@@ -1,3 +1,8 @@
+import { MiniGameScenario } from "./mini-game-scenario";
+import scenario1 from "@/assets/contents/M4/round-1-scenario.webp";
+import scenario2 from "@/assets/contents/M4/round-2-scenario.webp";
+import scenario3 from "@/assets/contents/M4/round-3-scenario.webp";
+import { MiniGameFeedback } from "./mini-game-feedback";
 import { useRef, useState } from "react";
 import {
   ArrowRight,
@@ -79,73 +84,79 @@ function StepEditor({
         <p className="rounded-xl bg-monitor-blue/5 p-4 leading-relaxed">{config.context}</p>
       )}
       <p className="font-semibold">{config.prompt}</p>
-      <fieldset disabled={locked} className="space-y-2">
-        <legend className="sr-only">{config.prompt}</legend>
-        {config.options.map((opt, i) => (
-          <label
-            key={opt.text}
-            className={`flex items-start gap-3 rounded-xl border p-3 sm:p-4 ${selected.includes(i) ? "border-mint-primary bg-mint-primary/10" : "border-control-border/30 bg-background"} ${locked ? "" : "cursor-pointer hover:border-mint-primary"}`}
-          >
-            <input
-              type="radio"
-              name={config.title}
-              checked={selected.includes(i)}
-              onChange={() => edit([i])}
-              className="mt-1 size-4 shrink-0 accent-mint-primary"
-            />
-            <span className="min-w-0">
-              <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text}
-            </span>
-          </label>
-        ))}
-      </fieldset>
-      {!locked && (
-        <Button
-          className="mini-game-primary w-full sm:w-auto"
-          disabled={selected.length === 0}
-          onClick={submit}
-        >
-          <CheckCircle2 />
-          {history.length ? "ตรวจคำตอบอีกครั้ง" : "ตรวจคำตอบ"}
-        </Button>
-      )}
-      {review && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`space-y-3 rounded-xl border p-4 ${review.correct ? "border-mint-primary/30 bg-mint-primary/5" : "border-monitor-amber/30 bg-monitor-amber/5"}`}
-        >
-          <p className="flex items-center gap-2 font-bold text-monitor-teal">
-            {review.correct ? <CheckCircle2 /> : <Lightbulb />}
-            {review.correct ? "ถูกต้องค่ะ!" : "ลองพิจารณาอีกครั้งนะคะ"}
-          </p>
-          {review.selected.map((n) => (
-            <div key={n} className="space-y-1 text-sm leading-relaxed">
-              <p>{config.options[n].response}</p>
-              {!review.correct && config.options[n].hint && (
-                <p className="text-slate-text">คำใบ้: {config.options[n].hint}</p>
-              )}
-            </div>
-          ))}
-          {review.correct && (
-            <div className="flex flex-wrap gap-2">
-              {config.achievements.map((a) => (
-                <span
-                  key={a}
-                  className="rounded-full bg-mint-primary/10 px-3 py-1 text-xs font-semibold text-monitor-teal"
-                >
-                  ✓ {a}
+      <div className="grid items-start gap-4 min-[1440px]:grid-cols-2">
+        <div className="min-w-0 space-y-4">
+          <fieldset disabled={locked} className="space-y-2">
+            <legend className="sr-only">{config.prompt}</legend>
+            {config.options.map((opt, i) => (
+              <label
+                key={opt.text}
+                className={`flex items-start gap-3 rounded-xl border p-3 sm:p-4 ${selected.includes(i) ? "border-mint-primary bg-mint-primary/10" : "border-control-border/30 bg-background"} ${locked ? "" : "cursor-pointer hover:border-mint-primary"}`}
+              >
+                <input
+                  type="radio"
+                  name={config.title}
+                  checked={selected.includes(i)}
+                  onChange={() => edit([i])}
+                  className="mt-1 size-4 shrink-0 accent-mint-primary"
+                />
+                <span className="min-w-0">
+                  <strong>{String.fromCharCode(65 + i)}.</strong> {opt.text}
                 </span>
-              ))}
-            </div>
-          )}
-          {review.correct && !last && (
-            <Button className="mini-game-primary w-full sm:w-auto" onClick={onNext}>
-              ไปขั้นตอนถัดไป <ArrowRight />
+              </label>
+            ))}
+          </fieldset>
+          {!locked && (
+            <Button
+              className="mini-game-primary w-full sm:w-auto"
+              disabled={selected.length === 0}
+              onClick={submit}
+            >
+              <CheckCircle2 />
+              {history.length ? "ตรวจคำตอบอีกครั้ง" : "ตรวจคำตอบ"}
             </Button>
           )}
         </div>
-      )}
+        <div className="min-w-0 space-y-4">
+          {review && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`space-y-3 rounded-xl border p-4 ${review.correct ? "border-mint-primary/30 bg-mint-primary/5" : "border-monitor-amber/30 bg-monitor-amber/5"}`}
+            >
+              <p className="flex items-center gap-2 font-bold text-monitor-teal">
+                {review.correct ? <CheckCircle2 /> : <Lightbulb />}
+                {review.correct ? "ถูกต้องค่ะ!" : "ลองพิจารณาอีกครั้งนะคะ"}
+              </p>
+              {review.selected.map((n) => (
+                <div key={n} className="space-y-1 text-sm leading-relaxed">
+                  <MiniGameFeedback
+                    response={config.options[n].response}
+                    hint={!review.correct ? config.options[n].hint : undefined}
+                  />
+                </div>
+              ))}
+              {review.correct && (
+                <div className="flex flex-wrap gap-2">
+                  {config.achievements.map((a) => (
+                    <span
+                      key={a}
+                      className="rounded-full bg-mint-primary/10 px-3 py-1 text-xs font-semibold text-monitor-teal"
+                    >
+                      ✓ {a}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {review.correct && !last && (
+                <Button className="mini-game-primary w-full sm:w-auto" onClick={onNext}>
+                  ไปขั้นตอนถัดไป <ArrowRight />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -229,8 +240,8 @@ export function Module4MiniGame({
           <div className="mini-game-opening-copy min-w-0">
             <h4 className="font-semibold">Mini Challenge: Right Feedback, Right Moment</h4>
             <p className="mt-3 rounded-xl bg-mint-primary/10 p-4 leading-relaxed">
-              “ครั้งนี้ อย่าเพิ่งคิดว่าจะพูดอะไร ลองถามก่อนว่า ‘ควรพูดตอนนี้หรือไม่?’
-              ‘ควรพูดที่ไหน?’ และ ‘ผู้เรียนสามารถนำ Feedback นี้ไปใช้ได้เมื่อไร?’”
+              “ก่อนให้ Feedback อย่าถามเพียงว่า ‘ฉันควรพูดอะไร’ แต่ให้ถามด้วยว่า ‘ควรพูดเมื่อไร
+              ที่ไหน กับใคร และผู้เรียนพร้อมนำข้อมูลนี้ไปใช้หรือยัง’”
             </p>
             <div className="ai-coach-layout mt-4 flex flex-col-reverse items-start gap-5">
               <span className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full bg-monitor-violet-soft shadow-sm sm:h-40 sm:w-40">
@@ -239,8 +250,8 @@ export function Module4MiniGame({
               <div className="ai-coach-speech w-full min-w-0 p-4 sm:p-5">
                 <p className="mb-2 text-sm font-semibold text-monitor-violet">AI Learning Coach</p>
                 <blockquote className="text-sm leading-relaxed">
-                  “ก่อนให้ Feedback อย่าถามเพียงว่า ‘ฉันควรพูดอะไร’ แต่ให้ถามด้วยว่า ‘ควรพูดเมื่อไร
-                  ที่ไหน กับใคร และผู้เรียนพร้อมนำข้อมูลนี้ไปใช้หรือยัง’”
+                  “ครั้งนี้ อย่าเพิ่งคิดว่าจะพูดอะไร ลองถามก่อนว่า ‘ควรพูดตอนนี้หรือไม่?’
+                  ‘ควรพูดที่ไหน?’ และ ‘ผู้เรียนสามารถนำ Feedback นี้ไปใช้ได้เมื่อไร?’”
                 </blockquote>
               </div>
             </div>
@@ -299,20 +310,12 @@ export function Module4MiniGame({
               {roundIndex + 1} / 3
             </span>
           </div>
-          <div className="rounded-xl border border-monitor-blue/15 bg-gradient-to-br from-background to-monitor-blue/10 p-4 sm:p-5">
-            <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-monitor-teal">
-              <MessageCircle className="size-5" />
-              สถานการณ์
-            </p>
-            <p className="leading-relaxed">{round.situation}</p>
-            {round.cues.length > 0 && (
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-text">
-                {round.cues.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <MiniGameScenario
+            title={round.title}
+            situation={round.situation}
+            cues={round.cues}
+            image={[scenario1, scenario2, scenario3][roundIndex]}
+          />
           <ol aria-label="ขั้นตอนในรอบนี้" className="flex flex-wrap gap-2">
             {round.steps.map((s, i) => (
               <li
@@ -385,8 +388,8 @@ export function Module4MiniGame({
                     <div className="mt-4 space-y-2">
                       <p className="font-bold">Right Feedback, Right Moment</p>
                       <p className="text-sm">
-                        What happened? → Does it need feedback now? → Who needs to hear it? → Is
-                        the learner ready? → Can the feedback still be used?
+                        What happened? → Does it need feedback now? → Who needs to hear it? → Is the
+                        learner ready? → Can the feedback still be used?
                       </p>
                       <p className="leading-relaxed text-slate-text">
                         ก่อนให้ Feedback อย่าถามเพียงว่า ‘ฉันควรพูดอะไร’ แต่ให้ถามด้วยว่า

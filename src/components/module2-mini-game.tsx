@@ -1,3 +1,5 @@
+import { MiniGameFeedback } from "./mini-game-feedback";
+import { STRUCTURE_FEEDBACK, AID_FEEDBACK } from "@/lib/mini-game-build-feedback";
 import { useRef, useState, type ReactNode } from "react";
 import {
   DndContext,
@@ -244,9 +246,7 @@ export function Module2MiniGame({
           )}
           {attempt.correct ? successCaption : "ลองพิจารณาอีกครั้ง"}
         </p>
-        <p className="leading-relaxed">
-          {attempt.correct ? opt.response : (opt.hint ?? opt.response)}
-        </p>
+        <MiniGameFeedback response={opt.response} hint={!attempt.correct ? opt.hint : undefined} />
       </>
     );
   }
@@ -299,8 +299,8 @@ export function Module2MiniGame({
           <div className="mini-game-opening-copy min-w-0">
             <h4 className="font-semibold">Mini Challenge: Structure the Feedback</h4>
             <p className="mt-3 rounded-xl bg-mint-primary/10 p-4 leading-relaxed">
-              “ในแต่ละสถานการณ์ ลองสังเกตว่า Feedback ขาดอะไร เลือกโครงสร้างที่เหมาะสม
-              และสร้างข้อความที่ช่วยให้ผู้เรียนก้าวต่อไปได้”
+              “Feedback ที่ดีไม่ได้เริ่มจากการเลือกคำพูดที่ฟังดูดี แต่ต้องชัดเจน มีโครงสร้าง
+              เชื่อมโยงกับการเรียนรู้ และช่วยให้ผู้เรียนรู้ว่าจะทำอะไรต่อ”
             </p>
             <div className="ai-coach-layout mt-4 flex flex-col-reverse items-start gap-5">
               <span className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full bg-monitor-violet-soft shadow-sm sm:h-40 sm:w-40">
@@ -314,8 +314,8 @@ export function Module2MiniGame({
               <div className="ai-coach-speech w-full min-w-0 p-4 sm:p-5">
                 <p className="mb-2 text-sm font-semibold text-monitor-violet">AI Learning Coach</p>
                 <blockquote className="text-sm leading-relaxed">
-                  “Feedback ที่ดีไม่ได้เริ่มจากการเลือกคำพูดที่ฟังดูดี แต่ต้องชัดเจน มีโครงสร้าง
-                  เชื่อมโยงกับการเรียนรู้ และช่วยให้ผู้เรียนรู้ว่าจะทำอะไรต่อ”
+                  “ในแต่ละสถานการณ์ ลองสังเกตว่า Feedback ขาดอะไร เลือกโครงสร้างที่เหมาะสม
+                  และสร้างข้อความที่ช่วยให้ผู้เรียนก้าวต่อไปได้”
                 </blockquote>
               </div>
             </div>
@@ -399,7 +399,7 @@ export function Module2MiniGame({
               <MessageCircle className="size-6 rounded-full bg-mint-primary/10 p-1 text-monitor-teal" />
               สถานการณ์
             </p>
-            <div className="grid gap-4 md:grid-cols-[0.8fr_1fr]">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
               <img
                 src={scenarioImages[roundIndex]}
                 alt=""
@@ -627,34 +627,57 @@ export function Module2MiniGame({
                           </span>
                         ))}
                       </div>
-                      <p>{round.retryMessage}</p>
+                      <div className="space-y-3">
+                        {(roundIndex === 0 ? STRUCTURE_FEEDBACK : AID_FEEDBACK).map((item, i) => {
+                          const passed =
+                            roundIndex === 0
+                              ? buildAttempt?.checks[i]
+                              : i < 3
+                                ? buildAttempt?.cards[i] === i
+                                : !buildAttempt?.cards.some((card) => card >= 3);
+                          return passed ? null : (
+                            <div key={item.label}>
+                              <p className="mb-2 font-bold text-rose-600">
+                                {item.label} · ไม่ถูกต้อง
+                              </p>
+                              <MiniGameFeedback response={item.response} hint={item.hint} />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </>
                   )}
                   {buildAttempt?.complete && (
-                    <ol className="space-y-3">
-                      {build.slots.map((slot, i) => {
-                        const Icon = slotIcons[i];
-                        return (
-                          <li
-                            key={slot}
-                            className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]"
-                          >
-                            <div
-                              className={
-                                "flex min-w-0 items-center gap-3 rounded-xl border p-4 [overflow-wrap:anywhere] " +
-                                tones[i]
-                              }
+                    <div className="space-y-4">
+                      <MiniGameFeedback response={round.successMessage} />
+                      <p className="text-sm text-monitor-teal">
+                        ไม่มี Hint เพิ่มเติม เพราะคำตอบถูกครบทุกด้าน
+                      </p>
+                      <ol className="space-y-3">
+                        {build.slots.map((slot, i) => {
+                          const Icon = slotIcons[i];
+                          return (
+                            <li
+                              key={slot}
+                              className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]"
                             >
-                              <Icon className="size-6 shrink-0" />
-                              <strong className="text-base font-bold">{slot}</strong>
-                            </div>
-                            <div className="flex min-w-0 items-center rounded-xl border border-border bg-background p-4 leading-relaxed">
-                              “{build.cards[i]}”
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ol>
+                              <div
+                                className={
+                                  "flex min-w-0 items-center gap-3 rounded-xl border p-4 [overflow-wrap:anywhere] " +
+                                  tones[i]
+                                }
+                              >
+                                <Icon className="size-6 shrink-0" />
+                                <strong className="text-base font-bold">{slot}</strong>
+                              </div>
+                              <div className="flex min-w-0 items-center rounded-xl border border-border bg-background p-4 leading-relaxed">
+                                “{build.cards[i]}”
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
                   )}
                 </div>
               )}
@@ -684,30 +707,34 @@ export function Module2MiniGame({
                     <p className="font-medium">
                       {i === 0 ? round.step2!.prompt : round.step3!.prompt}
                     </p>
-                    {options(key as "step2" | "step3")}
-                    <div
-                      role="status"
-                      aria-live="polite"
-                      className="rounded-lg bg-mint-primary/5 p-4"
-                    >
-                      {feedbackPanel(key as "step2" | "step3", "ดีมากครับ!")}
+                    <div className="grid items-start gap-4 min-[1440px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                      <div className="min-w-0">{options(key as "step2" | "step3")}</div>
+                      <div className="min-w-0 space-y-3">
+                        <div
+                          role="status"
+                          aria-live="polite"
+                          className="rounded-lg bg-mint-primary/5 p-4"
+                        >
+                          {feedbackPanel(key as "step2" | "step3", "ดีมากครับ!")}
+                        </div>
+                        {i === 0 && progress.step2.at(-1)?.correct && !step2Advanced && (
+                          <Button
+                            className="mini-game-primary w-full"
+                            onClick={() => {
+                              setStep2Advanced(true);
+                              requestAnimationFrame(() =>
+                                step3Ref.current?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "start",
+                                }),
+                              );
+                            }}
+                          >
+                            ไปขั้นตอนถัดไป <ArrowRight />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    {i === 0 && progress.step2.at(-1)?.correct && !step2Advanced && (
-                      <Button
-                        className="mini-game-primary w-full"
-                        onClick={() => {
-                          setStep2Advanced(true);
-                          requestAnimationFrame(() =>
-                            step3Ref.current?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            }),
-                          );
-                        }}
-                      >
-                        ไปขั้นตอนถัดไป <ArrowRight />
-                      </Button>
-                    )}
                   </div>
                 ),
             )}

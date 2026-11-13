@@ -29,6 +29,8 @@ import { useLearningTiming } from "@/hooks/use-learning-timing";
 import {
   ASSESSMENT_QUESTIONS,
   ASSESSMENT_VERSION,
+  isPosttestPassed,
+  POSTTEST_PASS_PERCENT,
   RANK_LABELS,
   assignRank,
   isRankComplete,
@@ -80,6 +82,14 @@ export function AssessmentSummary({
                     </span>
                   </p>
                   <p className="mt-2 text-mint-primary">{r.percentage.toFixed(2)}%</p>
+                  {phase === "posttest" && (
+                    <p
+                      className={`mt-3 text-sm font-semibold ${isPosttestPassed(r) ? "text-monitor-teal" : "text-amber-700"}`}
+                    >
+                      {isPosttestPassed(r) ? "ผ่านเกณฑ์" : "ยังไม่ผ่านเกณฑ์"} · เกณฑ์ผ่าน{" "}
+                      {POSTTEST_PASS_PERCENT}% (192/240 คะแนน)
+                    </p>
+                  )}
                 </>
               ) : (
                 <p className="mt-3 text-slate-text">ยังไม่ได้ทำแบบทดสอบ</p>

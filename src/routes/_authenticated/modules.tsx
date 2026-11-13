@@ -1,4 +1,5 @@
 import { Module1MiniGame } from "@/components/module1-mini-game";
+import { canOpenModule } from "@/lib/learning-unlocks";
 import { newMiniGame, miniGameResult } from "@/lib/module1-mini-game";
 import { Module2MiniGame } from "@/components/module2-mini-game";
 import { Module3MiniGame } from "@/components/module3-mini-game";
@@ -27,7 +28,7 @@ import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Loader2,
   BookOpenText,
@@ -39,7 +40,6 @@ import {
   Puzzle,
   PenLine,
   Award,
-  Sparkles,
   Info,
   Timer,
   Home,
@@ -394,29 +394,6 @@ function formatReflectionText(input: {
   return parts.join("\n\n");
 }
 
-const POSITIVE_KEYWORDS = [
-  "support",
-  "motivate",
-  "improve",
-  "empathy",
-  "specific",
-  "growth",
-  "encourage",
-  "listen",
-  "care",
-  "guide",
-  "สนับสนุน",
-  "กำลังใจ",
-  "พัฒนา",
-  "เข้าใจ",
-  "เจาะจง",
-  "เติบโต",
-  "รับฟัง",
-  "ห่วงใย",
-  "แนะนำ",
-  "เห็นใจ",
-];
-
 // ---------- Page ----------
 
 function ModulesPage() {
@@ -441,9 +418,9 @@ function ModulesPage() {
 
   const completed = new Set(data?.state.completed_modules ?? []);
   const progress = Math.round((completed.size / MODULES.length) * 100);
-  const allDone = completed.size >= MODULES.length;
+  const allDone = MODULES.every((module) => completed.has(module.id));
 
-  if (activeModule) {
+  if (activeModule && canOpenModule(data?.state, activeModule)) {
     return (
       <ModuleRunner
         moduleId={activeModule}
@@ -528,12 +505,25 @@ function ModulesPage() {
           </>
         }
       >
+        {!data?.state.pretest_completed && (
+          <div role="status" className="rounded-xl border border-border bg-white p-4 text-sm">
+            <p>
+              กรุณาทำแบบทดสอบก่อนเรียนให้เสร็จ เพื่อปลดล็อค Module 1 จากนั้นเรียนตามลำดับ Module 1–5
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/diagnostic" })}
+              className="mt-2 cursor-pointer font-semibold text-monitor-teal underline"
+            >
+              ไปทำแบบทดสอบก่อนเรียน
+            </button>
+          </div>
+        )}
         <h2 className="text-lg font-bold text-slate-deep">เลือกบทเรียนของคุณ</h2>
         <div className="space-y-3">
-          {MODULES.map((m, i) => {
+          {MODULES.map((m) => {
             const done = completed.has(m.id);
-            const prevDone = i === 0 || completed.has(MODULES[i - 1].id);
-            const locked = !prevDone && !done;
+            const locked = !canOpenModule(data?.state, m.id);
             return (
               <button
                 key={m.id}
@@ -585,7 +575,7 @@ function ModulesPage() {
           })}
         </div>
 
-        {allDone && (
+        {allDone && data?.state.pretest_completed && (
           <button
             onClick={() => navigate({ to: "/vr-simulation" })}
             className="mt-8 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-mint-primary to-monitor-teal px-5 py-4 font-bold text-white hover:opacity-90"
@@ -810,11 +800,6 @@ function ModuleRunner({
   const elaborateDone = !!currentMiniGame?.completed;
   const evaluateDone = reflectionSaved;
 
-  const reflectionKeywords = useMemo(() => {
-    const text = reflection.toLowerCase();
-    return POSITIVE_KEYWORDS.filter((k) => text.includes(k.toLowerCase()));
-  }, [reflection]);
-
   const stageIndex = stages.findIndex((s) => s.id === stage);
   const progressPct =
     stage === "intro"
@@ -994,7 +979,6 @@ function ModuleRunner({
             setPracticeGoal={setPracticeGoal}
             saved={reflectionSaved}
             onSave={trySaveReflection}
-            keywordsFound={reflectionKeywords}
           />
         )}
 
@@ -1027,7 +1011,6 @@ function ModuleRunner({
               matchScore={currentMiniGame?.finalLearningScore ?? 0}
               matchMax={10}
               gameLabel="Mini Game"
-              reflectionKeywords={reflectionKeywords}
               showBadge={showBadge}
               onNext={() => {
                 const idx = MODULES.findIndex((m) => m.id === moduleId);
@@ -1232,7 +1215,6 @@ function EvaluateScreen({
   setPracticeGoal,
   saved,
   onSave,
-  keywordsFound,
 }: {
   meta: ModuleMeta;
   reflection: string;
@@ -1245,7 +1227,6 @@ function EvaluateScreen({
   setPracticeGoal: (v: string) => void;
   saved: boolean;
   onSave: () => void;
-  keywordsFound: string[];
 }) {
   const content = MODULE_REFLECTIONS[meta.id] ?? MODULE_REFLECTIONS.m1;
 
@@ -1295,12 +1276,6 @@ function EvaluateScreen({
               {reflection.length} / {MAX_REFLECTION_CHARS}
             </span>
           </div>
-          {keywordsFound.length > 0 && (
-            <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-mint-primary">
-              <Sparkles className="h-3.5 w-3.5 shrink-0" /> ตรวจพบคำเชิงบวก:{" "}
-              {keywordsFound.slice(0, 5).join(", ")}
-            </p>
-          )}
         </div>
 
         {/* Question 2 — practice intention/development focus + reason */}
@@ -1424,12 +1399,39 @@ function EvaluateScreen({
   );
 }
 
+const MODULE_LEARNING_RECAP: Record<string, string[]> = {
+  m1: [
+    "เลือกจุดมุ่งหมายของ Feedback ให้เหมาะกับสถานการณ์และความต้องการของผู้เรียน",
+    "ฝึกสร้างข้อความที่เฉพาะเจาะจง ให้เกียรติ สนับสนุน และนำไปปฏิบัติได้",
+    "ฝึกใช้คำถามเปิดโอกาสให้ผู้เรียนสะท้อนคิดก่อนเสนอคำแนะนำ",
+  ],
+  m2: [
+    "ฝึกให้ Feedback ที่ชัดเจน เฉพาะเจาะจง เกี่ยวข้องกับงาน และนำไปใช้ได้ทันเวลา",
+    "เลือกโครงสร้าง Feedback และเรียงข้อความตามหลัก AID: พฤติกรรม ผลที่เกิดขึ้น และแนวทางครั้งต่อไป",
+    "ฝึกใช้ Feedback เป็นบทสนทนาที่ช่วยให้ผู้เรียนค้นหาแนวทางพัฒนา",
+  ],
+  m3: [
+    "สังเกตอารมณ์และความรู้สึกของผู้เรียนก่อนเลือกวิธีตอบสนอง",
+    "ฝึกเลือกถ้อยคำ น้ำเสียง และภาษากายที่สื่อความเข้าใจและให้เกียรติ",
+    "ฝึกพาบทสนทนากลับสู่การเรียนรู้ พร้อมตระหนักถึงอารมณ์ของตนเอง",
+  ],
+  m4: [
+    "เลือกจังหวะให้ Feedback ในขณะที่ผู้เรียนยังนำไปปรับปรุงงานได้",
+    "พิจารณาว่าเรื่องใดควรพูดต่อหน้าผู้อื่น และเรื่องใดควรพูดเป็นการส่วนตัว",
+    "ฝึกตัดสินใจว่าจะให้ Feedback ทันที รอ หรือพูดคุยหลังการประเมิน",
+  ],
+  m5: [
+    "ทบทวนการให้ Feedback ของตนเอง เพื่อระบุจุดแข็งและสิ่งที่ควรพัฒนา",
+    "เปลี่ยนสิ่งที่ได้จากการสะท้อนคิดเป็นเป้าหมาย พร้อมหลักฐานที่ใช้ติดตามความก้าวหน้า",
+    "ฝึกวางแผนพัฒนาที่นำไปปฏิบัติได้ และทบทวนผลเพื่อปรับการฝึกครั้งต่อไป",
+  ],
+};
+
 function SummaryScreen({
   meta,
   matchScore,
   matchMax = 10,
   gameLabel = "Mini Game",
-  reflectionKeywords,
   showBadge,
   onNext,
   onHome,
@@ -1439,14 +1441,12 @@ function SummaryScreen({
   matchScore: number;
   matchMax?: number;
   gameLabel?: string;
-  reflectionKeywords: string[];
   showBadge: boolean;
   onNext: () => void;
   onHome: () => void;
   hasNext: boolean;
 }) {
   const cognitivePct = Math.round((matchScore / matchMax) * 100);
-  const affectivePct = Math.min(100, reflectionKeywords.length * 20);
 
   return (
     <section className="animate-fade-in">
@@ -1468,10 +1468,10 @@ function SummaryScreen({
       )}
 
       <h2 className="mb-4 text-xl font-bold text-slate-deep">สรุปผลการเรียนรู้</h2>
-      <div className="mb-6 grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-background p-5">
+      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <div className="flex flex-col justify-center rounded-2xl border border-border bg-white p-5 sm:p-6">
           <div className="mb-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
-            Cognitive Understanding
+            ผลกิจกรรม Mini Game
           </div>
           <div className="mb-2 text-3xl font-bold text-slate-deep">{cognitivePct}%</div>
           <div className="mb-2 h-2 overflow-hidden rounded-full bg-secondary">
@@ -1484,21 +1484,33 @@ function SummaryScreen({
             {gameLabel} {matchScore}/{matchMax}
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-background p-5">
-          <div className="mb-1 text-xs font-bold uppercase tracking-wider text-mint-primary">
-            Affective Reflection
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 sm:p-6">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mint-light text-monitor-teal">
+              <NotebookPen className="size-5" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-xs font-semibold text-monitor-teal">ทบทวน Module {meta.order}</p>
+              <h3 className="font-bold text-slate-deep">สิ่งที่ได้เรียนรู้และฝึกในโมดูลนี้</h3>
+            </div>
           </div>
-          <div className="mb-2 text-3xl font-bold text-slate-deep">{affectivePct}%</div>
-          <div className="mb-2 h-2 overflow-hidden rounded-full bg-secondary">
-            <div
-              className="h-full rounded-full bg-mint-primary"
-              style={{ width: `${affectivePct}%` }}
-            />
-          </div>
-          <div className="text-xs text-slate-text">
-            คำเชิงบวกที่ตรวจพบ:{" "}
-            {reflectionKeywords.length > 0 ? reflectionKeywords.slice(0, 4).join(", ") : "—"}
-          </div>
+          <ul className="space-y-3">
+            {(MODULE_LEARNING_RECAP[meta.id] ?? []).map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-text"
+              >
+                <CheckCircle2
+                  className="mt-0.5 size-4 shrink-0 text-mint-primary"
+                  aria-hidden="true"
+                />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 border-t border-border pt-3 text-xs leading-relaxed text-slate-text">
+            กิจกรรม: รับชมวิดีโอ · ฝึก Mini Game · สะท้อนความคิดและเลือกแนวทางนำไปใช้
+          </p>
         </div>
       </div>
 

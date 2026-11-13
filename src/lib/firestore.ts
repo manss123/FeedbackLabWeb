@@ -30,6 +30,7 @@ export interface UserProfile {
   age?: number;
   teachingSubjects?: string[];
   teachingLevels?: string[];
+  learningGoalWeeks?: number;
   displayName: string | null;
   email: string;
   avatarUrl: string | null;

@@ -1,3 +1,10 @@
+import { MiniGameFeedback } from "./mini-game-feedback";
+import {
+  CONSTRUCTIVE_FEEDBACK,
+  CONSTRUCTIVE_SUCCESS,
+  MOTIVATION_FEEDBACK,
+  REFLECTION_FEEDBACK,
+} from "@/lib/mini-game-build-feedback";
 import { useRef, useState, type ReactNode } from "react";
 import {
   DndContext,
@@ -44,7 +51,6 @@ import {
   PURPOSES,
   ROUNDS,
   REFLECTION_CHOICES,
-  REFLECTION_HINTS,
   checkBuild,
   miniGameResult,
   roundComplete,
@@ -311,19 +317,19 @@ export function Module1MiniGame({
                   {
                     icon: Users,
                     title: "Understand the learner",
-                    subtitle: "เข้าใจผู้เรียน",
+                    subtitle: "ผู้เรียนต้องการอะไร",
                     tone: "mini-process-teal",
                   },
                   {
                     icon: Target,
                     title: "Choose the purpose",
-                    subtitle: "กำหนดเป้าหมาย",
+                    subtitle: "Feedback ควรมี Purpose อะไร",
                     tone: "mini-process-violet",
                   },
                   {
                     icon: MessageCircle,
                     title: "Build the feedback",
-                    subtitle: "สร้าง Feedback",
+                    subtitle: "ควรพูดอย่างไร",
                     tone: "mini-process-amber",
                   },
                 ].map(({ icon: Icon, title, subtitle, tone }, i) => (
@@ -376,7 +382,7 @@ export function Module1MiniGame({
               <MessageCircle className="size-6 rounded-full bg-mint-primary/10 p-1 text-monitor-teal" />
               สถานการณ์
             </p>
-            <div className="grid gap-4 md:grid-cols-[0.8fr_1fr]">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
               <img
                 src={scenarioImages[roundIndex]}
                 alt=""
@@ -629,37 +635,78 @@ export function Module1MiniGame({
                           </span>
                         ))}
                       </div>
-                      <p>
-                        ลองทบทวนหน้าที่ของแต่ละช่อง เลือกข้อความที่ระบุพฤติกรรมชัดเจน ให้เกียรติ
-                        สนับสนุนผู้เรียน และบอกแนวทางที่นำไปใช้ได้ แล้วตรวจคำตอบอีกครั้ง
-                      </p>
+                      <div className="space-y-3">
+                        {(roundIndex === 0 ? CONSTRUCTIVE_FEEDBACK : MOTIVATION_FEEDBACK).map(
+                          (item, i) => {
+                            const passed =
+                              roundIndex === 0
+                                ? build?.checks[i]
+                                : [
+                                    build?.cards[1] === 1,
+                                    build?.cards[2] === 2,
+                                    build?.cards[3] === 3,
+                                    !build?.cards.includes(4) && !build?.cards.includes(5),
+                                  ][i];
+                            return passed ? null : (
+                              <div key={item.label}>
+                                <p className="mb-2 flex items-center gap-2 font-bold text-rose-600">
+                                  <XCircle className="size-4" />
+                                  {item.label} · ไม่ถูกต้อง
+                                </p>
+                                <MiniGameFeedback response={item.response} hint={item.hint} />
+                              </div>
+                            );
+                          },
+                        )}
+                        {build?.checks.every(Boolean) && (
+                          <p className="text-sm text-slate-text">
+                            องค์ประกอบครบแล้ว
+                            ลองทบทวนลำดับประโยคให้ตรงกับหัวข้อของแต่ละช่องก่อนตรวจอีกครั้ง
+                          </p>
+                        )}
+                      </div>
                     </>
                   )}
                   {build?.complete && (
-                    <ol className="space-y-3">
-                      {round.slots.map((slot, i) => {
-                        const Icon = slotIcons[i];
-                        return (
-                          <li
-                            key={slot}
-                            className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]"
-                          >
-                            <div
-                              className={
-                                "flex min-w-0 items-center gap-3 rounded-xl border p-4 [overflow-wrap:anywhere] " +
-                                tones[i]
-                              }
+                    <div className="space-y-4">
+                      <div className="rounded-xl bg-emerald-50 p-4">
+                        <h5 className="mb-2 text-xl font-bold text-monitor-teal">
+                          ยอดเยี่ยมค่ะ! · ถูกครบทุกด้าน
+                        </h5>
+                        <p>
+                          {roundIndex === 0
+                            ? CONSTRUCTIVE_SUCCESS
+                            : "คุณใช้ภาษาสนับสนุนผู้เรียน ให้คำแนะนำที่ชัดเจน และให้กำลังใจได้ครบถ้วน"}
+                        </p>
+                        <p className="mt-2 text-sm text-monitor-teal">
+                          ไม่มี Hint เพิ่มเติม เพราะคำตอบถูกครบทุกด้าน
+                        </p>
+                      </div>
+                      <ol className="space-y-3">
+                        {round.slots.map((slot, i) => {
+                          const Icon = slotIcons[i];
+                          return (
+                            <li
+                              key={slot}
+                              className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]"
                             >
-                              <Icon className="size-6 shrink-0" />
-                              <strong className="text-base font-bold">{slot}</strong>
-                            </div>
-                            <div className="flex min-w-0 items-center rounded-xl border border-border bg-background p-4 leading-relaxed">
-                              “{round.cards[i]}”
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ol>
+                              <div
+                                className={
+                                  "flex min-w-0 items-center gap-3 rounded-xl border p-4 [overflow-wrap:anywhere] " +
+                                  tones[i]
+                                }
+                              >
+                                <Icon className="size-6 shrink-0" />
+                                <strong className="text-base font-bold">{slot}</strong>
+                              </div>
+                              <div className="flex min-w-0 items-center rounded-xl border border-border bg-background p-4 leading-relaxed">
+                                “{round.cards[i]}”
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
                   )}
                 </div>
               )}
@@ -687,13 +734,24 @@ export function Module1MiniGame({
                     </p>
                     {choices(key as "opening" | "followup", REFLECTION_CHOICES[i])}
                     {progress[key as "opening" | "followup"].at(-1) && (
-                      <p role="status" className="rounded-lg bg-mint-primary/5 p-4">
-                        {progress[key as "opening" | "followup"].at(-1)?.correct
-                          ? "ดีมากค่ะ คุณเปิดโอกาสให้นักศึกษาได้สะท้อนและประเมินผลงานของตนเอง แทนที่จะรีบบอกคำตอบหรือแนวทางแก้ไขทันที"
-                          : REFLECTION_HINTS[i][
-                              progress[key as "opening" | "followup"].at(-1)!.answer
-                            ]}
-                      </p>
+                      <div role="status" className="rounded-lg bg-mint-primary/5 p-4">
+                        <MiniGameFeedback
+                          response={
+                            progress[key as "opening" | "followup"].at(-1)?.correct
+                              ? "ดีมากค่ะ คุณเปิดโอกาสให้นักศึกษาได้สะท้อนและประเมินผลงานของตนเอง แทนที่จะรีบบอกคำตอบหรือแนวทางแก้ไขทันที"
+                              : REFLECTION_FEEDBACK[i][
+                                  progress[key as "opening" | "followup"].at(-1)!.answer
+                                ].response
+                          }
+                          hint={
+                            !progress[key as "opening" | "followup"].at(-1)?.correct
+                              ? REFLECTION_FEEDBACK[i][
+                                  progress[key as "opening" | "followup"].at(-1)!.answer
+                                ].hint
+                              : undefined
+                          }
+                        />
+                      </div>
                     )}
                     {i === 0 && progress.opening.at(-1)?.correct && !openingAdvanced && (
                       <Button

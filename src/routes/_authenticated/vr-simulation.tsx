@@ -1,3 +1,4 @@
+import { CompetencyAxisTick, useCompetencyRadarRadius } from "@/components/competency-axis-tick";
 import {
   REFLECTION_CRITERIA,
   REFLECTION_VERSION,
@@ -6,6 +7,7 @@ import {
   type ReflectionCriterion,
 } from "@/lib/vr-reflection";
 import { deferredEffect } from "@/lib/deferred-effect";
+import { canOpenVr, canOpenScenario } from "@/lib/learning-unlocks";
 import { useLearningTiming } from "@/hooks/use-learning-timing";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -383,13 +385,15 @@ const SCENARIOS: Scenario[] = [
 // ============================================================
 
 function VrSimulationPage() {
+  const navigate = useNavigate();
   const { data, isLoading } = useQuery({
     queryKey: ["learner-overview"],
     queryFn: () => getLearnerOverview(),
   });
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const active = SCENARIOS.find((s) => s.id === activeId) ?? null;
+  const active =
+    SCENARIOS.find((s) => s.id === activeId && canOpenScenario(data?.state, s.id)) ?? null;
 
   if (isLoading) {
     return (
@@ -470,6 +474,23 @@ function VrSimulationPage() {
             </>
           }
         >
+          {!canOpenVr(data?.state) && (
+            <div role="status" className="rounded-xl border border-border bg-white p-4 text-sm">
+              <p>
+                VR Scenarios จะปลดล็อคเมื่อทำแบบทดสอบก่อนเรียนและเรียน Module 1–5 ครบแล้ว
+                จากนั้นฝึกตามลำดับ Scenario 1–5
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate({ to: data?.state.pretest_completed ? "/modules" : "/diagnostic" })
+                }
+                className="mt-2 cursor-pointer font-semibold text-monitor-teal underline"
+              >
+                {data?.state.pretest_completed ? "ไปยังบทเรียน" : "ไปทำแบบทดสอบก่อนเรียน"}
+              </button>
+            </div>
+          )}
           <div className="flex flex-wrap items-end justify-between gap-2">
             <h2 className="text-lg font-bold text-slate-deep">ลำดับ Scenario การฝึก</h2>
           </div>
@@ -477,15 +498,16 @@ function VrSimulationPage() {
             {SCENARIOS.map((s, i) => {
               const done = completed.has(s.id);
               const currentIdx = SCENARIOS.findIndex((sc) => !completed.has(sc.id));
-              const isCurrent = i === currentIdx;
-              const isLocked = currentIdx !== -1 && i > currentIdx;
+              const isLocked = !canOpenScenario(data?.state, s.id);
+              const isCurrent = !isLocked && i === currentIdx;
               return (
                 <li key={s.id} className="relative">
                   <button
-                    onClick={() => setActiveId(s.id)}
+                    onClick={() => !isLocked && setActiveId(s.id)}
+                    disabled={isLocked}
                     data-module={s.order}
-                    data-available={done || !isLocked}
-                    className="module-catalogue-card group relative flex h-full w-full cursor-pointer items-stretch gap-3 rounded-2xl border p-4 text-left transition-shadow sm:gap-4 sm:p-5"
+                    data-available={!isLocked}
+                    className="module-catalogue-card group relative flex h-full w-full cursor-pointer items-stretch gap-3 rounded-2xl border p-4 text-left transition-shadow disabled:cursor-not-allowed sm:gap-4 sm:p-5"
                   >
                     {/* Step node */}
                     <div
@@ -2120,7 +2142,8 @@ function Stage3Awareness({
         )}
         {questions.map((question, i) => (
           <label key={question} className="mb-4 block text-sm text-slate-deep">
-            {i + 1}. {question}
+            {questions.length > 1 ? `${i + 1}. ` : ""}
+            {question}
             <textarea
               rows={3}
               value={answers[i] ?? ""}
@@ -2170,6 +2193,7 @@ function Stage3Radar({
   weaknesses: string[];
   onNext: () => void;
 }) {
+  const chart = useCompetencyRadarRadius();
   const data = COMPETENCIES.map((c) => ({
     name: c.label,
     score: scores ? scores[c.key] : 0,
@@ -2184,12 +2208,12 @@ function Stage3Radar({
         </div>
         <h2 className="mb-4 text-xl font-bold text-slate-deep">สมรรถนะการให้ Feedback 4 มิติ</h2>
 
-        <div className="grid gap-6 md:grid-cols-[1fr_1fr]">
+        <div className="grid min-w-0 gap-6">
           <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={data} outerRadius="75%">
+            <ResponsiveContainer width="100%" height="100%" onResize={chart.onResize}>
+              <RadarChart data={data} outerRadius={chart.radius}>
                 <PolarGrid stroke="#e5e7eb" />
-                <PolarAngleAxis dataKey="name" tick={{ fill: "#334155", fontSize: 11 }} />
+                <PolarAngleAxis dataKey="name" tick={<CompetencyAxisTick />} tickLine={false} />
                 <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
                 {scores && (
                   <Radar
@@ -2662,6 +2686,7 @@ function SummaryDashboard({
   onBackList: () => void;
   onNextScenario: () => void;
 }) {
+  const chart = useCompetencyRadarRadius();
   const finalScores = scores2 ?? scores1;
   const radarData = COMPETENCIES.map((c) => ({
     name: c.label,
@@ -2684,13 +2709,13 @@ function SummaryDashboard({
         </div>
         <h2 className="mb-4 text-2xl font-bold text-slate-deep">สรุปผล — {scenario.studentName}</h2>
 
-        <div className="grid gap-6 md:grid-cols-[1fr_1fr]">
+        <div className="grid min-w-0 gap-6">
           <div>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData} outerRadius="75%">
+              <ResponsiveContainer width="100%" height="100%" onResize={chart.onResize}>
+                <RadarChart data={radarData} outerRadius={chart.radius}>
                   <PolarGrid stroke="#e5e7eb" />
-                  <PolarAngleAxis dataKey="name" tick={{ fill: "#334155", fontSize: 11 }} />
+                  <PolarAngleAxis dataKey="name" tick={<CompetencyAxisTick />} tickLine={false} />
                   <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
                   {scores1 && (
                     <Radar
