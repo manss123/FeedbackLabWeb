@@ -9,10 +9,11 @@ import { getDb, getFirebaseAuth } from "@/lib/firebase";
 import { waitForFirebaseUser } from "@/lib/firebase-auth";
 import { listSessionsForUser, type UserDoc } from "@/lib/firestore";
 import type { AssessmentPhase, AssessmentResult } from "./assessment";
-import { ASSESSMENT_VERSION } from "./assessment";
+import { ASSESSMENT_VERSION, isPosttestPassed } from "./assessment";
 import { getAssessmentResults } from "./assessment.functions";
 import { isAllQuestionnairesComplete, type QuestionnaireKey } from "./questionnaires";
 import { getQuestionnaireCompletion } from "./questionnaires.functions";
+import { summarizeVrRounds, type VrRoundScores } from "./vr-round-scores";
 
 export const CONSENT_DOC_VERSION = "v3-2026-11-12-typed-consent";
 
@@ -303,37 +304,16 @@ async function getCompletedScenarioIds(): Promise<string[]> {
   return [...ids];
 }
 
-// Personal VR coaching-score trend for the results dashboard (certificate.tsx)
-// — average AI "overall" score across the learner's own sessions, round 1
-// (stage3, first attempt) vs round 2 (stage4, after retrying with coaching).
-// Same signal AdminMonitoring charts cohort-wide; this is the single-learner
-// version, computed client-side since sessions are already own-uid readable.
-export interface VrRoundScores {
-  round1: number | null;
-  round2: number | null;
-  pairedCount: number;
-}
+// Dashboard comparison uses only the latest session per scenario. Overview
+// averages are paired: both rounds come from the same latest sessions.
 
 export async function getVrRoundScores(): Promise<VrRoundScores> {
   const user = await waitForFirebaseUser();
-  if (!user) return { round1: null, round2: null, pairedCount: 0 };
+  if (!user) return summarizeVrRounds([]);
   const sessions = await listSessionsForUser(user.uid);
   if (getFirebaseAuth().currentUser?.uid !== user.uid)
     throw new Error("บัญชีผู้ใช้เปลี่ยนระหว่างโหลดข้อมูล กรุณาลองอีกครั้ง");
-  const round1 = sessions
-    .map((s) => s.stage3?.aiScores?.overall)
-    .filter((v): v is number => typeof v === "number");
-  const round2 = sessions
-    .map((s) => s.stage4?.aiScores?.overall)
-    .filter((v): v is number => typeof v === "number");
-  const pairedCount = sessions.filter(
-    (s) =>
-      typeof s.stage3?.aiScores?.overall === "number" &&
-      typeof s.stage4?.aiScores?.overall === "number",
-  ).length;
-  const avg = (values: number[]) =>
-    values.length ? Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)) : null;
-  return { round1: avg(round1), round2: avg(round2), pairedCount };
+  return summarizeVrRounds(sessions);
 }
 
 // -------- Auth (mock) --------
@@ -449,7 +429,7 @@ export async function syncLearnerSetup(
       pretestCompleted: !!d.assessmentResults.pretest,
       completedModuleIds,
       completedScenarioIds,
-      posttestCompleted: !!d.assessmentResults.posttest,
+      posttestCompleted: isPosttestPassed(d.assessmentResults.posttest),
       surveyCompleted: isAllQuestionnairesComplete(d.survey),
       certificateIssued: !!d.certificate,
     }),
@@ -496,7 +476,7 @@ export async function getLearnerOverview(): Promise<MockData> {
       pretestCompleted: !!results.pretest,
       completedModuleIds: moduleAndCert.completedModuleIds,
       completedScenarioIds,
-      posttestCompleted: !!results.posttest,
+      posttestCompleted: isPosttestPassed(results.posttest),
       surveyCompleted: isAllQuestionnairesComplete(surveyCompletion),
       certificateIssued: !!moduleAndCert.certificate,
     }),

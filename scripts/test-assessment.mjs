@@ -4,12 +4,22 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
-const require = createRequire(import.meta.url);
-const {
-  scoreAssessment,
-  saveAssessment,
-  ASSESSMENT_VERSION,
-} = require("../functions/lib/assessment.js");
+const serverRequire = createRequire(new URL("../functions/src/assessment.ts", import.meta.url));
+const serverModule = { exports: {} };
+runInNewContext(
+  ts.transpileModule(
+    readFileSync(new URL("../functions/src/assessment.ts", import.meta.url), "utf8"),
+    {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+        esModuleInterop: true,
+      },
+    },
+  ).outputText,
+  { module: serverModule, exports: serverModule.exports, require: serverRequire },
+);
+const { scoreAssessment, saveAssessment, ASSESSMENT_VERSION } = serverModule.exports;
 const content = JSON.parse(
   readFileSync(new URL("../src/lib/assessment-content.json", import.meta.url), "utf8"),
 );
@@ -179,7 +189,14 @@ function fakeDb() {
           writes++;
         },
         update: (r, v) => {
-          docs.set(r.path, { ...docs.get(r.path), ...v });
+          const data = structuredClone(docs.get(r.path));
+          for (const [key, value] of Object.entries(v)) {
+            const parts = key.split(".");
+            let target = data;
+            for (const part of parts.slice(0, -1)) target = target[part] ??= {};
+            target[parts.at(-1)] = value;
+          }
+          docs.set(r.path, data);
           writes++;
         },
       }),
@@ -210,4 +227,42 @@ test("Server rejects posttest without pretest and missing participant records", 
     (e) => e.code === "failed-precondition",
   );
   assert.equal(db.writes, 0);
+});
+
+test("Failed posttest can be retaken; attempts stay immutable, retries are idempotent and passing results cannot regress", async () => {
+  const db = fakeDb();
+  await saveAssessment(db, "u", input());
+  const failedInput = input("posttest");
+  failedInput.answers.forEach((a) => {
+    for (const key of Object.keys(a.ranks)) a.ranks[key] = 5 - a.ranks[key];
+  });
+  const failed = await saveAssessment(db, "u", failedInput);
+  assert.equal(failed.passed, false);
+  const retake = { ...input("posttest"), attemptId: "retake-000000000001" };
+  const passed = await saveAssessment(db, "u", retake);
+  assert.equal(passed.passed, true);
+  assert.equal(
+    db.docs.get(`users/u/assessment_attempts/${ASSESSMENT_VERSION}_posttest`).totalScore,
+    80,
+  );
+  assert.equal(db.docs.get("users/u").assessmentResults.posttest.totalScore, 240);
+  const writes = db.writes;
+  assert.equal(
+    (await saveAssessment(db, "u", { ...failedInput, attemptId: retake.attemptId })).totalScore,
+    240,
+  );
+  assert.equal(
+    (await saveAssessment(db, "u", { ...failedInput, attemptId: "stale-tab-000000001" }))
+      .totalScore,
+    240,
+  );
+  assert.equal(db.writes, writes);
+  await assert.rejects(
+    saveAssessment(db, "u", { ...retake, attemptId: "../bad" }),
+    (e) => e.code === "invalid-argument",
+  );
+  await assert.rejects(
+    saveAssessment(db, "u", { ...input(), attemptId: retake.attemptId }),
+    (e) => e.code === "invalid-argument",
+  );
 });

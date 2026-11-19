@@ -1000,6 +1000,8 @@ function ScenarioRunner({
   const currentStage = STAGE_OF[step];
   const isRetryBackdrop = currentStage >= 3;
   const presentedBackdrop = isRetryBackdrop ? presented2 : presented1;
+  const presentationPlaying = (step === "1-vr" && presented1) || (step === "4-vr" && presented2);
+  const fullIntroPanel = step === "1-intro" || (step === "1-vr" && !presented1);
   const onPresentBackdrop = () => (isRetryBackdrop ? setPresented2(true) : setPresented1(true));
 
   return (
@@ -1051,8 +1053,8 @@ function ScenarioRunner({
           />
         </div>
 
-        <div className="pointer-events-none relative z-10 flex h-full items-start justify-end overflow-y-auto p-4 lg:p-6">
-          <OverlayPanel>
+        {!presentationPlaying && <div className={`pointer-events-none relative z-10 flex h-full items-start justify-end overflow-y-auto ${fullIntroPanel ? "bg-background" : "p-4 lg:p-6"}`}>
+          <OverlayPanel full={fullIntroPanel}>
             {step === "1-intro" && (
               <Stage1Intro scenario={scenario} onStart={() => setStep("1-vr")} />
             )}
@@ -1344,7 +1346,7 @@ function ScenarioRunner({
                 />
               ))}
           </OverlayPanel>
-        </div>
+        </div>}
       </div>
     </div>
   );
@@ -1486,8 +1488,8 @@ function Stage1PresentGate({
 // Positional/sizing wrapper for the step content floating over the
 // persistent Unity backdrop. Deliberately adds no card chrome of its own —
 // every Stage* component already renders its own bordered card(s).
-function OverlayPanel({ children }: { children: React.ReactNode }) {
-  return <div className="pointer-events-auto w-full max-w-lg xl:max-w-xl">{children}</div>;
+function OverlayPanel({ children, full = false }: { children: React.ReactNode; full?: boolean }) {
+  return <div className={`pointer-events-auto w-full ${full ? "min-h-full [&>div]:min-h-full [&>div]:border-0 [&>div]:p-6 lg:[&>div]:p-10" : "max-w-lg xl:max-w-xl"}`}>{children}</div>;
 }
 
 function SectionLabel({

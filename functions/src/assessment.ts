@@ -94,24 +94,41 @@ export function scoreAssessment(input: unknown) {
 
 export async function saveAssessment(db: Firestore, uid: string, input: unknown) {
   const scored = scoreAssessment(input);
+  const attemptId = (input as { attemptId?: unknown }).attemptId;
+  if (
+    attemptId !== undefined &&
+    (scored.phase !== "posttest" ||
+      typeof attemptId !== "string" ||
+      !/^[a-zA-Z0-9-]{16,80}$/.test(attemptId))
+  ) {
+    throw new HttpsError("invalid-argument", "รหัสรอบแบบทดสอบไม่ถูกต้อง");
+  }
   const userRef = db.collection("users").doc(uid);
   const attemptRef = userRef
     .collection("assessment_attempts")
-    .doc(`${scored.version}_${scored.phase}`);
+    .doc(`${scored.version}_${scored.phase}${attemptId ? `_${attemptId}` : ""}`);
   return db.runTransaction(async (tx) => {
     const [existing, user] = await Promise.all([tx.get(attemptRef), tx.get(userRef)]);
-    // Deterministic ID makes retries and concurrent tabs idempotent. Never overwrite research responses.
+    // Each sitting has a stable ID: network retries never overwrite research responses.
     if (existing.exists) return existing.data()!;
     if (!user.exists)
       throw new HttpsError("failed-precondition", "กรุณากรอกข้อมูลผู้เข้าร่วมก่อนทำแบบทดสอบ");
     if (scored.phase === "posttest") {
+      // Keep every attempt immutable and never replace a passing result with a stale tab's submission.
+      const latest = user.data()?.assessmentResults?.posttest;
+      if (isPosttestPassed(latest)) return latest;
       const pre = await tx.get(
         userRef.collection("assessment_attempts").doc(`${scored.version}_pretest`),
       );
       if (!pre.exists)
         throw new HttpsError("failed-precondition", "กรุณาส่งแบบทดสอบก่อนเรียนชุดนี้ก่อน");
     }
-    const result = { ...scored, userId: uid, submittedAt: Timestamp.now() };
+    const result = {
+      ...scored,
+      ...(attemptId ? { attemptId } : {}),
+      userId: uid,
+      submittedAt: Timestamp.now(),
+    };
     tx.create(attemptRef, result);
     // Include raw answers in the user snapshot so existing researcher JSON exports retain them.
     tx.update(userRef, { [`assessmentResults.${scored.phase}`]: result });

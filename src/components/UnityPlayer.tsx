@@ -62,6 +62,7 @@ export function UnityPlayer({
   );
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const sentSessionInitRef = useRef(false);
+  const preparedSessionRef = useRef<string | null>(null);
   const firedOnUnityReadyRef = useRef(false);
   const timeoutRef = useRef<number | null>(null);
 
@@ -131,6 +132,16 @@ export function UnityPlayer({
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
     };
   }, [loadPhase]);
+
+  // Prepare the NPC and classroom on entry without starting any speech.
+  useEffect(() => {
+    if (loadPhase !== "ready" || !isUnityReady) return;
+    const sessionKey = `${scenario.id}:${userId}`;
+    if (preparedSessionRef.current === sessionKey) return;
+    preparedSessionRef.current = sessionKey;
+    sentSessionInitRef.current = false;
+    send({ command: "OnScenarioPrepare", payload: { scenarioId: scenario.id, userId } });
+  }, [loadPhase, isUnityReady, send, scenario.id, userId]);
 
   useEffect(() => {
     if (

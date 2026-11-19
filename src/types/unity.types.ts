@@ -60,7 +60,7 @@ export function isUnityToReactEvent(data: unknown): data is UnityToReactEvent {
 // ============================================================
 
 export interface OnSessionInitCommand {
-  command: "OnSessionInit";
+  command: "OnSessionInit" | "OnScenarioPrepare";
   payload: { scenarioId: string; userId: string };
 }
 // Same 4-dimension rubric used everywhere a VR round's spoken feedback is

@@ -1,6 +1,6 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { isPosttestPassed } from "@/lib/assessment";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -14,6 +14,7 @@ import {
   Download,
   CheckCircle2,
   Circle,
+  Info,
 } from "lucide-react";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ const tooltipStyle = {
 };
 
 function CertificatePage() {
+  const [vrScenario, setVrScenario] = useState("all");
   const qc = useQueryClient();
   const overview = useQuery({ queryKey: ["learner-overview"], queryFn: getLearnerOverview });
   const vrScores = useQuery({ queryKey: ["vr-round-scores"], queryFn: getVrRoundScores });
@@ -116,6 +118,9 @@ function CertificatePage() {
   const state = data?.state;
   const results = data?.assessmentResults ?? {};
   const vr = vrScores.data;
+  const selectedVr =
+    vrScenario === "all" ? vr : vr?.scenarios.find((s) => s.scenarioId === vrScenario);
+  const incompleteVr = vr?.scenarios.filter((s) => s.sessionId && s.round2 === null) ?? [];
   const certificateIssued = !!state?.certificate_issued;
   const surveyDoneCount = Object.values(data?.survey ?? {}).filter(Boolean).length;
 
@@ -185,11 +190,11 @@ function CertificatePage() {
   });
 
   const vrChart = [
-    ...(vr?.round1 !== null && vr?.round1 !== undefined
-      ? [{ name: "รอบแรก", score: vr.round1 }]
+    ...(selectedVr?.round1 !== null && selectedVr?.round1 !== undefined
+      ? [{ name: "รอบแรก", score: selectedVr.round1 }]
       : []),
-    ...(vr?.round2 !== null && vr?.round2 !== undefined
-      ? [{ name: "รอบสอง (หลังโค้ช)", score: vr.round2 }]
+    ...(selectedVr?.round2 !== null && selectedVr?.round2 !== undefined
+      ? [{ name: "รอบสอง (หลังโค้ช)", score: selectedVr.round2 }]
       : []),
   ];
 
@@ -269,9 +274,59 @@ function CertificatePage() {
           <ChartPanel
             title="คะแนนโค้ชการฝึก VR ก่อน–หลัง"
             subtitle={
-              vr?.pairedCount
-                ? `เฉลี่ยจากรอบฝึกที่มีคะแนนครบสองรอบ ${vr.pairedCount} รอบ`
-                : "ค่าเฉลี่ยคะแนน AI ต่อรอบการฝึก"
+              vrScenario === "all"
+                ? vr?.pairedCount === 5
+                  ? "คะแนนเฉลี่ยจากการฝึกทั้งสองรอบ ครบ 5 บทเรียน"
+                  : `คะแนนเฉลี่ยจากการฝึกทั้งสองรอบ ${vr?.pairedCount ?? 0} จาก 5 บทเรียน`
+                : `คะแนนการฝึก ${vrScenario.toUpperCase()} · ครั้งล่าสุด`
+            }
+            controls={
+              <div className="mt-4 space-y-3">
+                <label className="flex flex-wrap items-center gap-3 text-sm">
+                  ดูผลการฝึก
+                  <select
+                    value={vrScenario}
+                    onChange={(e) => setVrScenario(e.target.value)}
+                    className="min-h-11 rounded-xl border border-border bg-background px-3 text-slate-deep"
+                  >
+                    <option value="all">ภาพรวม 5 บทเรียน</option>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={`s${n}`}>
+                        S{n} · บทเรียนที่ {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="text-xs text-slate-text">
+                  ใช้การฝึกครั้งล่าสุดของแต่ละบทเท่านั้น ภาพรวมเฉลี่ยเฉพาะบทที่มีคะแนนครบทั้งสองรอบ
+                </p>
+                {vrScores.isLoading ? (
+                  <p role="status" className="text-sm">
+                    กำลังโหลดผลการฝึก…
+                  </p>
+                ) : vrScores.isError ? (
+                  <p role="alert" className="text-sm text-destructive">
+                    โหลดผลการฝึกไม่สำเร็จ{" "}
+                    <button className="underline" onClick={() => void vrScores.refetch()}>
+                      ลองอีกครั้ง
+                    </button>
+                  </p>
+                ) : vrScenario === "all" ? (
+                  incompleteVr.length > 0 && (
+                    <p className="text-sm text-amber-700">
+                      {incompleteVr.map((s) => s.scenarioId.toUpperCase()).join(", ")} ·
+                      ยังไม่จบรอบสอง
+                    </p>
+                  )
+                ) : (
+                  vr?.scenarios.find((s) => s.scenarioId === vrScenario)?.sessionId &&
+                  selectedVr?.round2 === null && (
+                    <p role="status" className="text-sm font-medium text-amber-700">
+                      ยังไม่จบรอบสอง
+                    </p>
+                  )
+                )}
+              </div>
             }
             empty="ยังไม่มีผลการฝึก VR ให้แสดง"
             data={vrChart}
@@ -290,7 +345,7 @@ function CertificatePage() {
                 <Tooltip contentStyle={tooltipStyle} />
                 <Bar
                   dataKey="score"
-                  name="คะแนนเฉลี่ย"
+                  name={vrScenario === "all" ? "คะแนนเฉลี่ย (เต็ม 100)" : "คะแนน (เต็ม 100)"}
                   fill="var(--monitor-blue)"
                   radius={[8, 8, 0, 0]}
                   maxBarSize={72}
@@ -306,6 +361,25 @@ function CertificatePage() {
           subtitle="ค่าเฉลี่ยความคิดเห็นในแต่ละแบบสอบถาม (เต็ม 5)"
           empty="ยังไม่มีผลแบบสำรวจให้แสดง"
           data={questionnaireChart}
+          footer={
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {QUESTIONNAIRES.map((def) => (
+                <details
+                  key={def.key}
+                  className="rounded-xl border border-border bg-background p-3"
+                >
+                  <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold text-monitor-teal">
+                    <Info className="size-4 shrink-0" aria-hidden="true" /> {def.code}{" "}
+                    <span className="font-normal text-slate-text">คืออะไร?</span>
+                  </summary>
+                  <p className="mt-2 text-sm font-semibold text-slate-deep">{def.titleTh}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-text">
+                    ครอบคลุมด้าน {def.dimensions.map((d) => d.title).join(" · ")}
+                  </p>
+                </details>
+              ))}
+            </div>
+          }
         >
           {(chartData) => (
             <BarChart data={chartData}>
@@ -463,17 +537,22 @@ function ChartPanel<T>({
   empty,
   data,
   children,
+  controls,
+  footer,
 }: {
   title: string;
   subtitle: string;
   empty: string;
   data: T[];
   children: (data: T[]) => ReactElement;
+  controls?: ReactNode;
+  footer?: ReactNode;
 }) {
   return (
     <section className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 sm:p-6">
       <h2 className="text-lg font-semibold text-slate-deep">{title}</h2>
       <p className="mt-1 text-sm text-slate-text">{subtitle}</p>
+      {controls}
       {data.length ? (
         <div className="mt-6 h-72">
           <ResponsiveContainer width="100%" height="100%">
@@ -485,6 +564,7 @@ function ChartPanel<T>({
           {empty}
         </p>
       )}
+      {footer}
     </section>
   );
 }

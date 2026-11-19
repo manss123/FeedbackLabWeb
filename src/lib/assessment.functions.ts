@@ -30,7 +30,11 @@ export async function getAssessmentResults(): Promise<
   return current;
 }
 
-export async function submitRankingAssessment(phase: AssessmentPhase, answers: AssessmentAnswers) {
+export async function submitRankingAssessment(
+  phase: AssessmentPhase,
+  answers: AssessmentAnswers,
+  attemptId?: string,
+) {
   const user = await waitForFirebaseUser();
   if (!user) throw new Error("กรุณาเข้าสู่ระบบ");
   const call = httpsCallable<unknown, AssessmentResult>(
@@ -40,6 +44,7 @@ export async function submitRankingAssessment(phase: AssessmentPhase, answers: A
   return (
     await call({
       phase,
+      ...(attemptId ? { attemptId } : {}),
       version: ASSESSMENT_VERSION,
       answers: Object.entries(answers).map(([id, ranks]) => ({ id, ranks })),
     })

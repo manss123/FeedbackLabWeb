@@ -14,6 +14,8 @@ import {
   Loader2,
   Send,
   Lightbulb,
+  BookOpen,
+  RotateCcw,
 } from "lucide-react";
 import testBanner from "@/assets/banners/test-banner.webp";
 import resultBanner from "@/assets/banners/resulttest-banner.webp";
@@ -109,7 +111,8 @@ export function AssessmentSummary({
       )}
       <p className="text-sm leading-relaxed text-slate-text">
         คะแนนสะท้อนการจัดอันดับในสถานการณ์ตามแบบทดสอบ คะแนนเต็ม 240 คะแนน
-        ยังไม่มีเกณฑ์ผ่าน–ไม่ผ่านหรือเกณฑ์ออกใบรับรองสำหรับแบบทดสอบชุดนี้
+        แบบทดสอบหลังเรียนต้องได้อย่างน้อย {POSTTEST_PASS_PERCENT}% (192/240 คะแนน)
+        จึงจะไปทำแบบประเมินความพึงพอใจได้ หากยังไม่ผ่าน สามารถทบทวนบทเรียนและทำแบบทดสอบใหม่ได้
       </p>
     </div>
   );
@@ -231,7 +234,7 @@ function AssessmentForm({
   // reading order (1,2,3,4) would otherwise score 100% regardless of
   // understanding. Stable for the rest of this sitting (computed once via
   // useState, not recomputed on every render/rank click).
-  const [displayOrder] = useState<Record<string, OptionId[]>>(() =>
+  const [displayOrder, setDisplayOrder] = useState<Record<string, OptionId[]>>(() =>
     Object.fromEntries(questions.map((q) => [q.id, shuffle(q.options.map((o) => o.id))])),
   );
   const [answers, setAnswers, clearDraft] = usePersistedState<AssessmentAnswers>(
@@ -241,7 +244,15 @@ function AssessmentForm({
   const [index, setIndex] = useState(0);
   const [review, setReview] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const [result, setResult] = useState<AssessmentResult | undefined>(initialResults[phase]);
+  const [retryAttemptId, setRetryAttemptId] = usePersistedState<string | null>(
+    `assessment.${uid}.${ASSESSMENT_VERSION}.${phase}.retry`,
+    null,
+  );
+  const [result, setResult] = useState<AssessmentResult | undefined>(
+    phase === "posttest" && retryAttemptId && !isPosttestPassed(initialResults.posttest)
+      ? undefined
+      : initialResults[phase],
+  );
   const [announcement, setAnnouncement] = useState("");
   const titleRef = useRef<HTMLHeadingElement>(null);
   const blocked = phase === "posttest" && !initialResults.pretest;
@@ -259,10 +270,12 @@ function AssessmentForm({
       submitRankingAssessment(
         phase,
         Object.fromEntries(questions.map((q) => [q.id, answers[q.id] ?? {}])),
+        phase === "posttest" ? (retryAttemptId ?? undefined) : undefined,
       ),
     onSuccess: (r) => {
       timing.finish();
       setResult(r);
+      setRetryAttemptId(null);
       clearDraft();
       onSaved(r);
       void logActivity({
@@ -321,12 +334,41 @@ function AssessmentForm({
         />
         <div className="app-content-container relative space-y-6">
           <AssessmentSummary results={{ ...initialResults, [phase]: result }} />
-          <Button asChild className="w-full">
-            <Link to={phase === "pretest" ? "/modules" : "/survey"}>
-              {phase === "pretest" ? "ไปยังบทเรียน" : "ไปยังแบบประเมินความพึงพอใจ"}
-              <ArrowRight />
-            </Link>
-          </Button>
+          {phase === "posttest" && !isPosttestPassed(result) ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button asChild variant="outline" className="h-auto min-h-12 whitespace-normal py-3">
+                <Link to="/modules">
+                  <BookOpen /> ทบทวนบทเรียน
+                </Link>
+              </Button>
+              <Button
+                className="h-auto min-h-12 whitespace-normal bg-gradient-to-r from-mint-primary to-monitor-teal py-3 text-white"
+                onClick={() => {
+                  setAnswers({});
+                  clearDraft();
+                  setRetryAttemptId(crypto.randomUUID());
+                  setDisplayOrder(
+                    Object.fromEntries(
+                      questions.map((q) => [q.id, shuffle(q.options.map((o) => o.id))]),
+                    ),
+                  );
+                  mutation.reset();
+                  setResult(undefined);
+                  setAnnouncement("");
+                  goTo(0);
+                }}
+              >
+                <RotateCcw /> ทำแบบทดสอบหลังเรียนอีกครั้ง
+              </Button>
+            </div>
+          ) : (
+            <Button asChild className="w-full">
+              <Link to={phase === "pretest" ? "/modules" : "/survey"}>
+                {phase === "pretest" ? "ไปยังบทเรียน" : "ไปยังแบบประเมินความพึงพอใจ"}
+                <ArrowRight />
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     );
